@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -127,12 +129,20 @@ namespace Microsoft.CodeAnalysis.QualifyMemberAccess
                 var severity = optionValue.Notification.Severity;
                 if (severity.WithDefaultSeverity(DiagnosticSeverity.Hidden) < ReportDiagnostic.Hidden)
                 {
+                    var properties = ImmutableDictionary.CreateBuilder<string, string>();
+                    var name = applicableOption.StorageLocations.OfType<EditorConfigStorageLocation<CodeStyleOption<bool>>>().FirstOrDefault();
+                    if (name != null)
+                    {
+                        properties["OptionName"] = name.KeyName;
+                        properties["OptionCurrent"] = optionValue.Value.ToString().ToLowerInvariant();
+                    }
+
                     context.ReportDiagnostic(DiagnosticHelper.Create(
                         Descriptor, 
                         GetLocation(operation),
                         severity,
                         additionalLocations: null,
-                        properties: null));
+                        properties: properties.ToImmutable()));
                 }
             }
         }
