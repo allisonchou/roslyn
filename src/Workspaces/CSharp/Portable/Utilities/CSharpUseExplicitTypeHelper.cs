@@ -37,6 +37,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Utilities
                 return !stylePreferences.HasFlag(TypeStylePreference.ImplicitTypeWherePossible);
             }
         }
+ 
+        protected override TypeStylePreference GetTypeStylePreferences(State state)
+        {
+            var stylePreferences = state.TypeStylePreference;
+            if (state.IsInIntrinsicTypeContext)
+            {
+                return TypeStylePreference.ImplicitTypeForIntrinsicTypes;
+            }
+            else if (state.IsTypeApparentInContext)
+            {
+                return TypeStylePreference.ImplicitTypeWhereApparent;
+            }
+            else
+            {
+                return TypeStylePreference.ImplicitTypeWherePossible;
+            }
+        }
 
         protected override bool ShouldAnalyzeVariableDeclaration(VariableDeclarationSyntax variableDeclaration, SemanticModel semanticModel, CancellationToken cancellationToken)
         {
