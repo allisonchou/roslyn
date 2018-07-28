@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Diagnostics;
+using System.Threading;
 using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
@@ -63,12 +65,46 @@ namespace Microsoft.CodeAnalysis.CSharp.Diagnostics.TypeStyle
                 return;
             }
 
+            var properties = ImmutableDictionary.CreateBuilder<string, string>();
+            var preferences = typeStyle.GetTypeStylePreferences;
+
+            if (preferences == CodeStyle.TypeStyle.TypeStylePreference.ImplicitTypeForIntrinsicTypes)
+            {
+                var name = CSharpCodeStyleOptions.UseImplicitTypeForIntrinsicTypes.StorageLocations.OfType<EditorConfigStorageLocation<CodeStyleOption<bool>>>().FirstOrDefault();
+                if (name != null)
+                {
+                    properties["OptionName"] = name.KeyName;
+                    var option = optionSet.GetOption(CSharpCodeStyleOptions.UseImplicitTypeForIntrinsicTypes);
+                    properties["OptionCurrent"] = option.Value.ToString().ToLowerInvariant();
+                }
+            }
+            else if (preferences == CodeStyle.TypeStyle.TypeStylePreference.ImplicitTypeWhereApparent)
+            {
+                var name = CSharpCodeStyleOptions.UseImplicitTypeWhereApparent.StorageLocations.OfType<EditorConfigStorageLocation<CodeStyleOption<bool>>>().FirstOrDefault();
+                if (name != null)
+                {
+                    properties["OptionName"] = name.KeyName;
+                    var option = optionSet.GetOption(CSharpCodeStyleOptions.UseImplicitTypeWhereApparent);
+                    properties["OptionCurrent"] = option.Value.ToString().ToLowerInvariant();
+                }
+            }
+            else if (preferences == CodeStyle.TypeStyle.TypeStylePreference.ImplicitTypeWherePossible)
+            {
+                var name = CSharpCodeStyleOptions.UseImplicitTypeWherePossible.StorageLocations.OfType<EditorConfigStorageLocation<CodeStyleOption<bool>>>().FirstOrDefault();
+                if (name != null)
+                {
+                    properties["OptionName"] = name.KeyName;
+                    var option = optionSet.GetOption(CSharpCodeStyleOptions.UseImplicitTypeWherePossible);
+                    properties["OptionCurrent"] = option.Value.ToString().ToLowerInvariant();
+                }
+            }
+
             // The severity preference is not Hidden, as indicated by IsStylePreferred.
             var descriptor = Descriptor;
-            context.ReportDiagnostic(CreateDiagnostic(descriptor, declarationStatement, declaredType.StripRefIfNeeded().Span, typeStyle.Severity));
+            context.ReportDiagnostic(CreateDiagnostic(descriptor, declarationStatement, declaredType.StripRefIfNeeded().Span, typeStyle.Severity, properties.ToImmutable()));
         }
 
-        private Diagnostic CreateDiagnostic(DiagnosticDescriptor descriptor, SyntaxNode declaration, TextSpan diagnosticSpan, ReportDiagnostic severity) 
-            => DiagnosticHelper.Create(descriptor, declaration.SyntaxTree.GetLocation(diagnosticSpan), severity, additionalLocations: null, properties: null);
+        private Diagnostic CreateDiagnostic(DiagnosticDescriptor descriptor, SyntaxNode declaration, TextSpan diagnosticSpan, ReportDiagnostic severity, ImmutableDictionary<string, string> properties) 
+            => DiagnosticHelper.Create(descriptor, declaration.SyntaxTree.GetLocation(diagnosticSpan), severity, additionalLocations: null, properties: properties);
     }
 }
