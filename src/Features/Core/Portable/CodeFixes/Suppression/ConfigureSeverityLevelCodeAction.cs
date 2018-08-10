@@ -197,10 +197,6 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Suppression
         internal static readonly Dictionary<string, PerLanguageOption<CodeStyleOption<bool>>> diagnosticToEditorConfigDotNet = new Dictionary<string, Options.PerLanguageOption<CodeStyleOption<bool>>>()
         {
             // Dictionary(error code, editorconfig name)
-            { IDEDiagnosticIds.PreferIntrinsicPredefinedTypeInDeclarationsDiagnosticId, CodeStyleOptions.PreferIntrinsicPredefinedTypeKeywordInDeclaration },
-            { IDEDiagnosticIds.PreferIntrinsicPredefinedTypeInMemberAccessDiagnosticId, CodeStyleOptions.PreferIntrinsicPredefinedTypeKeywordInMemberAccess },
-            { IDEDiagnosticIds.PreferFrameworkTypeInDeclarationsDiagnosticId, CodeStyleOptions.PreferIntrinsicPredefinedTypeKeywordInDeclaration },
-            { IDEDiagnosticIds.PreferFrameworkTypeInMemberAccessDiagnosticId, CodeStyleOptions.PreferIntrinsicPredefinedTypeKeywordInMemberAccess },
             { IDEDiagnosticIds.UseThrowExpressionDiagnosticId, CodeStyleOptions.PreferThrowExpression },
             { IDEDiagnosticIds.UseObjectInitializerDiagnosticId, CodeStyleOptions.PreferObjectInitializer },
             { IDEDiagnosticIds.InlineDeclarationDiagnosticId, CodeStyleOptions.PreferInlinedVariableDeclaration },
