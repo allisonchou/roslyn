@@ -49,7 +49,7 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Suppression
                 editorconfig.TryGetText(out var text);
                 var result = editorconfig.GetTextAsync().Result;
 
-                var headers = new Dictionary<string, TextSpan>();
+                var headers = new Dictionary<string, TextLine>();
                 string mostRecentHeader = null;
                 if (diagnosticToEditorConfigDotNet.ContainsKey(diagnostic.Id) ||
                     languageSpecificOptions.ContainsKey(diagnostic.Id) ||
@@ -95,6 +95,7 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Suppression
                     var lines = result.Lines;
                     if (name.Length != 0)
                     {
+                        var ruleFound = false;
                         foreach (var curLine in lines)
                         {
                             var curLineText = curLine.ToString();
@@ -108,25 +109,39 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Suppression
 
                                 var validRule = true;
                                 if (mostRecentHeader != null &&
-                                    (language == LanguageNames.CSharp && !mostRecentHeader.Contains("cs") ||
-                                    language == LanguageNames.VisualBasic && !mostRecentHeader.Contains("vb")))
+                                    mostRecentHeader.Length != 0)
                                 {
-                                    validRule = false;
+                                    var allHeaders = mostRecentHeader.Split(',','.',' ','{','}');
+                                    if ((language == LanguageNames.CSharp && !allHeaders.Contains("cs")) ||
+                                        (language == LanguageNames.VisualBasic && !allHeaders.Contains("vb")))
+                                    {
+                                        validRule = false;
+                                    }
                                 }
 
                                 // We found the rule in the file -- replace it
                                 if (name.Equals(ruleName) && validRule)
                                 {
+                                    ruleFound = true;
                                     var textChange = new TextChange(curLine.Span, ruleName + " = " + groups[2].Value.ToString().Trim() + ":" + severity);
-                                    return Task.FromResult(solution.WithAdditionalDocumentText(editorconfig.Id, result.WithChanges(textChange)));
+                                    solution = solution.WithAdditionalDocumentText(editorconfig.Id, result.WithChanges(textChange));
                                 }
                             }
                             else if (headerPattern.IsMatch(curLineText.Trim()))
                             {
                                 var groups = headerPattern.Match(curLineText.Trim()).Groups;
-                                mostRecentHeader = groups[1].Value.ToString();
-                                headers.Add(groups[1].Value.ToString().ToLowerInvariant(), curLine.Span);
+                                mostRecentHeader = groups[1].Value.ToString().ToLowerInvariant();
                             }
+
+                            if (mostRecentHeader != null)
+                            {
+                                headers[mostRecentHeader] = curLine;
+                            }
+                        }
+
+                        if (ruleFound)
+                        {
+                            return Task.FromResult(solution);
                         }
                     }
 
@@ -167,41 +182,55 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Suppression
 
                     if (name.Length != 0 && option.Length != 0)
                     {
-                        var newRule = name + " = " + option + ":" + severity;
-
+                        var newRule = "";
                         // Insert correct header if applicable
                         if (language == LanguageNames.CSharp && headers.Where(header => header.Key.Contains(".cs")).Count() != 0)
                         {
                             var csheader = headers.Where(header => header.Key.Contains(".cs"));
-                            var textChange = new TextChange(new TextSpan(csheader.FirstOrDefault().Value.End, 0), "\r\n" + newRule);
+                            if (csheader.FirstOrDefault().Value.ToString().Trim().Length != 0)
+                            {
+                                newRule = "\r\n";
+                            }
+
+                            newRule += name + " = " + option + ":" + severity + "\r\n";
+                            var textChange = new TextChange(new TextSpan(csheader.FirstOrDefault().Value.Span.End, 0), newRule);
                             solution = solution.WithAdditionalDocumentText(editorconfig.Id, result.WithChanges(textChange));
                         }
                         else if (language == LanguageNames.VisualBasic && headers.Where(header => header.Key.Contains(".vb")).Count() != 0)
                         {
                             var vbheader = headers.Where(header => header.Key.Contains(".vb"));
-                            var textChange = new TextChange(new TextSpan(vbheader.FirstOrDefault().Value.End, 0), "\r\n" + newRule);
+                            if (vbheader.FirstOrDefault().Value.ToString().Trim().Length != 0)
+                            {
+                                newRule = "\r\n";
+                            }
+
+                            newRule += name + " = " + option + ":" + severity + "\r\n";
+                            var textChange = new TextChange(new TextSpan(vbheader.FirstOrDefault().Value.Span.End, 0), newRule);
                             solution = solution.WithAdditionalDocumentText(editorconfig.Id, result.WithChanges(textChange));
                         }
                         else if (language == LanguageNames.CSharp || language == LanguageNames.VisualBasic)
                         {
-                            var newRuleWithHeader = "";
-
                             // Insert a newline if not already present
                             var lastLine = lines.AsEnumerable().LastOrDefault();
                             if (lastLine.ToString().Trim().Length != 0)
                             {
-                                newRuleWithHeader = "\r\n";
+                                newRule = "\r\n";
+                            }
+                            // Insert newline if file is not empty
+                            if (lines.AsEnumerable().Count() > 1 && lastLine.ToString().Trim().Length == 0)
+                            {
+                                newRule += "\r\n";
                             }
 
                             if (language == LanguageNames.CSharp)
                             {
-                                newRuleWithHeader += "[*.cs]\r\n" + newRule;
+                                newRule += "[*.cs]\r\n" + name + " = " + option + ":" + severity + "\r\n";
                             }
                             else if (language == LanguageNames.VisualBasic)
                             {
-                                newRuleWithHeader += "[*.vb]\r\n" + newRule;
+                                newRule += "[*.vb]\r\n" + name + " = " + option + ":" + severity + "\r\n";
                             }
-                            var textChange = new TextChange(new TextSpan(result.Length, 0), newRuleWithHeader);
+                            var textChange = new TextChange(new TextSpan(result.Length, 0), newRule);
                             solution = solution.WithAdditionalDocumentText(editorconfig.Id, result.WithChanges(textChange));
                         }
                     }
