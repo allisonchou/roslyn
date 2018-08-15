@@ -37,18 +37,15 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Suppression
 
         protected override Task<Solution> GetChangedSolutionAsync(CancellationToken cancellationToken)
         {
-            var additionalFiles = _document.Project.AdditionalDocuments;
-            var solution = _document.Project.Solution;
-
             return ConfigureSeverityLevelCodeAction.ConfigureEditorConfig(
-                "none",
+                Title.ToLowerInvariant(),
                 _diagnostic,
-                additionalFiles,
-                solution,
+                _document.Project,
                 _languageOptions,
                 _expressionOptions,
                 _language,
-                cancellationToken);
+                cancellationToken
+                );
         }
 
         public override string Title

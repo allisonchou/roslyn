@@ -41,14 +41,14 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Suppression
             var solution = _document.Project.Solution;
 
             return ConfigureSeverityLevelCodeAction.ConfigureEditorConfig(
-                "suggestion",
+                Title.ToLowerInvariant(),
                 _diagnostic,
-                additionalFiles,
-                solution,
+                _document.Project,
                 _languageOptions,
                 _expressionOptions,
                 _language,
-                cancellationToken);
+                cancellationToken
+                );
         }
 
         public override string Title
