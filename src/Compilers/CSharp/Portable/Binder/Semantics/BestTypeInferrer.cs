@@ -270,6 +270,15 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return type1;
             }
 
+            // Check for matching interfaces. 
+            var t1Interfaces = type1.AllInterfacesNoUseSiteDiagnostics;
+            var t2Interfaces = type2.AllInterfacesNoUseSiteDiagnostics;
+
+            if (t1Interfaces.Length == 1 && t2Interfaces.Length == 1 && t1Interfaces.ItemRef(0).Equals(t2Interfaces.ItemRef(0)))
+            {
+                return t1Interfaces.ItemRef(0);
+            }
+
             return null;
         }
     }
