@@ -14,5 +14,15 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.ContentTypes
         [Name(ContentTypeNames.RoslynContentType)]
         [BaseDefinition("code")]
         public static readonly ContentTypeDefinition RoslynContentTypeDefinition;
+
+        [Export]
+        [Name(ContentTypeNames.EditorConfigContentTypeName)]
+        [BaseDefinition("code-languageserver-preview")]
+        public static readonly ContentTypeDefinition EditorConfigContentTypeDefinition;
+
+        [Export]
+        [FileExtension(".editorconfig")]
+        [ContentType(ContentTypeNames.EditorConfigContentTypeName)]
+        public static readonly FileExtensionToContentTypeDefinition EditorConfigFileExtension;
     }
 }

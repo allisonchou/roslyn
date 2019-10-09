@@ -12,6 +12,7 @@
     <ServiceHubService Include="roslynRemoteSymbolSearchUpdateEngine" ClassName="Microsoft.CodeAnalysis.Remote.RemoteSymbolSearchUpdateEngine" />
     <ServiceHubService Include="roslynCSharpLanguageServer" ClassName="Microsoft.CodeAnalysis.Remote.CSharpLanguageServer" />
     <ServiceHubService Include="roslynVisualBasicLanguageServer" ClassName="Microsoft.CodeAnalysis.Remote.VisualBasicLanguageServer" />
+    <ServiceHubService Include="roslynEditorConfigLanguageServer" ClassName="Microsoft.CodeAnalysis.Remote.EditorConfigLanguageServer" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -161,6 +161,7 @@ namespace Roslyn.Test.Utilities.Remote
                 RegisterService(WellKnownServiceHubServices.RemoteSymbolSearchUpdateEngine, (s, p) => new RemoteSymbolSearchUpdateEngine(s, p));
                 RegisterService(WellKnownServiceHubServices.CSharpLanguageServer, (s, p) => new CSharpLanguageServer(s, p));
                 RegisterService(WellKnownServiceHubServices.VisualBasicLanguageServer, (s, p) => new VisualBasicLanguageServer(s, p));
+                RegisterService(WellKnownServiceHubServices.EditorConfigLanguageServer, (s, p) => new EditorConfigLanguageServer(s, p));
             }
 
             public AssetStorage AssetStorage => _serviceProvider.AssetStorage;

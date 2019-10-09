@@ -176,7 +176,18 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp {
                 return ResourceManager.GetString("CSharp_language_server_client", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to EditorConfig Language Server Client.
+        /// </summary>
+        internal static string EditorConfig_language_server_client
+        {
+            get
+            {
+                return ResourceManager.GetString("EditorConfig_language_server_client", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Discard.
         /// </summary>
