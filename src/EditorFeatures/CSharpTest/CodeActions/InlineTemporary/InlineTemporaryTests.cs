@@ -4076,7 +4076,7 @@ class C
 {
     public void M()
     {
-        var (x1, x2) = new C();
+        {|Warning:var (x1, x2) = new C()|};
         var x3 = new C();
     }
 }";
@@ -4568,7 +4568,7 @@ class C
 {
     bool M<T>(ref T x) 
     {
-        return M(ref x) || M(ref x);
+        return {|Warning:M(ref x) || M(ref x)|};
     }
 }");
         }
@@ -4593,7 +4593,7 @@ class C
 {
     bool M<T>(out T x) 
     {
-        return M(out x) || M(out x);
+        return {|Warning:M(out x) || M(out x)|};
     }
 }");
         }

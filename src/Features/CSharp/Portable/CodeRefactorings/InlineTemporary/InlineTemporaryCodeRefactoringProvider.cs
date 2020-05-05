@@ -17,8 +17,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp.Utilities;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.LanguageServices;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Simplification;
+using Microsoft.CodeAnalysis.UseCompoundAssignment;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.InlineTemporary
@@ -216,8 +218,9 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.InlineTemporary
 
             // Checks to see if inlining the temporary variable may change the code's meaning. This can only apply if the variable has two or more
             // references. We later use this heuristic to determine whether or not to display a warning message to the user.
-            var hasPossibleSideEffects = references.Count() > 1 &&
-                HasPossibleSideEffects(variableDeclarator.Initializer.Value, syntaxRoot, references);
+            var syntaxFacts = updatedDocument.GetLanguageService<ISyntaxFactsService>();
+            var hasPossibleSideEffects =
+                !UseCompoundAssignmentUtilities.IsSideEffectFree(syntaxFacts, variableDeclarator.Initializer.Value, semanticModel, cancellationToken);
 
             // Make each topmost parenting statement or Equals Clause Expressions semantically explicit.
             updatedDocument = await updatedDocument.ReplaceNodesAsync(topmostParentingExpressions, (o, n) =>

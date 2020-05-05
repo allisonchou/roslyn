@@ -49,6 +49,34 @@ namespace Microsoft.CodeAnalysis.UseCompoundAssignment
                 return false;
             }
 
+            if (syntaxFacts.IsLiteralExpression(expr))
+            {
+                return true;
+            }
+
+            if (syntaxFacts.IsBinaryExpression(expr))
+            {
+                syntaxFacts.GetPartsOfBinaryExpression(expr, out var left, out var right);
+                return IsSideEffectFreeRecurse(syntaxFacts, left, semanticModel, isTopLevel, cancellationToken) &&
+                    IsSideEffectFreeRecurse(syntaxFacts, right, semanticModel, isTopLevel, cancellationToken);
+            }
+
+            if (syntaxFacts.IsCastExpression(expr))
+            {
+                syntaxFacts.GetPartsOfCastExpression(expr, out _, out var castExpr);
+                return IsSideEffectFreeRecurse(syntaxFacts, castExpr, semanticModel, isTopLevel, cancellationToken);
+            }
+
+            if (syntaxFacts.IsElementAccessExpression(expr))
+            {
+                return true;
+            }
+
+            // Need to add checks for:
+            // Interpolated syntax
+            // Prefix Unary Expressions
+            // Postfix Unary Expressions
+
             // it basically has to be of the form "a.b.c", where all components are locals,
             // parameters or fields.  Basically, nothing that can cause arbitrary user code
             // execution when being evaluated by the compiler.
