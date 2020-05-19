@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Completion;
@@ -18,6 +19,7 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions.ContextQuery;
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp.Completion.Providers
@@ -31,6 +33,25 @@ namespace Microsoft.CodeAnalysis.CSharp.Completion.Providers
         [Obsolete(MefConstruction.ImportingConstructorMessage, error: true)]
         public SymbolCompletionProvider()
         {
+        }
+
+        public override async Task<CompletionChange> GetChangeAsync(
+            Document document,
+            CompletionItem item,
+            char? commitKey = null,
+            CancellationToken cancellationToken = default)
+        {
+            var textChange = new TextChange(item.Span, item.DisplayText);
+            if (commitKey == ';' && item.Tags.Any(t => t == WellKnownTags.Method))
+            {
+                var textToAdd = "()";
+                textChange = new TextChange(item.Span, item.DisplayText + textToAdd);
+                return CompletionChange.Create(textChange);
+            }
+
+            var change = (await GetTextChangeAsync(document, item, commitKey, cancellationToken).ConfigureAwait(false))
+                ?? new TextChange(item.Span, item.DisplayText);
+            return CompletionChange.Create(change);
         }
 
         protected override Task<ImmutableArray<ISymbol>> GetSymbolsAsync(SyntaxContext context, int position, OptionSet options, CancellationToken cancellationToken)
