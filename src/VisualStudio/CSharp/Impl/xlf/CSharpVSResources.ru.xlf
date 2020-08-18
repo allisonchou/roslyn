@@ -32,6 +32,11 @@
         <target state="translated">Отменить</target>
         <note />
       </trans-unit>
+      <trans-unit id="Format_document">
+        <source>Format document</source>
+        <target state="new">Format document</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Format_document_settings">
         <source>Format Document Settings (Experiment) </source>
         <target state="translated">Параметры форматирования документа (эксперимент) </target>
@@ -71,6 +76,11 @@
         <source>Prefer 'is null' for reference equality checks</source>
         <target state="translated">Использовать "is null" вместо проверки ссылок на равенство.</target>
         <note>'is null' is a C# string and should not be localized.</note>
+      </trans-unit>
+      <trans-unit id="Prefer_pattern_matching">
+        <source>Prefer pattern matching</source>
+        <target state="new">Prefer pattern matching</target>
+        <note />
       </trans-unit>
       <trans-unit id="Prefer_switch_expression">
         <source>Prefer switch expression</source>
