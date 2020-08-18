@@ -135,7 +135,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel.Inter
         }
 
         private bool HasAccessorNode(MethodKind methodKind)
-            => CodeModelService.TryGetAccessorNode(LookupNode(), methodKind, out _);
+            => CodeModelService.TryGetAccessorNode(LookupNode(), methodKind, out var accessorNode);
 
         private bool IsExpressionBodiedProperty()
             => CodeModelService.IsExpressionBodiedProperty(LookupNode());

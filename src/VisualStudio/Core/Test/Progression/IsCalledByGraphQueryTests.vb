@@ -6,12 +6,11 @@ Imports System.Threading.Tasks
 Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Microsoft.VisualStudio.GraphModel
 Imports Microsoft.VisualStudio.LanguageServices.Implementation.Progression
-Imports Roslyn.Test.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
-    <UseExportProvider, Trait(Traits.Feature, Traits.Features.Progression)>
+    <[UseExportProvider]>
     Public Class IsCalledByGraphQueryTests
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function IsCalledBySimpleTests() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>

@@ -1381,6 +1381,11 @@ class C
 }
 ";
 
+            var optionSet = new Dictionary<OptionKey2, object>
+            {
+                { new OptionKey2(BraceCompletionOptions.Enable, LanguageNames.CSharp), false }
+            };
+
             AssertFormatAfterTypeChar(code, expected);
         }
 
@@ -1405,6 +1410,11 @@ class C
     {
 }
 ";
+
+            var optionSet = new Dictionary<OptionKey2, object>
+            {
+                { new OptionKey2(BraceCompletionOptions.Enable, LanguageNames.CSharp), false }
+            };
 
             AssertFormatAfterTypeChar(code, expected);
         }
@@ -2232,7 +2242,7 @@ using System.B;
             AssertFormatWithView(expected, code, (GenerationOptions.SeparateImportDirectiveGroups, true));
         }
 
-        private static void AssertFormatAfterTypeChar(string code, string expected, Dictionary<OptionKey2, object> changedOptionSet = null)
+        private void AssertFormatAfterTypeChar(string code, string expected, Dictionary<OptionKey2, object> changedOptionSet = null)
         {
             using var workspace = TestWorkspace.CreateCSharp(code);
             if (changedOptionSet != null)

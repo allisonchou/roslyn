@@ -5,7 +5,6 @@
 #nullable enable
 
 using System;
-using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
@@ -20,10 +19,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics
     internal static class DiagnosticResultSerializer
     {
         public static (int diagnostics, int telemetry) WriteDiagnosticAnalysisResults(
-            ObjectWriter writer,
-            AnalysisKind? analysisKind,
-            DiagnosticAnalysisResultMap<string, DiagnosticAnalysisResultBuilder> result,
-            CancellationToken cancellationToken)
+            ObjectWriter writer, DiagnosticAnalysisResultMap<string, DiagnosticAnalysisResultBuilder> result, CancellationToken cancellationToken)
         {
             var diagnosticCount = 0;
             var diagnosticSerializer = new DiagnosticDataSerializer(VersionStamp.Default, VersionStamp.Default);
@@ -33,28 +29,12 @@ namespace Microsoft.CodeAnalysis.Diagnostics
             {
                 writer.WriteString(analyzerId);
 
-                switch (analysisKind)
-                {
-                    case AnalysisKind.Syntax:
-                        diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.SyntaxLocals, cancellationToken);
-                        break;
+                diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.SyntaxLocals, cancellationToken);
+                diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.SemanticLocals, cancellationToken);
+                diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.NonLocals, cancellationToken);
 
-                    case AnalysisKind.Semantic:
-                        diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.SemanticLocals, cancellationToken);
-                        break;
-
-                    case null:
-                        diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.SyntaxLocals, cancellationToken);
-                        diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.SemanticLocals, cancellationToken);
-                        diagnosticCount += WriteDiagnosticDataMap(writer, diagnosticSerializer, analyzerResults.NonLocals, cancellationToken);
-
-                        diagnosticSerializer.WriteDiagnosticData(writer, analyzerResults.Others, cancellationToken);
-                        diagnosticCount += analyzerResults.Others.Length;
-                        break;
-
-                    default:
-                        throw ExceptionUtilities.UnexpectedValue(analysisKind.Value);
-                }
+                diagnosticSerializer.WriteDiagnosticData(writer, analyzerResults.Others, cancellationToken);
+                diagnosticCount += analyzerResults.Others.Length;
             }
 
             writer.WriteInt32(result.TelemetryInfo.Count);
@@ -69,65 +49,31 @@ namespace Microsoft.CodeAnalysis.Diagnostics
         }
 
         public static DiagnosticAnalysisResultMap<DiagnosticAnalyzer, DiagnosticAnalysisResult> ReadDiagnosticAnalysisResults(
-            ObjectReader reader,
-            IDictionary<string, DiagnosticAnalyzer> analyzerMap,
-            DocumentAnalysisScope? documentAnalysisScope,
-            Project project,
-            VersionStamp version,
-            CancellationToken cancellationToken)
+            ObjectReader reader, IDictionary<string, DiagnosticAnalyzer> analyzerMap, Project project, VersionStamp version, CancellationToken cancellationToken)
         {
             var diagnosticDataSerializer = new DiagnosticDataSerializer(VersionStamp.Default, VersionStamp.Default);
 
             var analysisMap = ImmutableDictionary.CreateBuilder<DiagnosticAnalyzer, DiagnosticAnalysisResult>();
-            var documentIds = documentAnalysisScope != null ? ImmutableHashSet.Create(documentAnalysisScope.TextDocument.Id) : null;
 
             var analysisCount = reader.ReadInt32();
             for (var i = 0; i < analysisCount; i++)
             {
                 var analyzer = analyzerMap[reader.ReadString()];
 
-                DiagnosticAnalysisResult analysisResult;
-                if (documentAnalysisScope != null)
-                {
-                    ImmutableDictionary<DocumentId, ImmutableArray<DiagnosticData>> syntaxLocalMap, semanticLocalMap;
-                    if (documentAnalysisScope.Kind == AnalysisKind.Syntax)
-                    {
-                        syntaxLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
-                        semanticLocalMap = ImmutableDictionary<DocumentId, ImmutableArray<DiagnosticData>>.Empty;
-                    }
-                    else
-                    {
-                        Debug.Assert(documentAnalysisScope.Kind == AnalysisKind.Semantic);
-                        semanticLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
-                        syntaxLocalMap = ImmutableDictionary<DocumentId, ImmutableArray<DiagnosticData>>.Empty;
-                    }
+                var syntaxLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
+                var semanticLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
+                var nonLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
 
-                    analysisResult = DiagnosticAnalysisResult.Create(
-                        project,
-                        version,
-                        syntaxLocalMap,
-                        semanticLocalMap,
-                        nonLocalMap: ImmutableDictionary<DocumentId, ImmutableArray<DiagnosticData>>.Empty,
-                        others: ImmutableArray<DiagnosticData>.Empty,
-                        documentIds);
-                }
-                else
-                {
-                    var syntaxLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
-                    var semanticLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
-                    var nonLocalMap = ReadDiagnosticDataMap(reader, diagnosticDataSerializer, project, cancellationToken);
+                var others = diagnosticDataSerializer.ReadDiagnosticData(reader, project, document: null, cancellationToken);
 
-                    var others = diagnosticDataSerializer.ReadDiagnosticData(reader, project, document: null, cancellationToken);
-
-                    analysisResult = DiagnosticAnalysisResult.Create(
-                        project,
-                        version,
-                        syntaxLocalMap,
-                        semanticLocalMap,
-                        nonLocalMap,
-                        others.NullToEmpty(),
-                        documentIds: null);
-                }
+                var analysisResult = DiagnosticAnalysisResult.Create(
+                    project,
+                    version,
+                    syntaxLocalMap,
+                    semanticLocalMap,
+                    nonLocalMap,
+                    others.NullToEmpty(),
+                    documentIds: null);
 
                 analysisMap.Add(analyzer, analysisResult);
             }
@@ -202,7 +148,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics
             writer.WriteInt32(telemetryInfo.CompilationEndActionsCount);
             writer.WriteInt32(telemetryInfo.CompilationActionsCount);
             writer.WriteInt32(telemetryInfo.SyntaxTreeActionsCount);
-            writer.WriteInt32(telemetryInfo.AdditionalFileActionsCount);
             writer.WriteInt32(telemetryInfo.SemanticModelActionsCount);
             writer.WriteInt32(telemetryInfo.SymbolActionsCount);
             writer.WriteInt32(telemetryInfo.SymbolStartActionsCount);
@@ -228,7 +173,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics
             var compilationEndActionsCount = reader.ReadInt32();
             var compilationActionsCount = reader.ReadInt32();
             var syntaxTreeActionsCount = reader.ReadInt32();
-            var additionalFileActionsCount = reader.ReadInt32();
             var semanticModelActionsCount = reader.ReadInt32();
             var symbolActionsCount = reader.ReadInt32();
             var symbolStartActionsCount = reader.ReadInt32();
@@ -252,7 +196,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 CompilationActionsCount = compilationActionsCount,
 
                 SyntaxTreeActionsCount = syntaxTreeActionsCount,
-                AdditionalFileActionsCount = additionalFileActionsCount,
                 SemanticModelActionsCount = semanticModelActionsCount,
                 SymbolActionsCount = symbolActionsCount,
                 SymbolStartActionsCount = symbolStartActionsCount,

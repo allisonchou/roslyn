@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.ErrorReporting;
 using Roslyn.Utilities;
-using StreamJsonRpc;
 
 namespace Microsoft.CodeAnalysis.Interactive
 {
@@ -20,9 +19,7 @@ namespace Microsoft.CodeAnalysis.Interactive
         internal sealed class RemoteService
         {
             public readonly Process Process;
-            public readonly JsonRpc JsonRpc;
-            public readonly InteractiveHostPlatformInfo PlatformInfo;
-
+            public readonly Service Service;
             private readonly int _processId;
             private readonly SemaphoreSlim _disposeSemaphore = new SemaphoreSlim(initialCount: 1);
             private readonly bool _joinOutputWritingThreadsOnDisposal;
@@ -33,14 +30,13 @@ namespace Microsoft.CodeAnalysis.Interactive
             private Thread? _readErrorOutputThread;      // nulled on dispose
             private volatile ProcessExitHandlerStatus _processExitHandlerStatus;  // set to Handled on dispose
 
-            internal RemoteService(InteractiveHost host, Process process, int processId, JsonRpc jsonRpc, InteractiveHostPlatformInfo platformInfo)
+            internal RemoteService(InteractiveHost host, Process process, int processId, Service service)
             {
                 Process = process;
-                JsonRpc = jsonRpc;
-                PlatformInfo = platformInfo;
+                Service = service;
 
                 _host = host;
-                _joinOutputWritingThreadsOnDisposal = _host._joinOutputWritingThreadsOnDisposal;
+                _joinOutputWritingThreadsOnDisposal = host._joinOutputWritingThreadsOnDisposal;
                 _processId = processId;
                 _processExitHandlerStatus = ProcessExitHandlerStatus.Uninitialized;
 

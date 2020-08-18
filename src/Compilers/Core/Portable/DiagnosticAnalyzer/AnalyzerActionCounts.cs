@@ -17,7 +17,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics.Telemetry
                 analyzerActions.CompilationEndActionsCount,
                 analyzerActions.CompilationActionsCount,
                 analyzerActions.SyntaxTreeActionsCount,
-                analyzerActions.AdditionalFileActionsCount,
                 analyzerActions.SemanticModelActionsCount,
                 analyzerActions.SymbolActionsCount,
                 analyzerActions.SymbolStartActionsCount,
@@ -39,7 +38,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics.Telemetry
             int compilationEndActionsCount,
             int compilationActionsCount,
             int syntaxTreeActionsCount,
-            int additionalFileActionsCount,
             int semanticModelActionsCount,
             int symbolActionsCount,
             int symbolStartActionsCount,
@@ -58,7 +56,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics.Telemetry
             CompilationEndActionsCount = compilationEndActionsCount;
             CompilationActionsCount = compilationActionsCount;
             SyntaxTreeActionsCount = syntaxTreeActionsCount;
-            AdditionalFileActionsCount = additionalFileActionsCount;
             SemanticModelActionsCount = semanticModelActionsCount;
             SymbolActionsCount = symbolActionsCount;
             SymbolStartActionsCount = symbolStartActionsCount;
@@ -101,11 +98,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics.Telemetry
         /// Count of registered syntax tree actions.
         /// </summary>
         public int SyntaxTreeActionsCount { get; }
-
-        /// <summary>
-        /// Count of registered additional file actions.
-        /// </summary>
-        public int AdditionalFileActionsCount { get; }
 
         /// <summary>
         /// Count of registered semantic model actions.

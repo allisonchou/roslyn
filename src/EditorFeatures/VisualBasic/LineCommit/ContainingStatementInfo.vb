@@ -141,7 +141,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.LineCommit
             End If
         End Function
 
-        Private Shared Function FindExpansionStatement(node As StatementSyntax) As StatementSyntax
+        Private Function FindExpansionStatement(node As StatementSyntax) As StatementSyntax
             For Each ancestor In node.Ancestors()
                 Dim matchingStatements = MatchingStatementsVisitor.Instance.Visit(ancestor)
 

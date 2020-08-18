@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.VisualStudio.LanguageServices.ProjectSystem
@@ -32,10 +31,7 @@ namespace Microsoft.VisualStudio.LanguageServices.ProjectSystem
         ProjectId Id { get; }
 
         // Options.
-
-        [Obsolete("To avoid contributing to the large object heap, use SetOptions(ImmutableArray<string>). This API will be removed in the future.")]
         void SetOptions(string commandLineForOptions);
-        void SetOptions(ImmutableArray<string> arguments);
 
         // Other project properties.
         void SetProperty(string name, string value);

@@ -30,7 +30,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests.Editing
                     "test",
                     "test.dll",
                     LanguageNames.CSharp,
-                    metadataReferences: new[] { TestMetadata.Net451.mscorlib }));
+                    metadataReferences: new[] { TestReferences.NetFx.v4_0_30319.mscorlib }));
 
             var doc = emptyProject.AddDocument("test.cs", code);
 
@@ -768,7 +768,7 @@ class C
                     "test",
                     "test.dll",
                     LanguageNames.CSharp,
-                    metadataReferences: new[] { TestMetadata.Net451.mscorlib }));
+                    metadataReferences: new[] { TestReferences.NetFx.v4_0_30319.mscorlib }));
 
             var project = emptyProject
                 .AddMetadataReferences(new[] { otherAssemblyReference })
@@ -821,7 +821,7 @@ class C
             var compilation = CSharpCompilation
                 .Create("test.dll", new[] { tree })
                 .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .AddReferences(TestMetadata.Net451.mscorlib);
+                .AddReferences(TestReferences.NetFx.v4_0_30319.mscorlib);
 
             return compilation.ToMetadataReference();
         }

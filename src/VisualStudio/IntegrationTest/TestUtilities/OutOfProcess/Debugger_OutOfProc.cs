@@ -28,8 +28,8 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.OutOfProcess
         {
             _instance.Editor.Activate();
             _instance.Editor.SelectTextInCurrentDocument(text);
-            var lineNumber = _instance.Editor.GetLine();
-            var columnIndex = _instance.Editor.GetColumn();
+            int lineNumber = _instance.Editor.GetLine();
+            int columnIndex = _instance.Editor.GetColumn();
 
             SetBreakPoint(fileName, lineNumber, columnIndex + charsOffset);
         }

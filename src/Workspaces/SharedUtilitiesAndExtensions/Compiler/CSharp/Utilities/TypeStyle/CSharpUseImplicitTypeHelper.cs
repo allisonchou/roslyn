@@ -10,7 +10,6 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle.TypeStyle;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Shared.Utilities;
@@ -283,12 +282,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Utilities
 
             // var cannot be assigned null
             if (expression.IsKind(SyntaxKind.NullLiteralExpression))
-            {
-                return false;
-            }
-
-            // var cannot be used with target typed new
-            if (expression.IsKind(SyntaxKindEx.ImplicitObjectCreationExpression))
             {
                 return false;
             }

@@ -272,7 +272,7 @@ End Module
 ]]>
     </file>
 </compilation>
-            CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(source, {TestMetadata.Net40.SystemCore}).AssertTheseDiagnostics(
+            CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(source, {SystemCoreRef}).AssertTheseDiagnostics(
             <![CDATA[
 BC40008: 'Public Shared Sub ObsoleteMethod1()' is obsolete.
         ObsoleteMethod1()

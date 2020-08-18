@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.CodeAnalysis;
@@ -83,7 +82,8 @@ namespace Roslyn.VisualStudio.CSharp.UnitTests.ProjectSystemShim
                 hierarchy,
                 binOutputPath);
 
-            cpsProject.SetOptions(ImmutableArray.Create(commandLineArguments));
+            var commandLineForOptions = string.Join(" ", commandLineArguments);
+            cpsProject.SetOptions(commandLineForOptions);
 
             return cpsProject;
         }

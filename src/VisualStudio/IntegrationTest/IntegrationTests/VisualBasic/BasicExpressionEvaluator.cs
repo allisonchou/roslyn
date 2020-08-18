@@ -17,8 +17,8 @@ namespace Roslyn.VisualStudio.IntegrationTests.VisualBasic
     {
         protected override string LanguageName => LanguageNames.VisualBasic;
 
-        public BasicExpressionEvaluator(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory)
+        public BasicExpressionEvaluator(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper)
         {
         }
 

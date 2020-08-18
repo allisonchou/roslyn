@@ -4,8 +4,11 @@
 
 #nullable enable
 
+using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.PooledObjects;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -15,7 +18,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
              SourceMemberContainerTypeSymbol containingType,
              RecordDeclarationSyntax syntax,
              DiagnosticBag diagnostics) :
-             base(containingType, syntax.ParameterList!.GetLocation(), syntax, isIterator: false)
+             base(containingType, syntax.ParameterList!.GetLocation(), syntax)
         {
             this.MakeFlags(MethodKind.Constructor, containingType.IsAbstract ? DeclarationModifiers.Protected : DeclarationModifiers.Public, returnsVoid: true, isExtensionMethod: false);
         }
@@ -33,9 +36,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return GetSyntax().PrimaryConstructorBaseType;
         }
 
-        protected override bool AllowRefOrOut => false;
-
-        internal override bool IsExpressionBodied => false;
+        internal override bool IsExpressionBodied
+        {
+            get
+            {
+                return false;
+            }
+        }
 
         protected override bool IsWithinExpressionOrBlockBody(int position, out int offset)
         {

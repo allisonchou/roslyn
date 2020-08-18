@@ -62,7 +62,7 @@ namespace Microsoft.CodeAnalysis.Editor
                 rightSpan: GetSpanForTagging(matchingDirective));
         }
 
-        private static bool IsConditionalDirective(TDirectiveTriviaSyntax directive)
+        private bool IsConditionalDirective(TDirectiveTriviaSyntax directive)
         {
             return directive is TIfDirectiveTriviaSyntax ||
                    directive is TElseIfDirectiveTriviaSyntax ||

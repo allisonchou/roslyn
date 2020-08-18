@@ -99,6 +99,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.LanguageService
             private void SetupView(IVsTextView view)
                 => _languageService.SetupNewTextView(view);
 
+            private void TeardownView(IVsTextView view)
+            {
+            }
+
             private void OnOptionChanged(object sender, OptionChangedEventArgs e)
             {
                 // If the workspace registration is missing, addornments have been removed.
@@ -265,6 +269,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.LanguageService
 
             public int OnCloseView(IVsTextView view)
             {
+                TeardownView(view);
+
                 return VSConstants.S_OK;
             }
 

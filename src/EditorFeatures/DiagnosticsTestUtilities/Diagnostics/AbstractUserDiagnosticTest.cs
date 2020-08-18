@@ -21,7 +21,6 @@ using Roslyn.Test.Utilities;
 using Roslyn.Utilities;
 using Xunit;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Remote.Testing;
 
 namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
 {
@@ -76,12 +75,12 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
             return dxs;
         }
 
-        protected static void AddAnalyzerToWorkspace(Workspace workspace, DiagnosticAnalyzer analyzer, TestParameters parameters)
+        protected void AddAnalyzerToWorkspace(Workspace workspace, DiagnosticAnalyzer analyzer, TestParameters parameters)
         {
             AnalyzerReference[] analyzeReferences;
             if (analyzer != null)
             {
-                Contract.ThrowIfTrue(parameters.testHost == TestHost.OutOfProcess, $"Out-of-proc testing is not supported since {analyzer} can't be serialized.");
+                Contract.ThrowIfTrue(parameters.runProviderOutOfProc, $"Out-of-proc testing is not supported since {analyzer} can't be serialized.");
 
                 analyzeReferences = new[] { new AnalyzerImageReference(ImmutableArray.Create(analyzer)) };
             }
@@ -98,14 +97,14 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
             workspace.TryApplyChanges(workspace.CurrentSolution.WithAnalyzerReferences(analyzeReferences));
         }
 
-        protected static Document GetDocumentAndSelectSpan(TestWorkspace workspace, out TextSpan span)
+        protected Document GetDocumentAndSelectSpan(TestWorkspace workspace, out TextSpan span)
         {
             var hostDocument = workspace.Documents.Single(d => d.SelectedSpans.Any());
             span = hostDocument.SelectedSpans.Single();
             return workspace.CurrentSolution.GetDocument(hostDocument.Id);
         }
 
-        protected static bool TryGetDocumentAndSelectSpan(TestWorkspace workspace, out Document document, out TextSpan span)
+        protected bool TryGetDocumentAndSelectSpan(TestWorkspace workspace, out Document document, out TextSpan span)
         {
             var hostDocument = workspace.Documents.FirstOrDefault(d => d.SelectedSpans.Any());
             if (hostDocument == null)
@@ -130,7 +129,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
             return true;
         }
 
-        protected static Document GetDocumentAndAnnotatedSpan(TestWorkspace workspace, out string annotation, out TextSpan span)
+        protected Document GetDocumentAndAnnotatedSpan(TestWorkspace workspace, out string annotation, out TextSpan span)
         {
             var annotatedDocuments = workspace.Documents.Where(d => d.AnnotatedSpans.Any());
             Debug.Assert(!annotatedDocuments.IsEmpty(), "No annotated span found");
@@ -141,7 +140,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
             return workspace.CurrentSolution.GetDocument(hostDocument.Id);
         }
 
-        protected static FixAllScope? GetFixAllScope(string annotation)
+        protected FixAllScope? GetFixAllScope(string annotation)
         {
             if (annotation == null)
             {

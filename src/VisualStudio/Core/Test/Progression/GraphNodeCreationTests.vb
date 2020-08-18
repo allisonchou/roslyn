@@ -9,10 +9,9 @@ Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Microsoft.VisualStudio.GraphModel
 Imports Microsoft.VisualStudio.LanguageServices.Implementation.Progression
 Imports Microsoft.VisualStudio.LanguageServices.Progression
-Imports Roslyn.Test.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
-    <UseExportProvider, Trait(Traits.Feature, Traits.Features.Progression)>
+    <[UseExportProvider]>
     Public Class GraphNodeCreationTests
         Private Async Function AssertCreatedNodeIsAsync(code As String, expectedId As String, xml As XElement, Optional language As String = "C#") As Task
             Using testState = ProgressionTestState.Create(
@@ -33,7 +32,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestSimpleType() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class $$C { } }", "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C)",
                     <DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
@@ -47,7 +46,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestNamespaceType() As Task
             Await AssertCreatedNodeIsAsync("namespace $$N { class C { } }", "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N)",
                     <DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
@@ -61,7 +60,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestLongNamespaceType() As Task
             Await AssertCreatedNodeIsAsync("namespace N.$$N1.N11 { class C { } }", "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N.N1)",
                     <DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
@@ -75,7 +74,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestSimpleParameterType() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class C { void M(int $$x) { } } }",
                     "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C Member=(Name=M OverloadingParameters=[(Assembly=file:///Z:/FxReferenceAssembliesUri Namespace=System Type=Int32)]) ParameterIdentifier=x)",
@@ -91,7 +90,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestDelegateType() As Task
             Await AssertCreatedNodeIsAsync("namespace N { delegate void D(string $$m); }",
                     "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=D Member=(Name=Invoke OverloadingParameters=[(Assembly=file:///Z:/FxReferenceAssembliesUri Namespace=System Type=String)]) ParameterIdentifier=m)",
@@ -107,7 +106,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestLambdaParameterType() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class C { void M(Func<int,int> $$x) { } } }",
                     "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C Member=(Name=M OverloadingParameters=[(Assembly=file:///Z:/CSharpAssembly1.dll Type=(Name=Func GenericParameterCount=2 GenericArguments=[(Assembly=file:///Z:/FxReferenceAssembliesUri Namespace=System Type=Int32),(Assembly=file:///Z:/FxReferenceAssembliesUri Namespace=System Type=Int32)]))]) ParameterIdentifier=x)",
@@ -123,7 +122,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestLocalType() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class C { int M() { int $$y = 0; return y; } } }", "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C Member=M LocalVariable=y)",
                     <DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
@@ -137,7 +136,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestFirstLocalWithSameNameType() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class C { int M() { { int $$y = 0; } { int y = 1;} } } }", "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C Member=M LocalVariable=y)",
                     <DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
@@ -151,7 +150,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestSecondLocalWithSameNameType() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class C { int M() { { int y = 0; } { int $$y = 1;} } } }",
                     "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C Member=M LocalVariable=y LocalVariableIndex=1)",
@@ -166,7 +165,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestErrorType() As Task
             Await AssertCreatedNodeIsAsync(
                 "Class $$C : Inherits D : End Class",
@@ -183,7 +182,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
             LanguageNames.VisualBasic)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestSimpleMethodSymbolTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -203,7 +202,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestReferenceParameterSymbolTest() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class C { void $$Goo(ref int i) { i = i + 1; } } }",
                     "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C Member=(Name=Goo OverloadingParameters=[(Assembly=file:///Z:/FxReferenceAssembliesUri Namespace=System Type=Int32 ParamKind=Ref)]))",
@@ -219,7 +218,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestReferenceOutParameterSymbolTest() As Task
             Await AssertCreatedNodeIsAsync("namespace N { class C { void $$Goo(out int i) { i = 1; } } }",
                     "(Assembly=file:///Z:/CSharpAssembly1.dll Namespace=N Type=C Member=(Name=Goo OverloadingParameters=[(Assembly=file:///Z:/FxReferenceAssembliesUri Namespace=System Type=Int32 ParamKind=Ref)]))",
@@ -235,7 +234,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
                     </DirectedGraph>)
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestSimpleIndexerTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -272,7 +271,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestAttributedIndexerTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -310,7 +309,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestParameterWithConversionOperatorTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -343,7 +342,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestLocalVBVariableType() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -376,7 +375,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestLocalVBRangeTypeVariable() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -409,7 +408,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestLocalVBVariableWithinBlockType() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -446,7 +445,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestLocalVariableIndexTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -483,7 +482,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestGenericArgumentsTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -537,7 +536,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestGenericArgumentsTest2() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -591,7 +590,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestGenericCSharpMethodSymbolTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -611,7 +610,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestGenericCSharpTypeSymbolTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -644,7 +643,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestGenericCSharpMethodTypeSymbolTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -673,7 +672,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestGenericVBMethodSymbolTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -696,7 +695,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestGenericVBTypeSymbolTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -731,7 +730,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestMultiGenericVBTypeSymbolTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -766,7 +765,7 @@ End Module
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestFilteringPropertiesTest() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>

@@ -267,7 +267,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
         public void VerifyTags(string tagTypeName, int expectedCount)
             => ExecuteOnActiveView(view =>
         {
-            var type = WellKnownTagNames.GetTagTypeByName(tagTypeName);
+            Type type = WellKnownTagNames.GetTagTypeByName(tagTypeName);
             bool filterTag(IMappingTagSpan<ITag> tag)
             {
                 return tag.Tag.GetType().Equals(type);

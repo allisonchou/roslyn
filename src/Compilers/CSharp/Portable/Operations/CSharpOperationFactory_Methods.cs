@@ -415,7 +415,7 @@ namespace Microsoft.CodeAnalysis.Operations
                                                             instance,
                                                             _semanticModel,
                                                             anonymousProperty.Syntax,
-                                                            anonymousProperty.GetPublicTypeSymbol(),
+                                                            anonymousProperty.Type.GetPublicSymbol(),
                                                             anonymousProperty.ConstantValue,
                                                             anonymousProperty.WasCompilerGenerated);
                     isImplicitAssignment = isImplicit;

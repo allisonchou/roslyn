@@ -2,15 +2,14 @@
 ' The .NET Foundation licenses this file to you under the MIT license.
 ' See the LICENSE file in the project root for more information.
 
-Imports Microsoft.CodeAnalysis.Remote.Testing
+Imports System.Threading.Tasks
 
 Namespace Microsoft.CodeAnalysis.Editor.UnitTests.ReferenceHighlighting
     Public Class CSharpReferenceHighlightingTests
         Inherits AbstractReferenceHighlightingTests
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestVerifyNoHighlightsWhenOptionDisabled(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestVerifyNoHighlightsWhenOptionDisabled() As Task
             Await VerifyHighlightsAsync(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -22,13 +21,12 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.ReferenceHighlighting
                         </Document>
                     </Project>
                 </Workspace>,
-                testHost,
                 optionIsEnabled:=False)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestVerifyHighlightsForClass(testHost As TestHost) As Task
+        <WpfFact>
+        <Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestVerifyHighlightsForClass() As Task
             Await VerifyHighlightsAsync(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -38,12 +36,12 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.ReferenceHighlighting
                             }
                         </Document>
                     </Project>
-                </Workspace>, testHost)
+                </Workspace>)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestVerifyHighlightsForScriptReference(testHost As TestHost) As Task
+        <WpfFact>
+        <Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestVerifyHighlightsForScriptReference() As Task
             Await VerifyHighlightsAsync(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -57,12 +55,11 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.ReferenceHighlighting
                             {|Reference:$$Script|}.M();
                         </Document>
                     </Project>
-                </Workspace>, testHost)
+                </Workspace>)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestVerifyHighlightsForCSharpClassWithConstructor(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestVerifyHighlightsForCSharpClassWithConstructor() As Task
             Await VerifyHighlightsAsync(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -76,13 +73,12 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.ReferenceHighlighting
                             }
                         </Document>
                     </Project>
-                </Workspace>, testHost)
+                </Workspace>)
         End Function
 
         <WorkItem(538721, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/538721")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestVerifyHighlightsForCSharpClassWithSynthesizedConstructor(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestVerifyHighlightsForCSharpClassWithSynthesizedConstructor() As Task
             Await VerifyHighlightsAsync(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -96,13 +92,12 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.ReferenceHighlighting
                             }
                         </Document>
                     </Project>
-                </Workspace>, testHost)
+                </Workspace>)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
         <WorkItem(528436, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/528436")>
-        Public Async Function TestVerifyHighlightsOnCloseAngleOfGeneric(testHost As TestHost) As Task
+        Public Async Function TestVerifyHighlightsOnCloseAngleOfGeneric() As Task
             Await VerifyHighlightsAsync(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -120,13 +115,12 @@ class {|Definition:Program|}
 }]]>
                         </Document>
                     </Project>
-                </Workspace>, testHost)
+                </Workspace>)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
         <WorkItem(570809, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/570809")>
-        Public Async Function TestVerifyNoHighlightsOnAsyncLambda(testHost As TestHost) As Task
+        Public Async Function TestVerifyNoHighlightsOnAsyncLambda() As Task
             Await VerifyHighlightsAsync(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -146,13 +140,12 @@ class Program
 }]]>
                         </Document>
                     </Project>
-                </Workspace>, testHost)
+                </Workspace>)
         End Function
 
         <WorkItem(543768, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/543768")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestAlias1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestAlias1() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -172,13 +165,12 @@ namespace X
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(543768, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/543768")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestAlias2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestAlias2() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -198,13 +190,12 @@ namespace X
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(543768, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/543768")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestAlias3(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestAlias3() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -224,13 +215,12 @@ namespace X
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(552000, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/552000")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestAlias4(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestAlias4() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -247,13 +237,12 @@ namespace N
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(542830, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/542830")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightThroughVar1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightThroughVar1() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -272,13 +261,12 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(542830, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/542830")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightThroughVar2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightThroughVar2() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -297,13 +285,12 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(542830, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/542830")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightThroughVar3(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightThroughVar3() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -324,13 +311,12 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(545648, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/545648")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestUsingAliasAndTypeWithSameName1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestUsingAliasAndTypeWithSameName1() As Task
             Dim input =
 <Workspace>
     <Project Language="C#" CommonReferences="true">
@@ -341,13 +327,12 @@ class X { }
         </Document>
     </Project>
 </Workspace>
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(545648, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/545648")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestUsingAliasAndTypeWithSameName2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestUsingAliasAndTypeWithSameName2() As Task
             Dim input =
 <Workspace>
     <Project Language="C#" CommonReferences="true">
@@ -358,13 +343,12 @@ class {|Definition:$$X|} { }
         </Document>
     </Project>
 </Workspace>
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(567959, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/567959")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestAccessor1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestAccessor1() As Task
             Dim input =
 <Workspace>
     <Project Language="C#" CommonReferences="true">
@@ -387,13 +371,12 @@ class C
     </Project>
 </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(567959, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/567959")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestAccessor2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestAccessor2() As Task
             Dim input =
 <Workspace>
     <Project Language="C#" CommonReferences="true">
@@ -416,12 +399,12 @@ class C
     </Project>
 </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory(Skip:="604466"), CombinatorialData>
         <WorkItem(604466, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/604466")>
-        Public Async Function TestThisShouldNotHighlightTypeName(testHost As TestHost) As Task
+        <WpfFact(Skip:="604466"), Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestThisShouldNotHighlightTypeName() As Task
             Dim input =
 <Workspace>
     <Project Language="C#" CommonReferences="true">
@@ -437,13 +420,12 @@ class C
     </Project>
 </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(531620, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/531620")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightDynamicallyBoundMethod(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightDynamicallyBoundMethod() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -469,13 +451,12 @@ class A
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
         <WorkItem(531624, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/531624")>
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightParameterizedPropertyParameter(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightParameterizedPropertyParameter() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -494,12 +475,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestInterpolatedString1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestInterpolatedString1() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -517,12 +497,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestInterpolatedString2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestInterpolatedString2() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -540,12 +519,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestWrittenReference(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestWrittenReference() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -562,12 +540,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestWrittenReference2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestWrittenReference2() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -584,12 +561,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestPatternMatchingType1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestPatternMatchingType1() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -609,12 +585,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestPatternMatchingType2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestPatternMatchingType2() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -634,12 +609,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestPatternMatchingTypeScoping1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestPatternMatchingTypeScoping1() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -666,12 +640,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestPatternMatchingTypeScoping2(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestPatternMatchingTypeScoping2() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -698,12 +671,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestRegexReference1(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestRegexReference1() As Task
 
             Dim input =
            <Workspace>
@@ -722,12 +694,11 @@ class C
                </Project>
            </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightParamAndCommentsCursorOnDefinition(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightParamAndCommentsCursorOnDefinition() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -750,12 +721,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightParamAndCommentsCursorOnReference(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightParamAndCommentsCursorOnReference() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -778,12 +748,11 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
 
-        <WpfTheory>
-        <CombinatorialData>
-        Public Async Function TestHighlightParamAndCommentsDefinitionNestedBetweenReferences(testHost As TestHost) As Task
+        <WpfFact, Trait(Traits.Feature, Traits.Features.ReferenceHighlighting)>
+        Public Async Function TestHighlightParamAndCommentsDefinitionNestedBetweenReferences() As Task
             Dim input =
             <Workspace>
                 <Project Language="C#" CommonReferences="true">
@@ -806,7 +775,7 @@ class C
                 </Project>
             </Workspace>
 
-            Await VerifyHighlightsAsync(input, testHost)
+            Await VerifyHighlightsAsync(input)
         End Function
     End Class
 End Namespace

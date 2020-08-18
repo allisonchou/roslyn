@@ -68,6 +68,5 @@ namespace Microsoft.CodeAnalysis.Editing
         internal abstract SyntaxNode InterpolatedStringExpression(SyntaxToken startToken, IEnumerable<SyntaxNode> content, SyntaxToken endToken);
         internal abstract SyntaxNode InterpolationAlignmentClause(SyntaxNode alignment);
         internal abstract SyntaxNode InterpolationFormatClause(string format);
-        internal abstract SyntaxNode TypeParameterList(IEnumerable<string> typeParameterNames);
     }
 }

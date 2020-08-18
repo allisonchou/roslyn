@@ -29,7 +29,8 @@ namespace Microsoft.CodeAnalysis.Editor.Interactive
         protected InteractiveCommandHandler(
             IContentTypeRegistryService contentTypeRegistryService,
             IEditorOptionsFactoryService editorOptionsFactoryService,
-            IEditorOperationsFactoryService editorOperationsFactoryService)
+            IEditorOperationsFactoryService editorOperationsFactoryService,
+            IWaitIndicator waitIndicator)
         {
             _contentTypeRegistryService = contentTypeRegistryService;
             _editorOptionsFactoryService = editorOptionsFactoryService;

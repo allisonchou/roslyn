@@ -253,7 +253,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal PropertySymbol GetLeastOverriddenProperty(NamedTypeSymbol accessingTypeOpt)
         {
-            accessingTypeOpt = accessingTypeOpt?.OriginalDefinition;
+            var accessingType = ((object)accessingTypeOpt == null ? this.ContainingType : accessingTypeOpt).OriginalDefinition;
+
             PropertySymbol p = this;
             while (p.IsOverride && !p.HidesBasePropertiesByName)
             {
@@ -279,8 +280,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 // See InternalsVisibleToAndStrongNameTests: IvtVirtualCall1, IvtVirtualCall2, IvtVirtual_ParamsAndDynamic.
                 PropertySymbol overridden = p.OverriddenProperty;
                 HashSet<DiagnosticInfo> useSiteDiagnostics = null;
-                if ((object)overridden == null ||
-                    (accessingTypeOpt is { } && !AccessCheck.IsSymbolAccessible(overridden, accessingTypeOpt, ref useSiteDiagnostics)))
+                if ((object)overridden == null || !AccessCheck.IsSymbolAccessible(overridden, accessingType, ref useSiteDiagnostics))
                 {
                     break;
                 }

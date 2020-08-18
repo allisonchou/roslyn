@@ -7,9 +7,9 @@
 extern alias InteractiveHost;
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.CodeAnalysis.CSharp.Scripting.Hosting;
 using Xunit;
 
@@ -17,27 +17,56 @@ namespace Microsoft.CodeAnalysis.UnitTests.Interactive
 {
     using InteractiveHost::Microsoft.CodeAnalysis.Interactive;
 
-    public sealed class StressTests
+    public sealed class StressTests : AbstractInteractiveHostTests
     {
-        [Fact]
-        public async Task TestKill()
+        private readonly List<InteractiveHost> _processes = new List<InteractiveHost>();
+        private readonly List<Thread> _threads = new List<Thread>();
+
+        public override void Dispose()
         {
-            for (int sleep = 0; sleep < 20; sleep++)
+            try
             {
-                await TestKillAfterAsync(sleep).ConfigureAwait(false);
+                foreach (var process in _processes)
+                {
+                    DisposeInteractiveHostProcess(process);
+                }
+
+                foreach (var thread in _threads)
+                {
+                    thread.Join();
+                }
+            }
+            finally
+            {
+                base.Dispose();
             }
         }
 
-        private async Task TestKillAfterAsync(int milliseconds)
+        private InteractiveHost CreateProcess()
         {
-            using var host = new InteractiveHost(typeof(CSharpReplServiceProvider), ".", millisecondsTimeout: 1, joinOutputWritingThreadsOnDisposal: true);
-            var options = InteractiveHostOptions.CreateFromDirectory(TestUtils.HostRootPath, initializationFileName: null, CultureInfo.InvariantCulture, InteractiveHostPlatform.Desktop64);
+            var p = new InteractiveHost(typeof(CSharpReplServiceProvider), ".", millisecondsTimeout: 1, joinOutputWritingThreadsOnDisposal: true);
+            _processes.Add(p);
+            return p;
+        }
 
-            host.InteractiveHostProcessCreated += new Action<Process>(proc =>
+        [Fact]
+        public void TestKill()
+        {
+            for (int sleep = 0; sleep < 20; sleep++)
             {
-                _ = Task.Run(async () =>
+                TestKillAfter(sleep);
+            }
+        }
+
+        private void TestKillAfter(int milliseconds)
+        {
+            var p = CreateProcess();
+
+            p.InteractiveHostProcessCreated += new Action<Process>(proc =>
+            {
+                var t = new Thread(() =>
                 {
-                    await Task.Delay(milliseconds).ConfigureAwait(false);
+                    Thread.Sleep(milliseconds);
 
                     try
                     {
@@ -47,13 +76,18 @@ namespace Microsoft.CodeAnalysis.UnitTests.Interactive
                     {
                     }
                 });
+
+                t.Name = "Test Thread";
+                _threads.Add(t);
+                t.Start();
             });
 
-            await host.ResetAsync(options).ConfigureAwait(false);
+            p.ResetAsync(new InteractiveHostOptions(GetInteractiveHostDirectory())).Wait();
 
             for (int j = 0; j < 10; j++)
             {
-                await host.ExecuteAsync("1+1").ConfigureAwait(false);
+                var rs = p.ExecuteAsync("1+1");
+                rs.Wait(CancellationToken.None);
             }
         }
     }

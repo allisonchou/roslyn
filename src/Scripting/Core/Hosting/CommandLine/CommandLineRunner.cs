@@ -172,9 +172,11 @@ namespace Microsoft.CodeAnalysis.Scripting.Hosting
 
         internal static MetadataReferenceResolver GetMetadataReferenceResolver(CommandLineArguments arguments, TouchedFileLogger loggerOpt)
         {
-            return RuntimeMetadataReferenceResolver.CreateCurrentPlatformResolver(
-                arguments.ReferencePaths,
-                arguments.BaseDirectory,
+            return new RuntimeMetadataReferenceResolver(
+                pathResolver: new RelativePathResolver(arguments.ReferencePaths, arguments.BaseDirectory),
+                packageResolver: null,
+                gacFileResolver: GacFileResolver.IsAvailable ? new GacFileResolver(preferredCulture: CultureInfo.CurrentCulture) : null,
+                useCoreResolver: !GacFileResolver.IsAvailable,
                 fileReferenceProvider: (path, properties) =>
                 {
                     loggerOpt?.AddRead(path);

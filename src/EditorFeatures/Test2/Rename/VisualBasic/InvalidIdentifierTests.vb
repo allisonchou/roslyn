@@ -2,7 +2,6 @@
 ' The .NET Foundation licenses this file to you under the MIT license.
 ' See the LICENSE file in the project root for more information.
 
-Imports Microsoft.CodeAnalysis.Remote.Testing
 Imports Microsoft.CodeAnalysis.Rename.ConflictEngine
 
 Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.VisualBasic
@@ -16,7 +15,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.VisualBasic
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenamingToInvalidIdentifier(host As RenameTestHost)
+        Public Sub RenamingToInvalidIdentifier(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="Visual Basic" CommonReferences="true">
@@ -35,7 +34,7 @@ End Class
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenamingToInvalidIdentifier2(host As RenameTestHost)
+        Public Sub RenamingToInvalidIdentifier2(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="Visual Basic" CommonReferences="true">
@@ -54,7 +53,7 @@ End Class
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename), WorkItem(545164, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/545164")>
-        Public Sub RenamingToUnderscoreAttribute(host As RenameTestHost)
+        Public Sub RenamingToUnderscoreAttribute(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="Visual Basic" CommonReferences="true">

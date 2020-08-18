@@ -3,25 +3,28 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Editor.UnitTests;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Classification;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
-using Microsoft.CodeAnalysis.Remote.Testing;
+using Microsoft.CodeAnalysis.Test.Utilities.RemoteHost;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
 {
     public abstract class AbstractCSharpClassifierTests : AbstractClassifierTests
     {
-        protected static TestWorkspace CreateWorkspace(string code, ParseOptions options, TestHost testHost)
+        protected TestWorkspace CreateWorkspace(string code, TextSpan span, ParseOptions options, bool outOfProcess)
         {
-            var composition = EditorTestCompositions.EditorFeatures.WithTestHostParts(testHost);
-            return TestWorkspace.CreateCSharp(code, parseOptions: options, composition: composition);
+            var workspace = TestWorkspace.CreateCSharp(code, parseOptions: options);
+            workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(
+                workspace.Options.WithChangedOption(RemoteHostOptions.RemoteHostTest, outOfProcess)));
+
+            return workspace;
         }
 
-        protected override async Task DefaultTestAsync(string code, string allCode, TestHost testHost, FormattedClassification[] expected)
+        protected override async Task DefaultTestAsync(string code, string allCode, bool outOfProcess, FormattedClassification[] expected)
         {
-            await TestAsync(code, allCode, testHost, parseOptions: null, expected);
-            await TestAsync(code, allCode, testHost, parseOptions: Options.Script, expected);
+            await TestAsync(code, allCode, parseOptions: null, outOfProcess, expected);
+            await TestAsync(code, allCode, parseOptions: Options.Script, outOfProcess, expected);
         }
 
         protected override string WrapInClass(string className, string code) =>

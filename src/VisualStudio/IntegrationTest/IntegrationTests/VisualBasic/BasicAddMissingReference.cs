@@ -113,8 +113,8 @@ End Module
 
         protected override string LanguageName => LanguageNames.VisualBasic;
 
-        public BasicAddMissingReference(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory)
+        public BasicAddMissingReference(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper)
         {
         }
 

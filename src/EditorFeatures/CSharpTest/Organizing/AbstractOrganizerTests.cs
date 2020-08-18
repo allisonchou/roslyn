@@ -16,18 +16,27 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Organizing
     [UseExportProvider]
     public abstract class AbstractOrganizerTests
     {
-        protected static async Task CheckAsync(string initial, string final)
+        protected async Task CheckAsync(string initial, string final)
         {
-            await CheckAsync(initial, final, options: null);
-            await CheckAsync(initial, final, Options.Script);
+            await CheckResultAsync(initial, final);
+            await CheckResultAsync(initial, final, Options.Script);
         }
 
-        protected static async Task CheckAsync(string initial, string final, CSharpParseOptions options)
+        protected async Task CheckAsync(string initial, string final, bool specialCaseSystem)
         {
-            using var workspace = TestWorkspace.CreateCSharp(initial, options);
+            await CheckResultAsync(initial, final, specialCaseSystem);
+            await CheckResultAsync(initial, final, specialCaseSystem, Options.Script);
+        }
+
+        protected async Task CheckResultAsync(string initial, string final, bool specialCaseSystem, CSharpParseOptions options = null)
+        {
+            using var workspace = TestWorkspace.CreateCSharp(initial);
             var document = workspace.CurrentSolution.GetDocument(workspace.Documents.First().Id);
             var newRoot = await (await OrganizingService.OrganizeAsync(document)).GetSyntaxRootAsync();
             Assert.Equal(final.NormalizeLineEndings(), newRoot.ToFullString());
         }
+
+        protected Task CheckResultAsync(string initial, string final, CSharpParseOptions options = null)
+            => CheckResultAsync(initial, final, false, options);
     }
 }

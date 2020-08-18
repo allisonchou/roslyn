@@ -39,6 +39,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel.Colle
 
         public int Item(object index, out EnvDTE.CodeElement element)
         {
+            var elementIndex = -1;
+
             if (index is string elementName)
             {
                 if (TryGetItemByName(elementName, out element))
@@ -48,7 +50,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel.Colle
             }
             else if (index is int i)
             {
-                var elementIndex = i - 1;
+                elementIndex = i - 1;
                 if (elementIndex >= 0 && TryGetItemByIndex(elementIndex, out element))
                 {
                     return VSConstants.S_OK;

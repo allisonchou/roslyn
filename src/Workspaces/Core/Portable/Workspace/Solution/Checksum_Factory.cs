@@ -22,28 +22,27 @@ namespace Microsoft.CodeAnalysis
         private static readonly ObjectPool<IncrementalHash> s_incrementalHashPool =
             new ObjectPool<IncrementalHash>(() => IncrementalHash.CreateHash(HashAlgorithmName.SHA256), size: 20);
 
-        public static Checksum Create(IEnumerable<string> values)
+        public static Checksum Create(string val)
         {
             using var pooledHash = s_incrementalHashPool.GetPooledObject();
             using var pooledBuffer = SharedPools.ByteArray.GetPooledObject();
             var hash = pooledHash.Object;
 
-            foreach (var value in values)
+            var stringBytes = MemoryMarshal.AsBytes(val.AsSpan());
+            Debug.Assert(stringBytes.Length == val.Length * 2);
+            var buffer = pooledBuffer.Object;
+
+            var index = 0;
+            while (index < stringBytes.Length)
             {
-                AppendData(hash, pooledBuffer.Object, value);
-                AppendData(hash, pooledBuffer.Object, "\0");
+                var remaining = stringBytes.Length - index;
+                var toCopy = Math.Min(remaining, buffer.Length);
+
+                stringBytes.Slice(index, toCopy).CopyTo(buffer);
+                hash.AppendData(buffer, 0, toCopy);
+
+                index += toCopy;
             }
-
-            return From(hash.GetHashAndReset());
-        }
-
-        public static Checksum Create(string value)
-        {
-            using var pooledHash = s_incrementalHashPool.GetPooledObject();
-            using var pooledBuffer = SharedPools.ByteArray.GetPooledObject();
-            var hash = pooledHash.Object;
-
-            AppendData(hash, pooledBuffer.Object, value);
 
             return From(hash.GetHashAndReset());
         }
@@ -145,24 +144,6 @@ namespace Microsoft.CodeAnalysis
 
             stream.Position = 0;
             return Create(stream);
-        }
-
-        private static void AppendData(IncrementalHash hash, byte[] buffer, string value)
-        {
-            var stringBytes = MemoryMarshal.AsBytes(value.AsSpan());
-            Debug.Assert(stringBytes.Length == value.Length * 2);
-
-            var index = 0;
-            while (index < stringBytes.Length)
-            {
-                var remaining = stringBytes.Length - index;
-                var toCopy = Math.Min(remaining, buffer.Length);
-
-                stringBytes.Slice(index, toCopy).CopyTo(buffer);
-                hash.AppendData(buffer, 0, toCopy);
-
-                index += toCopy;
-            }
         }
     }
 }

@@ -9,9 +9,9 @@ Imports Microsoft.VisualStudio.LanguageServices.Implementation.Progression
 Imports Roslyn.Test.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
-    <UseExportProvider, Trait(Traits.Feature, Traits.Features.Progression)>
+    <[UseExportProvider]>
     Public Class InheritsGraphQueryTests
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function BaseTypesOfSimpleType() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -44,7 +44,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
         End Function
 
         <WorkItem(546199, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/546199")>
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestErrorBaseType() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -75,7 +75,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestSolutionWithMultipleProjects() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>

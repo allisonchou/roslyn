@@ -13,12 +13,12 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
     [Collection(nameof(SharedIntegrationHostFixture))]
     public class CSharpInteractiveCommands : AbstractInteractiveWindowTest
     {
-        public CSharpInteractiveCommands(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory)
+        public CSharpInteractiveCommands(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper)
         {
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/18779")]
         public void VerifyPreviousAndNextHistory()
         {
             VisualStudio.InteractiveWindow.SubmitText("1 + 2");
@@ -40,7 +40,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
             VisualStudio.InteractiveWindow.WaitForLastReplOutput("\"1\"");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyMaybeExecuteInput()
         {
             VisualStudio.InteractiveWindow.InsertCode("2 + 3");
@@ -48,7 +48,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
             VisualStudio.InteractiveWindow.WaitForLastReplOutput("5");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyNewLineAndIndent()
         {
             VisualStudio.InteractiveWindow.InsertCode("3 + ");
@@ -75,7 +75,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
             VisualStudio.InteractiveWindow.Verify.ReplPromptConsistency("<![CDATA[1 + 2 + 3]]>", "6");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyCancelInput()
         {
             VisualStudio.InteractiveWindow.InsertCode("1 + 4");
@@ -84,7 +84,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
             VisualStudio.InteractiveWindow.Verify.LastReplInput(string.Empty);
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyUndoAndRedo()
         {
             VisualStudio.InteractiveWindow.ClearReplText();
@@ -97,7 +97,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
             VisualStudio.InteractiveWindow.WaitForLastReplOutput("6");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void CutDeletePasteSelectAll()
         {
             ClearInteractiveWindow();
@@ -134,7 +134,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
         //     of these tests and convert them to unit-tests.
         //     -->
         //<!-- TODO(https://github.com/dotnet/roslyn/issues/4235)
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyReturnIndentCurrentLine()
         {
             VisualStudio.InteractiveWindow.ClearScreen();

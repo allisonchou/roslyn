@@ -145,7 +145,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.EndConstructGeneration
             End Using
         End Sub
 
-        Private Shared Function GetSpanToCleanup(statement As StatementSyntax) As TextSpan
+        Private Function GetSpanToCleanup(statement As StatementSyntax) As TextSpan
             Dim firstToken = statement.GetFirstToken()
             Dim lastToken = statement.GetLastToken()
 

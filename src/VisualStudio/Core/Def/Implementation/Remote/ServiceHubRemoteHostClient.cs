@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
                 var uiCultureLCID = CultureInfo.CurrentUICulture.LCID;
                 var cultureLCID = CultureInfo.CurrentCulture.LCID;
 
-                var success = false;
+                bool success = false;
                 try
                 {
                     // initialize the remote service

@@ -75,7 +75,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <summary>
         /// Generate implementation-specific state machine initialization for the kickoff method body.
         /// </summary>
-        protected abstract BoundStatement GenerateStateMachineCreation(LocalSymbol stateMachineVariable, NamedTypeSymbol frameType, IReadOnlyDictionary<Symbol, CapturedSymbolReplacement> proxies);
+        protected abstract BoundStatement GenerateStateMachineCreation(LocalSymbol stateMachineVariable, NamedTypeSymbol frameType);
 
         /// <summary>
         /// Generate implementation-specific state machine member method implementations.
@@ -283,17 +283,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             // plus code to initialize all of the parameter proxies result.proxy
             var proxies = PreserveInitialParameterValuesAndThreadId ? initialParameters : nonReusableLocalProxies;
 
-            bodyBuilder.Add(GenerateStateMachineCreation(stateMachineVariable, frameType, proxies));
-
-            return F.Block(
-                ImmutableArray.Create(stateMachineVariable),
-                bodyBuilder.ToImmutableAndFree());
-        }
-
-        protected BoundStatement GenerateParameterStorage(LocalSymbol stateMachineVariable, IReadOnlyDictionary<Symbol, CapturedSymbolReplacement> proxies)
-        {
-            var bodyBuilder = ArrayBuilder<BoundStatement>.GetInstance();
-
             // starting with the "this" proxy
             if (!method.IsStatic)
             {
@@ -316,7 +305,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            return F.Block(bodyBuilder.ToImmutableAndFree());
+            bodyBuilder.Add(GenerateStateMachineCreation(stateMachineVariable, frameType));
+            return F.Block(
+                ImmutableArray.Create(stateMachineVariable),
+                bodyBuilder.ToImmutableAndFree());
         }
 
         protected SynthesizedImplementationMethod OpenMethodImplementation(

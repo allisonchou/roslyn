@@ -5,8 +5,11 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis.Editor.UnitTests;
+using Microsoft.CodeAnalysis.Editor.UnitTests.Utilities;
+using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.VisualStudio.Composition;
 using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Interactive
 {
@@ -15,10 +18,26 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Interactive
         internal readonly IInteractiveWindow Window;
         internal readonly TestInteractiveEvaluator Evaluator;
 
-        internal InteractiveWindowTestHost(IInteractiveWindowFactoryService interactiveWindowFactory)
+        private readonly System.ComponentModel.Composition.Hosting.ExportProvider _exportProvider;
+
+        internal static readonly IExportProviderFactory ExportProviderFactory = ExportProviderCache.GetOrCreateExportProviderFactory(
+            ExportProviderCache.GetOrCreateAssemblyCatalog(
+                new[]
+                {
+                    typeof(TestWaitIndicator).Assembly,
+                    typeof(TestInteractiveEvaluator).Assembly,
+                    typeof(IInteractiveWindow).Assembly
+                })
+                .WithParts(TestExportProvider.GetCSharpAndVisualBasicAssemblyCatalog())
+                .WithParts(MinimalTestExportProvider.GetEditorAssemblyCatalog()));
+
+        internal InteractiveWindowTestHost(ExportProvider exportProvider)
         {
+            _exportProvider = exportProvider.AsExportProvider();
+
+            var contentTypeRegistryService = _exportProvider.GetExport<IContentTypeRegistryService>().Value;
             Evaluator = new TestInteractiveEvaluator();
-            Window = interactiveWindowFactory.CreateWindow(Evaluator);
+            Window = _exportProvider.GetExport<IInteractiveWindowFactoryService>().Value.CreateWindow(Evaluator);
             Window.InitializeAsync().Wait();
         }
 

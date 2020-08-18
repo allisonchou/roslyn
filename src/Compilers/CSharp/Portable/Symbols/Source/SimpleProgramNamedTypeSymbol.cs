@@ -23,12 +23,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// </summary>
     internal sealed class SimpleProgramNamedTypeSymbol : SourceMemberContainerTypeSymbol
     {
+        internal const string UnspeakableName = "$Program";
+
         internal SimpleProgramNamedTypeSymbol(NamespaceSymbol globalNamespace, MergedTypeDeclaration declaration, DiagnosticBag diagnostics)
             : base(globalNamespace, declaration, diagnostics)
         {
             Debug.Assert(globalNamespace.IsGlobalNamespace);
             Debug.Assert(declaration.Kind == DeclarationKind.SimpleProgram);
-            Debug.Assert(declaration.Name == WellKnownMemberNames.TopLevelStatementsEntryPointTypeName);
+            Debug.Assert(declaration.Name == UnspeakableName);
 
             state.NotePartComplete(CompletionPart.EnumUnderlyingType); // No work to do for this.
         }
@@ -40,7 +42,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private static SimpleProgramNamedTypeSymbol? GetSimpleProgramNamedTypeSymbol(CSharpCompilation compilation)
         {
-            return compilation.SourceModule.GlobalNamespace.GetTypeMembers(WellKnownMemberNames.TopLevelStatementsEntryPointTypeName).OfType<SimpleProgramNamedTypeSymbol>().SingleOrDefault();
+            return compilation.SourceModule.GlobalNamespace.GetTypeMembers(UnspeakableName).OfType<SimpleProgramNamedTypeSymbol>().SingleOrDefault();
         }
 
         internal static SynthesizedSimpleProgramEntryPointSymbol? GetSimpleProgramEntryPoint(CSharpCompilation compilation, CompilationUnitSyntax compilationUnit, bool fallbackToMainEntryPoint)

@@ -28,15 +28,10 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions
                 initialMarkup, expectedMarkup,
                 expectedContainers, expectedDocumentName,
                 WithRegularOptions(parameters));
-
-            // VB script is not supported:
-            if (GetLanguage() == LanguageNames.CSharp)
-            {
-                await TestAddDocument(
-                    initialMarkup, expectedMarkup,
-                    expectedContainers, expectedDocumentName,
-                    WithScriptOptions(parameters));
-            }
+            await TestAddDocument(
+                initialMarkup, expectedMarkup,
+                expectedContainers, expectedDocumentName,
+                WithScriptOptions(parameters));
         }
 
         protected async Task<Tuple<Solution, Solution>> TestAddDocumentAsync(
@@ -86,7 +81,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions
                 expectedDocumentName: expectedDocumentName);
         }
 
-        protected static async Task<Tuple<Solution, Solution>> TestAddDocument(
+        protected async Task<Tuple<Solution, Solution>> TestAddDocument(
             TestWorkspace workspace,
             string expected,
             ImmutableArray<CodeActionOperation> operations,

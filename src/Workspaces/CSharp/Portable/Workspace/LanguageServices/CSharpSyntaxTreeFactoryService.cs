@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Text;
@@ -41,16 +42,20 @@ namespace Microsoft.CodeAnalysis.CSharp
             public override ParseOptions GetDefaultParseOptionsWithLatestLanguageVersion()
                 => _parseOptionWithLatestLanguageVersion;
 
-            public override SyntaxTree CreateSyntaxTree(string filePath, ParseOptions options, Encoding encoding, SyntaxNode root)
+            public override SyntaxTree CreateSyntaxTree(string filePath, ParseOptions options, Encoding encoding, SyntaxNode root, AnalyzerConfigOptionsResult analyzerConfigOptionsResult)
             {
                 options ??= GetDefaultParseOptions();
-                return CSharpSyntaxTree.Create((CSharpSyntaxNode)root, (CSharpParseOptions)options, filePath, encoding);
+                var isUserConfiguredGeneratedCode = GeneratedCodeUtilities.GetIsGeneratedCodeFromOptions(analyzerConfigOptionsResult.AnalyzerOptions);
+                return CSharpSyntaxTree.Create((CSharpSyntaxNode)root, (CSharpParseOptions)options, filePath, encoding, analyzerConfigOptionsResult.TreeOptions, isUserConfiguredGeneratedCode);
             }
 
-            public override SyntaxTree ParseSyntaxTree(string filePath, ParseOptions options, SourceText text, CancellationToken cancellationToken)
+            public override SyntaxTree ParseSyntaxTree(string filePath, ParseOptions options, SourceText text, AnalyzerConfigOptionsResult? analyzerConfigOptionsResult, CancellationToken cancellationToken)
             {
                 options ??= GetDefaultParseOptions();
-                return SyntaxFactory.ParseSyntaxTree(text, options, filePath, cancellationToken: cancellationToken);
+                var isUserConfiguredGeneratedCode = analyzerConfigOptionsResult.HasValue
+                    ? GeneratedCodeUtilities.GetIsGeneratedCodeFromOptions(analyzerConfigOptionsResult.Value.AnalyzerOptions)
+                    : null;
+                return SyntaxFactory.ParseSyntaxTree(text, options, filePath, analyzerConfigOptionsResult?.TreeOptions, isUserConfiguredGeneratedCode, cancellationToken: cancellationToken);
             }
 
             public override SyntaxNode DeserializeNodeFrom(Stream stream, CancellationToken cancellationToken)
@@ -65,7 +70,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 ParseOptions options,
                 ValueSource<TextAndVersion> text,
                 Encoding encoding,
-                SyntaxNode root)
+                SyntaxNode root,
+                ImmutableDictionary<string, ReportDiagnostic> treeDiagnosticReportingOptionsOpt)
             {
                 System.Diagnostics.Debug.Assert(CanCreateRecoverableTree(root));
                 return RecoverableSyntaxTree.CreateRecoverableTree(
@@ -75,7 +81,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     options ?? GetDefaultParseOptions(),
                     text,
                     encoding,
-                    (CompilationUnitSyntax)root);
+                    (CompilationUnitSyntax)root,
+                    treeDiagnosticReportingOptionsOpt);
             }
         }
     }

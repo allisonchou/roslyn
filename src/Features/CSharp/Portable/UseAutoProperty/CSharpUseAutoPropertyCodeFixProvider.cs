@@ -27,9 +27,6 @@ namespace Microsoft.CodeAnalysis.CSharp.UseAutoProperty
         {
         }
 
-        protected override PropertyDeclarationSyntax GetPropertyDeclaration(SyntaxNode node)
-            => (PropertyDeclarationSyntax)node;
-
         protected override SyntaxNode GetNodeToRemove(VariableDeclaratorSyntax declarator)
         {
             var fieldDeclaration = (FieldDeclarationSyntax)declarator.Parent.Parent;

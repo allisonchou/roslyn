@@ -77,8 +77,7 @@ namespace Microsoft.CodeAnalysis.GenerateOverrides
                     members,
                     new CodeGenerationOptions(
                         afterThisLocation: afterThisLocation,
-                        contextLocation: syntaxTree.GetLocation(_textSpan),
-                        options: await _document.GetOptionsAsync(cancellationToken).ConfigureAwait(false)),
+                        contextLocation: syntaxTree.GetLocation(_textSpan)),
                     cancellationToken).ConfigureAwait(false);
 
                 return SpecializedCollections.SingletonEnumerable(

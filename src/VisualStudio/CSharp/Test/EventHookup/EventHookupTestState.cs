@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Extensions;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.CodeAnalysis.Test.Utilities;
+using Microsoft.VisualStudio.Composition;
 using Roslyn.Utilities;
 using Xunit;
 
@@ -19,16 +20,11 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.EventHookup
 {
     internal sealed class EventHookupTestState : AbstractCommandHandlerTestState
     {
-        // TODO: It seems that we can move EventHookupSessionManager to EditorFeatures (https://github.com/dotnet/roslyn/issues/46280)
-        private static readonly TestComposition s_composition = EditorTestCompositions.EditorFeaturesWpf.AddParts(
-            typeof(EventHookupCommandHandler),
-            typeof(EventHookupSessionManager));
-
         private readonly EventHookupCommandHandler _commandHandler;
         private readonly Mutex _testSessionHookupMutex;
 
         public EventHookupTestState(XElement workspaceElement, OptionsCollection options)
-            : base(workspaceElement, s_composition)
+            : base(workspaceElement, GetExtraParts())
         {
             _commandHandler = new EventHookupCommandHandler(
                 Workspace.ExportProvider.GetExportedValue<IThreadingContext>(),
@@ -39,6 +35,11 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.EventHookup
             _testSessionHookupMutex = new Mutex(false);
             _commandHandler.TESTSessionHookupMutex = _testSessionHookupMutex;
             Workspace.ApplyOptions(options);
+        }
+
+        private static ComposableCatalog GetExtraParts()
+        {
+            return ExportProviderCache.CreateTypeCatalog(new[] { typeof(EventHookupCommandHandler), typeof(EventHookupSessionManager) });
         }
 
         public static EventHookupTestState CreateTestState(string markup, OptionsCollection options = null)

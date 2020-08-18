@@ -30,8 +30,6 @@ namespace Microsoft.CodeAnalysis.Completion.Providers
             /// </summary>
             public readonly MultiDictionary<string, DeclaredSymbolInfo> ReceiverTypeNameToExtensionMethodMap { get; }
 
-            public bool ContainsExtensionMethod => !ReceiverTypeNameToExtensionMethodMap.IsEmpty;
-
             private CacheEntry(
                 Checksum checksum,
                 string language,

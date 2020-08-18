@@ -3,14 +3,13 @@
 ' See the LICENSE file in the project root for more information.
 
 Imports System.Threading
-Imports Microsoft.CodeAnalysis.Editor.UnitTests
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 
 Namespace Microsoft.CodeAnalysis.Editor.Implementation.Compilation.UnitTests
 
     <[UseExportProvider]>
     Public Class CompilationTests
-        Private Shared Function GetProject(snapshot As Solution, assemblyName As String) As Project
+        Private Function GetProject(snapshot As Solution, assemblyName As String) As Project
             Return snapshot.Projects.Single(Function(p) p.AssemblyName = assemblyName)
         End Function
 
@@ -26,11 +25,7 @@ Namespace Microsoft.CodeAnalysis.Editor.Implementation.Compilation.UnitTests
     </Project>
 </Workspace>
 
-            Dim composition = EditorTestCompositions.EditorFeatures.AddParts(
-                GetType(NoCompilationContentTypeLanguageService),
-                GetType(NoCompilationContentTypeDefinitions))
-
-            Using workspace = TestWorkspace.Create(workspaceDefinition, composition:=composition)
+            Using workspace = TestWorkspace.Create(workspaceDefinition)
                 Dim project = GetProject(workspace.CurrentSolution, "TestAssembly")
                 Assert.Null(Await project.GetCompilationAsync())
 

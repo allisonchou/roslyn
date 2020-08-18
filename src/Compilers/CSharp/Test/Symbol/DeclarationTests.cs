@@ -425,7 +425,6 @@ public class B
                 get { return _underlyingTree.Length; }
             }
 
-            [Obsolete]
             public override ImmutableDictionary<string, ReportDiagnostic> DiagnosticOptions => throw new NotImplementedException();
 
             public override SyntaxReference GetReference(SyntaxNode node)
@@ -444,6 +443,11 @@ public class B
             }
 
             public override SyntaxTree WithFilePath(string path)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override SyntaxTree WithDiagnosticOptions(ImmutableDictionary<string, ReportDiagnostic> options)
             {
                 throw new NotImplementedException();
             }

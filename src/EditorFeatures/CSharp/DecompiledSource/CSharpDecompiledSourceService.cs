@@ -97,7 +97,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource
             return formattedDoc;
         }
 
-        private static Document PerformDecompilation(Document document, string fullName, Compilation compilation, string assemblyLocation)
+        private Document PerformDecompilation(Document document, string fullName, Compilation compilation, string assemblyLocation)
         {
             // Load the assembly.
             var file = new PEFile(assemblyLocation, PEStreamOptions.PrefetchEntireImage);
@@ -122,7 +122,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource
             return document.WithText(SourceText.From(text));
         }
 
-        private static async Task<Document> AddAssemblyInfoRegionAsync(Document document, ISymbol symbol, CancellationToken cancellationToken)
+        private async Task<Document> AddAssemblyInfoRegionAsync(Document document, ISymbol symbol, CancellationToken cancellationToken)
         {
             var assemblyInfo = MetadataAsSourceHelpers.GetAssemblyInfo(symbol.ContainingAssembly);
             var compilation = await document.Project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
@@ -148,7 +148,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource
             return document.WithSyntaxRoot(newRoot);
         }
 
-        private static async Task<Document> ConvertDocCommentsToRegularCommentsAsync(Document document, IDocumentationCommentFormattingService docCommentFormattingService, CancellationToken cancellationToken)
+        private async Task<Document> ConvertDocCommentsToRegularCommentsAsync(Document document, IDocumentationCommentFormattingService docCommentFormattingService, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
@@ -157,7 +157,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource
             return document.WithSyntaxRoot(newSyntaxRoot);
         }
 
-        private static string GetFullReflectionName(INamedTypeSymbol containingType)
+        private string GetFullReflectionName(INamedTypeSymbol containingType)
         {
             var stack = new Stack<string>();
             stack.Push(containingType.MetadataName);

@@ -2,87 +2,49 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CodeStyle;
+using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle;
-using Microsoft.CodeAnalysis.CSharp.Testing;
-using Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions;
+using Microsoft.CodeAnalysis.CSharp.Test.Utilities;
+using Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.CodeActions;
+using Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.CodeRefactorings;
 using Microsoft.CodeAnalysis.GenerateEqualsAndGetHashCodeFromMembers;
 using Microsoft.CodeAnalysis.PickMembers;
-using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Test.Utilities;
-using Microsoft.CodeAnalysis.Testing;
 using Roslyn.Test.Utilities;
 using Xunit;
-using VerifyCS = Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions.CSharpCodeRefactoringVerifier<
-    Microsoft.CodeAnalysis.GenerateEqualsAndGetHashCodeFromMembers.GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider>;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.GenerateEqualsAndGetHashCodeFromMembers
 {
-    [UseExportProvider]
-    public class GenerateEqualsAndGetHashCodeFromMembersTests
+    using static GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider;
+
+    public class GenerateEqualsAndGetHashCodeFromMembersTests : AbstractCSharpCodeActionTest
     {
-        private class TestWithDialog : VerifyCS.Test
-        {
-            private static readonly TestComposition s_composition =
-                FeaturesTestCompositions.Features.AddParts(typeof(TestPickMembersService));
+        private static readonly TestParameters CSharp6 =
+            new TestParameters(parseOptions: TestOptions.Regular.WithLanguageVersion(LanguageVersion.CSharp6));
 
-            public ImmutableArray<string> MemberNames;
-            public Action<ImmutableArray<PickMembersOption>> OptionsCallback;
+        private static readonly TestParameters CSharpLatest =
+            new TestParameters(parseOptions: TestOptions.Regular);
 
-            public override AdhocWorkspace CreateWorkspace()
-            {
-                // If we're a dialog test, then mixin our mock and initialize its values to the ones the test asked for.
-                var workspace = new AdhocWorkspace(s_composition.GetHostServices());
+        protected override CodeRefactoringProvider CreateCodeRefactoringProvider(Workspace workspace, TestParameters parameters)
+            => new GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider((IPickMembersService)parameters.fixProviderData);
 
-                var service = (TestPickMembersService)workspace.Services.GetService<IPickMembersService>();
-                service.MemberNames = MemberNames;
-                service.OptionsCallback = OptionsCallback;
-
-                return workspace;
-            }
-        }
-
-        private static OptionsCollection PreferImplicitTypeWithInfo()
-            => new OptionsCollection(LanguageNames.CSharp)
-            {
-                { CSharpCodeStyleOptions.VarElsewhere, true, NotificationOption2.Suggestion },
-                { CSharpCodeStyleOptions.VarWhenTypeIsApparent, true, NotificationOption2.Suggestion },
-                { CSharpCodeStyleOptions.VarForBuiltInTypes, true, NotificationOption2.Suggestion },
-            };
-
-        private static OptionsCollection PreferExplicitTypeWithInfo()
-            => new OptionsCollection(LanguageNames.CSharp)
-            {
-                { CSharpCodeStyleOptions.VarElsewhere, false, NotificationOption2.Suggestion },
-                { CSharpCodeStyleOptions.VarWhenTypeIsApparent, false, NotificationOption2.Suggestion },
-                { CSharpCodeStyleOptions.VarForBuiltInTypes, false, NotificationOption2.Suggestion },
-            };
-
-        internal static void EnableOption(ImmutableArray<PickMembersOption> options, string id)
-        {
-            var option = options.FirstOrDefault(o => o.Id == id);
-            if (option != null)
-            {
-                option.Value = true;
-            }
-        }
+        private TestParameters CSharp6Implicit => CSharp6.WithOptions(this.PreferImplicitTypeWithInfo());
+        private TestParameters CSharp6Explicit => CSharp6.WithOptions(this.PreferExplicitTypeWithInfo());
+        private TestParameters CSharpLatestImplicit => CSharpLatest.WithOptions(this.PreferImplicitTypeWithInfo());
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsSingleField()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
 {
     [|int a;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -95,31 +57,21 @@ class Program
         return program != null &&
                a == program.a;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [WorkItem(39916, "https://github.com/dotnet/roslyn/issues/39916")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsSingleField_PreferExplicitType()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
 {
     [|int a;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -132,39 +84,29 @@ class Program
         return program != null &&
                a == program.a;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferExplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Explicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestReferenceIEquatable()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"
 using System;
 using System.Collections.Generic;
 
-class S : {|CS0535:IEquatable<S>|} { }
+class S : IEquatable<S> { }
 
 class Program
 {
     [|S a;|]
-}";
-            var fixedCode =
+}",
 @"
 using System;
 using System.Collections.Generic;
 
-class S : {|CS0535:IEquatable<S>|} { }
+class S : IEquatable<S> { }
 
 class Program
 {
@@ -176,41 +118,31 @@ class Program
         return program != null &&
                EqualityComparer<S>.Default.Equals(a, program.a);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestNullableReferenceIEquatable()
         {
-            var code =
+            await TestInRegularAndScriptAsync(
 @"#nullable enable
 
 using System;
 using System.Collections.Generic;
 
-class S : {|CS0535:IEquatable<S>|} { }
+class S : IEquatable<S> { }
 
 class Program
 {
     [|S? a;|]
-}";
-            var fixedCode =
+}",
 @"#nullable enable
 
 using System;
 using System.Collections.Generic;
 
-class S : {|CS0535:IEquatable<S>|} { }
+class S : IEquatable<S> { }
 
 class Program
 {
@@ -226,39 +158,28 @@ class Program
     {
         return -1757793268 + EqualityComparer<S?>.Default.GetHashCode(a);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}", index: 1, options: this.PreferImplicitTypeWithInfo());
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestValueIEquatable()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"
 using System;
 using System.Collections.Generic;
 
-struct S : {|CS0535:IEquatable<S>|} { }
+struct S : IEquatable<S> { }
 
 class Program
 {
     [|S a;|]
-}";
-            var fixedCode =
+}",
 @"
 using System;
 using System.Collections.Generic;
 
-struct S : {|CS0535:IEquatable<S>|} { }
+struct S : IEquatable<S> { }
 
 class Program
 {
@@ -270,30 +191,20 @@ class Program
         return program != null &&
                a.Equals(program.a);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsLongName()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class ReallyLongName
 {
     [|int a;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class ReallyLongName
@@ -306,30 +217,20 @@ class ReallyLongName
         return name != null &&
                a == name.a;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsKeywordName()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class ReallyLongLong
 {
     [|long a;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class ReallyLongLong
@@ -342,23 +243,14 @@ class ReallyLongLong
         return @long != null &&
                a == @long.a;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsProperty()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class ReallyLongName
@@ -366,8 +258,7 @@ class ReallyLongName
     [|int a;
 
     string B { get; }|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class ReallyLongName
@@ -383,23 +274,14 @@ class ReallyLongName
                a == name.a &&
                B == name.B;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsBaseTypeWithNoEquals()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"class Base
 {
 }
@@ -407,8 +289,7 @@ class ReallyLongName
 class Program : Base
 {
     [|int i;|]
-}";
-            var fixedCode =
+}",
 @"class Base
 {
 }
@@ -423,30 +304,20 @@ class Program : Base
         return program != null &&
                i == program.i;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsBaseWithOverriddenEquals()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Base
 {
     public override bool Equals(object o)
     {
-        return false;
     }
 }
 
@@ -455,15 +326,13 @@ class Program : Base
     [|int i;
 
     string S { get; }|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Base
 {
     public override bool Equals(object o)
     {
-        return false;
     }
 }
 
@@ -481,31 +350,21 @@ class Program : Base
                i == program.i &&
                S == program.S;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 0,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 0,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsOverriddenDeepBase()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Base
 {
     public override bool Equals(object o)
     {
-        return false;
     }
 }
 
@@ -518,15 +377,13 @@ class Program : Middle
     [|int i;
 
     string S { get; }|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Base
 {
     public override bool Equals(object o)
     {
-        return false;
     }
 }
 
@@ -548,23 +405,14 @@ class Program : Middle
                i == program.i &&
                S == program.S;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsStruct()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 struct ReallyLongName
@@ -608,7 +456,7 @@ struct ReallyLongName : IEquatable<ReallyLongName>
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsStructCSharpLatest()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 struct ReallyLongName
@@ -652,11 +500,11 @@ struct ReallyLongName : IEquatable<ReallyLongName>
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsStructAlreadyImplementsIEquatable()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"using System;
 using System.Collections.Generic;
 
-struct ReallyLongName : {|CS0535:IEquatable<ReallyLongName>|}
+struct ReallyLongName : IEquatable<ReallyLongName>
 {
     [|int i;
 
@@ -665,7 +513,7 @@ struct ReallyLongName : {|CS0535:IEquatable<ReallyLongName>|}
 @"using System;
 using System.Collections.Generic;
 
-struct ReallyLongName : {|CS0535:IEquatable<ReallyLongName>|}
+struct ReallyLongName : IEquatable<ReallyLongName>
 {
     int i;
 
@@ -693,7 +541,7 @@ struct ReallyLongName : {|CS0535:IEquatable<ReallyLongName>|}
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsStructAlreadyHasOperators()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"using System;
 using System.Collections.Generic;
 
@@ -734,11 +582,11 @@ struct ReallyLongName : IEquatable<ReallyLongName>
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsStructAlreadyImplementsIEquatableAndHasOperators()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"using System;
 using System.Collections.Generic;
 
-struct ReallyLongName : {|CS0535:IEquatable<ReallyLongName>|}
+struct ReallyLongName : IEquatable<ReallyLongName>
 {
     [|int i;
 
@@ -750,7 +598,7 @@ struct ReallyLongName : {|CS0535:IEquatable<ReallyLongName>|}
 @"using System;
 using System.Collections.Generic;
 
-struct ReallyLongName : {|CS0535:IEquatable<ReallyLongName>|}
+struct ReallyLongName : IEquatable<ReallyLongName>
 {
     int i;
 
@@ -794,21 +642,14 @@ class Program<T>
 }
 ";
 
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = expected,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+            await TestInRegularAndScript1Async(code, expected,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsNullableContext()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"#nullable enable
 
 class Program
@@ -832,14 +673,13 @@ class Program
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeSingleField1()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
 {
     [|int i;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -857,31 +697,21 @@ class Program
     {
         return 165851236 + i.GetHashCode();
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeSingleField2()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
 {
     [|int j;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -899,24 +729,15 @@ class Program
     {
         return 1424088837 + j.GetHashCode();
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeWithBaseHashCode1()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Base {
@@ -926,8 +747,7 @@ class Base {
 class Program : Base
 {
     [|int j;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Base {
@@ -952,24 +772,15 @@ class Program : Base
         hashCode = hashCode * -1521134295 + j.GetHashCode();
         return hashCode;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeWithBaseHashCode2()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"using System.Collections.Generic;
 
 class Base {
@@ -980,8 +791,7 @@ class Program : Base
 {
     int j;
     [||]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Base {
@@ -1002,32 +812,22 @@ class Program : Base
     {
         return 624022166 + base.GetHashCode();
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                MemberNames = ImmutableArray<string>.Empty,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: new string[] { },
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeSingleField_CodeStyle1()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
 {
     [|int i;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -1042,32 +842,23 @@ class Program
     }
 
     public override int GetHashCode() => 165851236 + i.GetHashCode();
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                Options =
-                {
-                    { CSharpCodeStyleOptions.PreferExpressionBodiedMethods, CSharpCodeStyleOptions.WhenPossibleWithSilentEnforcement },
-                },
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            }.RunAsync();
+}",
+index: 1,
+parameters: new TestParameters(
+    options: Option(CSharpCodeStyleOptions.PreferExpressionBodiedMethods, CSharpCodeStyleOptions.WhenPossibleWithSilentEnforcement),
+    parseOptions: CSharp6.parseOptions));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeTypeParameter()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program<T>
 {
     [|T i;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program<T>
@@ -1085,31 +876,21 @@ class Program<T>
     {
         return 165851236 + EqualityComparer<T>.Default.GetHashCode(i);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeGenericType()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program<T>
 {
     [|Program<T> i;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program<T>
@@ -1127,24 +908,15 @@ class Program<T>
     {
         return 165851236 + EqualityComparer<Program<T>>.Default.GetHashCode(i);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeMultipleMembers()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
@@ -1152,8 +924,7 @@ class Program
     [|int i;
 
     string S { get; }|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -1177,24 +948,15 @@ class Program
         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(S);
         return hashCode;
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestSmartTagText1()
         {
-            var code =
+            await TestSmartTagTextAsync(
 @"using System.Collections.Generic;
 
 class Program
@@ -1206,42 +968,14 @@ class Program
     {
         this.b = b;
     }
-}";
-            var fixedCode =
-@"using System.Collections.Generic;
-
-class Program
-{
-    bool b;
-    HashSet<string> s;
-
-    public Program(bool b)
-    {
-        this.b = b;
-    }
-
-    public override bool Equals(object obj)
-    {
-        return obj is Program program &&
-               b == program.b &&
-               EqualityComparer<HashSet<string>>.Default.Equals(s, program.s);
-    }
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 0,
-                CodeActionEquivalenceKey = FeaturesResources.Generate_Equals_object,
-                CodeActionVerifier = (codeAction, verifier) => verifier.Equal(FeaturesResources.Generate_Equals_object, codeAction.Title),
-            }.RunAsync();
+}",
+FeaturesResources.Generate_Equals_object);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestSmartTagText2()
         {
-            var code =
+            await TestSmartTagTextAsync(
 @"using System.Collections.Generic;
 
 class Program
@@ -1253,50 +987,15 @@ class Program
     {
         this.b = b;
     }
-}";
-            var fixedCode =
-@"using System.Collections.Generic;
-
-class Program
-{
-    bool b;
-    HashSet<string> s;
-
-    public Program(bool b)
-    {
-        this.b = b;
-    }
-
-    public override bool Equals(object obj)
-    {
-        return obj is Program program &&
-               b == program.b &&
-               EqualityComparer<HashSet<string>>.Default.Equals(s, program.s);
-    }
-
-    public override int GetHashCode()
-    {
-        int hashCode = -666523601;
-        hashCode = hashCode * -1521134295 + b.GetHashCode();
-        hashCode = hashCode * -1521134295 + EqualityComparer<HashSet<string>>.Default.GetHashCode(s);
-        return hashCode;
-    }
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                CodeActionEquivalenceKey = FeaturesResources.Generate_Equals_and_GetHashCode,
-                CodeActionVerifier = (codeAction, verifier) => verifier.Equal(FeaturesResources.Generate_Equals_and_GetHashCode, codeAction.Title),
-            }.RunAsync();
+}",
+FeaturesResources.Generate_Equals_and_GetHashCode,
+index: 1);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestSmartTagText3()
         {
-            var code =
+            await TestSmartTagTextAsync(
 @"using System.Collections.Generic;
 
 class Program
@@ -1308,62 +1007,26 @@ class Program
     {
         this.b = b;
     }
-}";
-            var fixedCode =
-@"using System.Collections.Generic;
-
-class Program
-{
-    bool b;
-    HashSet<string> s;
-
-    public Program(bool b)
-    {
-        this.b = b;
-    }
-
-    public override bool Equals(object obj)
-    {
-        return obj is Program program &&
-               b == program.b &&
-               EqualityComparer<HashSet<string>>.Default.Equals(s, program.s);
-    }
-
-    public override int GetHashCode()
-    {
-        int hashCode = -666523601;
-        hashCode = hashCode * -1521134295 + b.GetHashCode();
-        hashCode = hashCode * -1521134295 + EqualityComparer<HashSet<string>>.Default.GetHashCode(s);
-        return hashCode;
-    }
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                CodeActionEquivalenceKey = FeaturesResources.Generate_Equals_and_GetHashCode,
-                CodeActionVerifier = (codeAction, verifier) => verifier.Equal(FeaturesResources.Generate_Equals_and_GetHashCode, codeAction.Title),
-            }.RunAsync();
+}",
+FeaturesResources.Generate_Equals_and_GetHashCode,
+index: 1);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task Tuple_Disabled()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class C
 {
-    [|{|CS8059:(int, string)|} a;|]
-}";
-            var fixedCode =
+    [|(int, string) a;|]
+}",
 @"using System.Collections.Generic;
 
 class C
 {
-    {|CS8059:(int, string)|} a;
+    (int, string) a;
 
     public override bool Equals(object obj)
     {
@@ -1371,36 +1034,26 @@ class C
         return c != null &&
                a.Equals(c.a);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 0,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 0,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task Tuples_Equals()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class C
 {
-    [|{|CS8059:(int, string)|} a;|]
-}";
-            var fixedCode =
+    [|(int, string) a;|]
+}",
 @"using System.Collections.Generic;
 
 class C
 {
-    {|CS8059:(int, string)|} a;
+    (int, string) a;
 
     public override bool Equals(object obj)
     {
@@ -1408,35 +1061,25 @@ class C
         return c != null &&
                a.Equals(c.a);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TupleWithNames_Equals()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class C
 {
-    [|{|CS8059:(int x, string y)|} a;|]
-}";
-            var fixedCode =
+    [|(int x, string y) a;|]
+}",
 @"using System.Collections.Generic;
 
 class C
 {
-    {|CS8059:(int x, string y)|} a;
+    (int x, string y) a;
 
     public override bool Equals(object obj)
     {
@@ -1444,35 +1087,25 @@ class C
         return c != null &&
                a.Equals(c.a);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task Tuple_HashCode()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
 {
-    [|{|CS8059:(int, string)|} i;|]
-}";
-            var fixedCode =
+    [|(int, string) i;|]
+}",
 @"using System.Collections.Generic;
 
 class Program
 {
-    {|CS8059:(int, string)|} i;
+    (int, string) i;
 
     public override bool Equals(object obj)
     {
@@ -1485,36 +1118,26 @@ class Program
     {
         return 165851236 + i.GetHashCode();
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TupleWithNames_HashCode()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
 {
-    [|{|CS8059:(int x, string y)|} i;|]
-}";
-            var fixedCode =
+    [|(int x, string y) i;|]
+}",
 @"using System.Collections.Generic;
 
 class Program
 {
-    {|CS8059:(int x, string y)|} i;
+    (int x, string y) i;
 
     public override bool Equals(object obj)
     {
@@ -1527,24 +1150,15 @@ class Program
     {
         return 165851236 + i.GetHashCode();
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task StructWithoutGetHashCodeOverride_ShouldCallGetHashCodeDirectly()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Foo
@@ -1554,8 +1168,7 @@ class Foo
 
 struct Bar
 {
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Foo
@@ -1577,24 +1190,15 @@ class Foo
 
 struct Bar
 {
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task StructWithGetHashCodeOverride_ShouldCallGetHashCodeDirectly()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Foo
@@ -1605,8 +1209,7 @@ class Foo
 struct Bar
 {
     public override int GetHashCode() => 0;
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Foo
@@ -1629,24 +1232,15 @@ class Foo
 struct Bar
 {
     public override int GetHashCode() => 0;
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task NullableStructWithoutGetHashCodeOverride_ShouldCallGetHashCodeDirectly()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Foo
@@ -1656,8 +1250,7 @@ class Foo
 
 struct Bar
 {
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Foo
@@ -1679,31 +1272,21 @@ class Foo
 
 struct Bar
 {
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task StructTypeParameter_ShouldCallGetHashCodeDirectly()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Foo<TBar> where TBar : struct
 {
     [|TBar bar;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Foo<TBar> where TBar : struct
@@ -1721,31 +1304,21 @@ class Foo<TBar> where TBar : struct
     {
         return 999205674 + bar.GetHashCode();
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task NullableStructTypeParameter_ShouldCallGetHashCodeDirectly()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Foo<TBar> where TBar : struct
 {
     [|TBar? bar;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Foo<TBar> where TBar : struct
@@ -1763,24 +1336,15 @@ class Foo<TBar> where TBar : struct
     {
         return 999205674 + bar.GetHashCode();
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task Enum_ShouldCallGetHashCodeDirectly()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Foo
@@ -1790,8 +1354,7 @@ class Foo
 
 enum Bar
 {
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Foo
@@ -1813,31 +1376,21 @@ class Foo
 
 enum Bar
 {
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task PrimitiveValueType_ShouldCallGetHashCodeDirectly()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Foo
 {
     [|ulong bar;|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Foo
@@ -1855,24 +1408,15 @@ class Foo
     {
         return 999205674 + bar.GetHashCode();
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestWithDialog1()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"using System.Collections.Generic;
 
 class Program
@@ -1880,8 +1424,7 @@ class Program
     int a;
     string b;
     [||]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -1896,24 +1439,15 @@ class Program
                a == program.a &&
                b == program.b;
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = ImmutableArray.Create("a", "b"),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: new[] { "a", "b" },
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestWithDialog2()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"using System.Collections.Generic;
 
 class Program
@@ -1922,8 +1456,7 @@ class Program
     string b;
     bool c;
     [||]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -1939,24 +1472,15 @@ class Program
                c == program.c &&
                b == program.b;
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = ImmutableArray.Create("c", "b"),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: new[] { "c", "b" },
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestWithDialog3()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"using System.Collections.Generic;
 
 class Program
@@ -1965,8 +1489,7 @@ class Program
     string b;
     bool c;
     [||]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -1980,32 +1503,22 @@ class Program
         var program = obj as Program;
         return program != null;
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = ImmutableArray<string>.Empty,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: new string[] { },
+parameters: CSharp6Implicit);
         }
 
         [WorkItem(17643, "https://github.com/dotnet/roslyn/issues/17643")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestWithDialogNoBackingField()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 class Program
 {
     public int F { get; set; }
     [||]
-}";
-            var fixedCode =
+}",
 @"
 class Program
 {
@@ -2017,32 +1530,23 @@ class Program
         return program != null &&
                F == program.F;
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+parameters: CSharp6Implicit);
         }
 
         [WorkItem(25690, "https://github.com/dotnet/roslyn/issues/25690")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestWithDialogNoIndexer()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 class Program
 {
     public int P => 0;
     public int this[int index] => 0;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 class Program
 {
@@ -2054,28 +1558,22 @@ class Program
         return obj is Program program &&
                P == program.P;
     }
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-            }.RunAsync();
+}",
+chosenSymbols: null);
         }
 
         [WorkItem(25707, "https://github.com/dotnet/roslyn/issues/25707")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestWithDialogNoSetterOnlyProperty()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 class Program
 {
     public int P => 0;
     public int S { set { } }
     [||]
-}";
-            var fixedCode =
+}",
 @"
 class Program
 {
@@ -2087,20 +1585,15 @@ class Program
         return obj is Program program &&
                P == program.P;
     }
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-            }.RunAsync();
+}",
+chosenSymbols: null);
         }
 
         [WorkItem(41958, "https://github.com/dotnet/roslyn/issues/41958")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestWithDialogInheritedMembers()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 class Base
 {
@@ -2116,8 +1609,7 @@ class Derived : Middle
 {
     public int A { get; set; }
     [||]
-}";
-            var fixedCode =
+}",
 @"
 class Base
 {
@@ -2140,19 +1632,14 @@ class Derived : Middle
                B == derived.B &&
                A == derived.A;
     }
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-            }.RunAsync();
+}",
+chosenSymbols: null);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGenerateOperators1()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 using System.Collections.Generic;
 
@@ -2160,8 +1647,7 @@ class Program
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 using System.Collections.Generic;
 
@@ -2185,25 +1671,16 @@ class Program
     {
         return !(left == right);
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.GenerateOperatorsId),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, GenerateOperatorsId),
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGenerateOperators2()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 using System.Collections.Generic;
 
@@ -2211,8 +1688,7 @@ class Program
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 using System.Collections.Generic;
 
@@ -2229,26 +1705,18 @@ class Program
 
     public static bool operator ==(Program left, Program right) => EqualityComparer<Program>.Default.Equals(left, right);
     public static bool operator !=(Program left, Program right) => !(left == right);
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.GenerateOperatorsId),
-                LanguageVersion = LanguageVersion.CSharp6,
-                Options =
-                {
-                    { CSharpCodeStyleOptions.PreferExpressionBodiedOperators, CSharpCodeStyleOptions.WhenPossibleWithSilentEnforcement },
-                },
-            }.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, GenerateOperatorsId),
+parameters: new TestParameters(
+    options: Option(CSharpCodeStyleOptions.PreferExpressionBodiedOperators, CSharpCodeStyleOptions.WhenPossibleWithSilentEnforcement),
+    parseOptions: CSharp6.parseOptions));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGenerateOperators3()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 using System.Collections.Generic;
 
@@ -2257,9 +1725,8 @@ class Program
     public string s;
     [||]
 
-    public static bool operator {|CS0216:==|}(Program left, Program right) => true;
-}";
-            var fixedCode =
+    public static bool operator ==(Program left, Program right) => true;
+}",
 @"
 using System.Collections.Generic;
 
@@ -2274,26 +1741,17 @@ class Program
                s == program.s;
     }
 
-    public static bool operator {|CS0216:==|}(Program left, Program right) => true;
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => Assert.Null(options.FirstOrDefault(i => i.Id == GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.GenerateOperatorsId)),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+    public static bool operator ==(Program left, Program right) => true;
+}",
+chosenSymbols: null,
+optionsCallback: options => Assert.Null(options.FirstOrDefault(i => i.Id == GenerateOperatorsId)),
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGenerateOperators4()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 using System.Collections.Generic;
 
@@ -2301,8 +1759,7 @@ struct Program
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 using System.Collections.Generic;
 
@@ -2330,25 +1787,16 @@ struct Program
     {
         return !(left == right);
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.GenerateOperatorsId),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, GenerateOperatorsId),
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGenerateLiftedOperators()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"
 using System;
 using System.Collections.Generic;
@@ -2363,8 +1811,7 @@ class Foo
 
 enum Bar
 {
-}";
-            var fixedCode =
+}",
 @"
 using System;
 using System.Collections.Generic;
@@ -2389,24 +1836,15 @@ class Foo
 
 enum Bar
 {
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 0,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 0,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task LiftedOperatorIsNotUsedWhenDirectOperatorWouldNotBeUsed()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"
 using System;
 using System.Collections.Generic;
@@ -2421,7 +1859,7 @@ struct Bar : IEquatable<Bar>
 {
     private readonly int value;
 
-    public override bool Equals(object obj) => false;
+    public override bool Equals(object obj) => obj is Bar bar && Equals(bar);
 
     public bool Equals(Bar other) => value == other.value;
 
@@ -2430,8 +1868,7 @@ struct Bar : IEquatable<Bar>
     public static bool operator ==(Bar left, Bar right) => left.Equals(right);
 
     public static bool operator !=(Bar left, Bar right) => !(left == right);
-}";
-            var fixedCode =
+}",
 @"
 using System;
 using System.Collections.Generic;
@@ -2454,7 +1891,7 @@ struct Bar : IEquatable<Bar>
 {
     private readonly int value;
 
-    public override bool Equals(object obj) => false;
+    public override bool Equals(object obj) => obj is Bar bar && Equals(bar);
 
     public bool Equals(Bar other) => value == other.value;
 
@@ -2463,24 +1900,15 @@ struct Bar : IEquatable<Bar>
     public static bool operator ==(Bar left, Bar right) => left.Equals(right);
 
     public static bool operator !=(Bar left, Bar right) => !(left == right);
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 0,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 0,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestImplementIEquatableOnStruct()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 using System.Collections.Generic;
 
@@ -2488,8 +1916,7 @@ struct Program
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 using System;
 using System.Collections.Generic;
@@ -2507,33 +1934,23 @@ struct Program : IEquatable<Program>
     {
         return s == other.s;
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, ImplementIEquatableId),
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         [WorkItem(25708, "https://github.com/dotnet/roslyn/issues/25708")]
         public async Task TestOverrideEqualsOnRefStructReturnsFalse()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 ref struct Program
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 ref struct Program
 {
@@ -2543,27 +1960,21 @@ ref struct Program
     {
         return false;
     }
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-            }.RunAsync();
+}",
+chosenSymbols: null);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         [WorkItem(25708, "https://github.com/dotnet/roslyn/issues/25708")]
         public async Task TestImplementIEquatableOnRefStructSkipsIEquatable()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 ref struct Program
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 ref struct Program
 {
@@ -2573,32 +1984,25 @@ ref struct Program
     {
         return false;
     }
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                // We are forcefully enabling the ImplementIEquatable option, as that is our way
-                // to test that the option does nothing. The VS mode will ensure if the option
-                // is not available it will not be shown.
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId),
-            }.RunAsync();
+}",
+chosenSymbols: null,
+// We are forcefully enabling the ImplementIEquatable option, as that is our way
+// to test that the option does nothing. The VS mode will ensure if the option
+// is not available it will not be shown.
+optionsCallback: options => EnableOption(options, ImplementIEquatableId));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestImplementIEquatableOnStructInNullableContextWithUnannotatedMetadata()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"#nullable enable
 
 struct Foo
 {
     public int Bar { get; }
     [||]
-}";
-            var fixedCode =
+}",
 @"#nullable enable
 
 using System;
@@ -2616,23 +2020,19 @@ struct Foo : IEquatable<Foo>
     {
         return Bar == other.Bar;
     }
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId),
-                LanguageVersion = LanguageVersion.CSharp8,
-            }.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, ImplementIEquatableId),
+parameters: new TestParameters(TestOptions.Regular8));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestImplementIEquatableOnStructInNullableContextWithAnnotatedMetadata()
         {
-            var code =
-@"
+            await TestWithPickMembersDialogAsync(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""false"">
+        <Document><![CDATA[
 #nullable enable
 
 using System;
@@ -2643,8 +2043,26 @@ struct Foo
     public bool Bar { get; }
     [||]
 }
-";
-            var fixedCode =
+
+namespace System
+{
+    public class Object { }
+    public struct Boolean { }
+
+    public interface IEquatable<T>
+    {
+        bool Equals([AllowNull] T other);
+    }
+}
+
+namespace System.Diagnostics.CodeAnalysis
+{
+    public sealed class AllowNullAttribute : Attribute { }
+}
+]]>
+        </Document>
+    </Project>
+</Workspace>",
 @"
 #nullable enable
 
@@ -2665,22 +2083,32 @@ struct Foo : IEquatable<Foo>
         return Bar == other.Bar;
     }
 }
-";
 
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId),
-                LanguageVersion = LanguageVersion.CSharp8,
-            }.RunAsync();
+namespace System
+{
+    public class Object { }
+    public struct Boolean { }
+
+    public interface IEquatable<T>
+    {
+        bool Equals([AllowNull] T other);
+    }
+}
+
+namespace System.Diagnostics.CodeAnalysis
+{
+    public sealed class AllowNullAttribute : Attribute { }
+}
+",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, ImplementIEquatableId),
+parameters: new TestParameters(TestOptions.Regular8, retainNonFixableDiagnostics: true));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestImplementIEquatableOnClass()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 using System.Collections.Generic;
 
@@ -2688,8 +2116,7 @@ class Program
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 using System;
 using System.Collections.Generic;
@@ -2708,33 +2135,23 @@ class Program : IEquatable<Program>
         return other != null &&
                s == other.s;
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, ImplementIEquatableId),
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestImplementIEquatableOnClassInNullableContextWithUnannotatedMetadata()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"#nullable enable
 
 class Foo
 {
     public int Bar { get; }
     [||]
-}";
-            var fixedCode =
+}",
 @"#nullable enable
 
 using System;
@@ -2753,23 +2170,19 @@ class Foo : IEquatable<Foo?>
         return other != null &&
                Bar == other.Bar;
     }
-}";
-
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId),
-                LanguageVersion = LanguageVersion.CSharp8,
-            }.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, ImplementIEquatableId),
+parameters: new TestParameters(TestOptions.Regular8));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestImplementIEquatableOnClassInNullableContextWithAnnotatedMetadata()
         {
-            var code =
-@"
+            await TestWithPickMembersDialogAsync(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""false"">
+        <Document><![CDATA[
 #nullable enable
 
 using System;
@@ -2780,8 +2193,26 @@ class Foo
     public bool Bar { get; }
     [||]
 }
-";
-            var fixedCode =
+
+namespace System
+{
+    public class Object { }
+    public struct Boolean { }
+
+    public interface IEquatable<T>
+    {
+        bool Equals([AllowNull] T other);
+    }
+}
+
+namespace System.Diagnostics.CodeAnalysis
+{
+    public sealed class AllowNullAttribute : Attribute { }
+}
+]]>
+        </Document>
+    </Project>
+</Workspace>",
 @"
 #nullable enable
 
@@ -2803,35 +2234,44 @@ class Foo : IEquatable<Foo?>
                Bar == other.Bar;
     }
 }
-";
 
-            await new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId),
-                LanguageVersion = LanguageVersion.CSharp8,
-            }.RunAsync();
+namespace System
+{
+    public class Object { }
+    public struct Boolean { }
+
+    public interface IEquatable<T>
+    {
+        bool Equals([AllowNull] T other);
+    }
+}
+
+namespace System.Diagnostics.CodeAnalysis
+{
+    public sealed class AllowNullAttribute : Attribute { }
+}
+",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, ImplementIEquatableId),
+parameters: new TestParameters(TestOptions.Regular8, retainNonFixableDiagnostics: true));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestDoNotOfferIEquatableIfTypeAlreadyImplementsIt()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 using System.Collections.Generic;
 
-class Program : {|CS0535:System.IEquatable<Program>|}
+class Program : System.IEquatable<Program>
 {
     public string s;
     [||]
-}";
-            var fixedCode =
+}",
 @"
 using System.Collections.Generic;
 
-class Program : {|CS0535:System.IEquatable<Program>|}
+class Program : System.IEquatable<Program>
 {
     public string s;
 
@@ -2841,129 +2281,61 @@ class Program : {|CS0535:System.IEquatable<Program>|}
         return program != null &&
                s == program.s;
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => Assert.Null(options.FirstOrDefault(i => i.Id == GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.ImplementIEquatableId)),
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => Assert.Null(options.FirstOrDefault(i => i.Id == ImplementIEquatableId)),
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
-        public async Task TestMissingReferences1()
+        public async Task TestMissingReferences()
         {
-            await new VerifyCS.Test
-            {
-                LanguageVersion = LanguageVersion.CSharp6,
-                CodeActionIndex = 1,
-                TestState =
-                {
-                    Sources =
-                    {
-@"public class Class1
+            await TestWithPickMembersDialogAsync(
+@"
+<Workspace>
+    <Project Language='C#' AssemblyName='CSharpAssembly1' CommonReferences='false' LanguageVersion='CSharp6'>
+        <Document FilePath='Test1.cs'>
+public class Class1
 {
-    [|int i;|]
+    int i;
+    [||]
 
     public void F()
     {
     }
-}",
-                    },
-                    ExpectedDiagnostics =
-                    {
-    // /0/Test0.cs(1,14): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(1, 14, 1, 20).WithArguments("System.Object"),
-    // /0/Test0.cs(1,14): error CS1729: 'object' does not contain a constructor that takes 0 arguments
-    DiagnosticResult.CompilerError("CS1729").WithSpan(1, 14, 1, 20).WithArguments("object", "0"),
-    // /0/Test0.cs(3,5): error CS0518: Predefined type 'System.Int32' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(3, 5, 3, 8).WithArguments("System.Int32"),
-    // /0/Test0.cs(5,12): error CS0518: Predefined type 'System.Void' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(5, 12, 5, 16).WithArguments("System.Void"),
-                    },
-                },
-                FixedState =
-                {
-                    Sources = {
-@"public class Class1
+}
+        </Document>
+    </Project>
+</Workspace>",
+@"
+public class Class1
 {
     int i;
 
-    public override System.Boolean Equals(System.Object obj)
+    public override global::System.Boolean Equals(global::System.Object obj)
     {
         Class1 @class = obj as Class1;
-        return @class != null &&
-               i == @class.i;
+        return @class != null;
     }
 
     public void F()
     {
     }
 
-    public override System.Int32 GetHashCode()
+    public override global::System.Int32 GetHashCode()
     {
-        return 165851236 + EqualityComparer<System.Int32>.Default.GetHashCode(i);
+        return 0;
     }
-}",
-                    },
-                    ExpectedDiagnostics =
-                    {
-    // /0/Test0.cs(1,14): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(1, 14, 1, 20).WithArguments("System.Object"),
-    // /0/Test0.cs(1,14): error CS1729: 'object' does not contain a constructor that takes 0 arguments
-    DiagnosticResult.CompilerError("CS1729").WithSpan(1, 14, 1, 20).WithArguments("object", "0"),
-    // /0/Test0.cs(3,5): error CS0518: Predefined type 'System.Int32' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(3, 5, 3, 8).WithArguments("System.Int32"),
-    // /0/Test0.cs(5,21): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(5, 21, 5, 27).WithArguments("System.Object"),
-    // /0/Test0.cs(5,28): error CS1069: The type name 'Boolean' could not be found in the namespace 'System'. This type has been forwarded to assembly 'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089' Consider adding a reference to that assembly.
-    DiagnosticResult.CompilerError("CS1069").WithSpan(5, 28, 5, 35).WithArguments("Boolean", "System", "mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"),
-    // /0/Test0.cs(5,43): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(5, 43, 5, 49).WithArguments("System.Object"),
-    // /0/Test0.cs(5,50): error CS1069: The type name 'Object' could not be found in the namespace 'System'. This type has been forwarded to assembly 'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089' Consider adding a reference to that assembly.
-    DiagnosticResult.CompilerError("CS1069").WithSpan(5, 50, 5, 56).WithArguments("Object", "System", "mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"),
-    // /0/Test0.cs(7,9): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(7, 9, 7, 15).WithArguments("System.Object"),
-    // /0/Test0.cs(7,32): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(7, 32, 7, 38).WithArguments("System.Object"),
-    // /0/Test0.cs(8,16): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(8, 16, 8, 30).WithArguments("System.Object"),
-    // /0/Test0.cs(9,16): error CS0518: Predefined type 'System.Boolean' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(9, 16, 9, 29).WithArguments("System.Boolean"),
-    // /0/Test0.cs(12,12): error CS0518: Predefined type 'System.Void' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(12, 12, 12, 16).WithArguments("System.Void"),
-    // /0/Test0.cs(16,21): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(16, 21, 16, 27).WithArguments("System.Object"),
-    // /0/Test0.cs(16,28): error CS1069: The type name 'Int32' could not be found in the namespace 'System'. This type has been forwarded to assembly 'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089' Consider adding a reference to that assembly.
-    DiagnosticResult.CompilerError("CS1069").WithSpan(16, 28, 16, 33).WithArguments("Int32", "System", "mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"),
-    // /0/Test0.cs(16,34): error CS0115: 'Class1.GetHashCode()': no suitable method found to override
-    DiagnosticResult.CompilerError("CS0115").WithSpan(16, 34, 16, 45).WithArguments("Class1.GetHashCode()"),
-    // /0/Test0.cs(18,16): error CS0518: Predefined type 'System.Int32' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(18, 16, 18, 25).WithArguments("System.Int32"),
-    // /0/Test0.cs(18,28): error CS0103: The name 'EqualityComparer' does not exist in the current context
-    DiagnosticResult.CompilerError("CS0103").WithSpan(18, 28, 18, 58).WithArguments("EqualityComparer"),
-    // /0/Test0.cs(18,28): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(18, 28, 18, 58).WithArguments("System.Object"),
-    // /0/Test0.cs(18,45): error CS0518: Predefined type 'System.Object' is not defined or imported
-    DiagnosticResult.CompilerError("CS0518").WithSpan(18, 45, 18, 51).WithArguments("System.Object"),
-    // /0/Test0.cs(18,52): error CS1069: The type name 'Int32' could not be found in the namespace 'System'. This type has been forwarded to assembly 'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089' Consider adding a reference to that assembly.
-    DiagnosticResult.CompilerError("CS1069").WithSpan(18, 52, 18, 57).WithArguments("Int32", "System", "mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"),
-                    },
-                },
-                ReferenceAssemblies = ReferenceAssemblies.Default.WithAssemblies(ImmutableArray<string>.Empty),
-            }.RunAsync();
+}
+        ",
+chosenSymbols: new string[] { },
+index: 1);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeInCheckedContext()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
@@ -2971,8 +2343,7 @@ class Program
     [|int i;
 
     string S { get; }|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Program
@@ -2999,36 +2370,24 @@ class Program
             return hashCode;
         }
     }
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-                SolutionTransforms =
-                {
-                    (solution, projectId) =>
-                    {
-                        var compilationOptions = solution.GetRequiredProject(projectId).CompilationOptions;
-                        return solution.WithProjectCompilationOptions(projectId, compilationOptions.WithOverflowChecks(true));
-                    },
-                },
-            }.RunAsync();
+}",
+index: 1,
+parameters: new TestParameters(
+    parseOptions: CSharp6.parseOptions,
+    compilationOptions: new CSharpCompilationOptions(
+        OutputKind.DynamicallyLinkedLibrary, checkOverflow: true)));
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeStruct()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 struct S
 {
     [|int j;|]
-}";
-            var fixedCode =
+}",
 @"using System;
 using System.Collections.Generic;
 
@@ -3060,32 +2419,22 @@ struct S : IEquatable<S>
     {
         return !(left == right);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeSystemHashCodeOneMember()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 namespace System { public struct HashCode { } }
 
 struct S
 {
     [|int j;|]
-}";
-            var fixedCode =
+}",
 @"using System;
 using System.Collections.Generic;
 namespace System { public struct HashCode { } }
@@ -3118,50 +2467,52 @@ struct S : IEquatable<S>
     {
         return !(left == right);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedState =
-                {
-                    Sources = { fixedCode },
-                    ExpectedDiagnostics =
-                    {
-                        // /0/Test0.cs(21,25): error CS0117: 'HashCode' does not contain a definition for 'Combine'
-                        DiagnosticResult.CompilerError("CS0117").WithSpan(21, 25, 21, 32).WithArguments("System.HashCode", "Combine"),
-                    },
-                },
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [WorkItem(37297, "https://github.com/dotnet/roslyn/issues/37297")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestPublicSystemHashCodeOtherProject()
         {
-            var publicHashCode =
-@"using System.Collections.Generic;
-namespace System { public struct HashCode { } }";
-            var code =
-@"struct S
+            await TestInRegularAndScript1Async(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P1"">
+        <Document>
+using System.Collections.Generic;
+namespace System { public struct HashCode { } }
+        </Document>
+    </Project>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P2"">
+        <ProjectReference>P1</ProjectReference>
+        <Document>
+struct S
 {
     [|int j;|]
-}";
-            var fixedCode =
-@"using System;
+}
+        </Document>
+    </Project>
+</Workspace>",
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P1"">
+        <Document>
+using System.Collections.Generic;
+namespace System { public struct HashCode { } }
+        </Document>
+    </Project>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P2"">
+        <ProjectReference>P1</ProjectReference>
+        <Document>
+using System;
 
-struct S : IEquatable<S>
+struct S : IEquatable&lt;S&gt;
 {
     int j;
 
     public override bool Equals(object obj)
     {
-        return obj is S && Equals((S)obj);
+        return obj is S s &amp;&amp; Equals(s);
     }
 
     public bool Equals(S other)
@@ -3183,72 +2534,56 @@ struct S : IEquatable<S>
     {
         return !(left == right);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestState =
-                {
-                    AdditionalProjects =
-                    {
-                        new CSharpProjectState("P1")
-                        {
-                            Sources = { ("HashCode.cs", publicHashCode) },
-                        },
-                    },
-                    Sources = { code },
-                },
-                FixedState =
-                {
-                    Sources = { fixedCode },
-                    ExpectedDiagnostics =
-                    {
-                        // /0/Test0.cs(19,25): error CS0117: 'HashCode' does not contain a definition for 'Combine'
-                        DiagnosticResult.CompilerError("CS0117").WithSpan(19, 25, 19, 32).WithArguments("System.HashCode", "Combine"),
-                    },
-                },
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-                SolutionTransforms =
-                {
-                    (solution, projectId) =>
-                    {
-                        var dependency = solution.Projects.Single(project => project.Name == "P1");
-                        var mainProject = solution.GetRequiredProject(projectId);
-                        return solution
-                            .WithProjectMetadataReferences(dependency.Id, mainProject.MetadataReferences)
-                            .WithProjectCompilationOptions(dependency.Id, mainProject.CompilationOptions)
-                            .WithProjectParseOptions(dependency.Id, mainProject.ParseOptions);
-                    }
-                },
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}
+        </Document>
+    </Project>
+</Workspace>",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [WorkItem(37297, "https://github.com/dotnet/roslyn/issues/37297")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestInternalSystemHashCode()
         {
-            var internalHashCode =
-@"using System.Collections.Generic;
-namespace System { internal struct HashCode { } }";
-            var code =
-@"struct S
+            await TestInRegularAndScript1Async(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P1"">
+        <Document>
+using System.Collections.Generic;
+namespace System { internal struct HashCode { } }
+        </Document>
+    </Project>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P2"">
+        <ProjectReference>P1</ProjectReference>
+        <Document>
+struct S
 {
     [|int j;|]
-}";
-            var fixedCode =
-@"using System;
+}
+        </Document>
+    </Project>
+</Workspace>",
 
-struct S : IEquatable<S>
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P1"">
+        <Document>
+using System.Collections.Generic;
+namespace System { internal struct HashCode { } }
+        </Document>
+    </Project>
+    <Project Language=""C#"" CommonReferences=""true"" Name=""P2"">
+        <ProjectReference>P1</ProjectReference>
+        <Document>
+using System;
+
+struct S : IEquatable&lt;S&gt;
 {
     int j;
 
     public override bool Equals(object obj)
     {
-        return obj is S && Equals((S)obj);
+        return obj is S s &amp;&amp; Equals(s);
     }
 
     public bool Equals(S other)
@@ -3270,54 +2605,25 @@ struct S : IEquatable<S>
     {
         return !(left == right);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestState =
-                {
-                    AdditionalProjects =
-                    {
-                        new CSharpProjectState("P1")
-                        {
-                            Sources = { ("HashCode.cs", internalHashCode) },
-                        },
-                    },
-                    Sources = { code },
-                },
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-                SolutionTransforms =
-                {
-                    (solution, projectId) =>
-                    {
-                        var dependency = solution.Projects.Single(project => project.Name == "P1");
-                        var mainProject = solution.GetRequiredProject(projectId);
-                        return solution
-                            .WithProjectMetadataReferences(dependency.Id, mainProject.MetadataReferences)
-                            .WithProjectCompilationOptions(dependency.Id, mainProject.CompilationOptions)
-                            .WithProjectParseOptions(dependency.Id, mainProject.ParseOptions);
-                    }
-                },
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}
+        </Document>
+    </Project>
+</Workspace>",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeSystemHashCodeEightMembers()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 namespace System { public struct HashCode { } }
 
 struct S
 {
     [|int j, k, l, m, n, o, p, q;|]
-}";
-            var fixedCode =
+}",
 @"using System;
 using System.Collections.Generic;
 namespace System { public struct HashCode { } }
@@ -3357,43 +2663,25 @@ struct S : IEquatable<S>
     {
         return !(left == right);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedState =
-                {
-                    Sources = { fixedCode },
-                    ExpectedDiagnostics =
-                    {
-                        // /0/Test0.cs(28,25): error CS0117: 'HashCode' does not contain a definition for 'Combine'
-                        DiagnosticResult.CompilerError("CS0117").WithSpan(28, 25, 28, 32).WithArguments("System.HashCode", "Combine"),
-                    },
-                },
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeSystemHashCodeNineMembers()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
-namespace System { public struct HashCode { public void Add<T>(T value) { } public int ToHashCode() => 0; } }
+namespace System { public struct HashCode { } }
 
 struct S
 {
     [|int j, k, l, m, n, o, p, q, r;|]
-}";
-            var fixedCode =
+}",
 @"using System;
 using System.Collections.Generic;
-namespace System { public struct HashCode { public void Add<T>(T value) { } public int ToHashCode() => 0; } }
+namespace System { public struct HashCode { } }
 
 struct S : IEquatable<S>
 {
@@ -3441,36 +2729,26 @@ struct S : IEquatable<S>
     {
         return !(left == right);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Implicit);
         }
 
         [WorkItem(39916, "https://github.com/dotnet/roslyn/issues/39916")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestGetHashCodeSystemHashCodeNineMembers_Explicit()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
-namespace System { public struct HashCode { public void Add<T>(T value) { } public int ToHashCode() => 0; } }
+namespace System { public struct HashCode { } }
 
 struct S
 {
     [|int j, k, l, m, n, o, p, q, r;|]
-}";
-            var fixedCode =
+}",
 @"using System;
 using System.Collections.Generic;
-namespace System { public struct HashCode { public void Add<T>(T value) { } public int ToHashCode() => 0; } }
+namespace System { public struct HashCode { } }
 
 struct S : IEquatable<S>
 {
@@ -3518,24 +2796,15 @@ struct S : IEquatable<S>
     {
         return !(left == right);
     }
-}";
-
-            var test = new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.CSharp6,
-            };
-
-            test.Options.AddRange(PreferExplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+index: 1,
+parameters: CSharp6Explicit);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsSingleField_Patterns()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Program
@@ -3559,7 +2828,7 @@ class Program
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsSingleFieldInStruct_Patterns()
         {
-            await VerifyCS.VerifyRefactoringAsync(
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 struct Program
@@ -3598,14 +2867,13 @@ struct Program : IEquatable<Program>
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualsBaseWithOverriddenEquals_Patterns()
         {
-            var code =
+            await TestInRegularAndScript1Async(
 @"using System.Collections.Generic;
 
 class Base
 {
     public override bool Equals(object o)
     {
-        return false;
     }
 }
 
@@ -3614,15 +2882,13 @@ class Program : Base
     [|int i;
 
     string S { get; }|]
-}";
-            var fixedCode =
+}",
 @"using System.Collections.Generic;
 
 class Base
 {
     public override bool Equals(object o)
     {
-        return false;
     }
 }
 
@@ -3639,40 +2905,28 @@ class Program : Base
                i == program.i &&
                S == program.S;
     }
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                CodeActionIndex = 0,
-            }.RunAsync();
+}",
+index: 0);
         }
 
         [WorkItem(33601, "https://github.com/dotnet/roslyn/issues/33601")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestPartialSelection()
         {
-            var code =
+            await TestMissingAsync(
 @"using System.Collections.Generic;
 
 class Program
 {
     int [|a|];
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedCode = code,
-            }.RunAsync();
+}");
         }
 
         [WorkItem(40053, "https://github.com/dotnet/roslyn/issues/40053")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualityOperatorsNullableAnnotationWithReferenceType()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 #nullable enable
 using System;
@@ -3683,8 +2937,7 @@ namespace N
     {
         public int X;
     }
-}";
-            var fixedCode =
+}",
 @"
 #nullable enable
 using System;
@@ -3712,36 +2965,17 @@ namespace N
             return !(left == right);
         }
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedState =
-                {
-                    Sources = { fixedCode },
-                    ExpectedDiagnostics =
-                    {
-                        // /0/Test0.cs(20,55): error CS8604: Possible null reference argument for parameter 'x' in 'bool EqualityComparer<C>.Equals(C x, C y)'.
-                        DiagnosticResult.CompilerError("CS8604").WithSpan(20, 55, 20, 59).WithArguments("x", "bool EqualityComparer<C>.Equals(C x, C y)"),
-                        // /0/Test0.cs(20,61): error CS8604: Possible null reference argument for parameter 'y' in 'bool EqualityComparer<C>.Equals(C x, C y)'.
-                        DiagnosticResult.CompilerError("CS8604").WithSpan(20, 61, 20, 66).WithArguments("y", "bool EqualityComparer<C>.Equals(C x, C y)"),
-                    },
-                },
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.GenerateOperatorsId),
-                LanguageVersion = LanguageVersion.Default,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, GenerateOperatorsId),
+parameters: CSharpLatestImplicit);
         }
 
         [WorkItem(40053, "https://github.com/dotnet/roslyn/issues/40053")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestEqualityOperatorsNullableAnnotationWithValueType()
         {
-            var code =
+            await TestWithPickMembersDialogAsync(
 @"
 #nullable enable
 using System;
@@ -3752,8 +2986,7 @@ namespace N
     {
         public int X;
     }
-}";
-            var fixedCode =
+}",
 @"
 #nullable enable
 using System;
@@ -3780,48 +3013,37 @@ namespace N
             return !(left == right);
         }
     }
-}";
-
-            var test = new TestWithDialog
-            {
-                TestCode = code,
-                FixedCode = fixedCode,
-                MemberNames = default,
-                OptionsCallback = options => EnableOption(options, GenerateEqualsAndGetHashCodeFromMembersCodeRefactoringProvider.GenerateOperatorsId),
-                LanguageVersion = LanguageVersion.Default,
-            };
-
-            test.Options.AddRange(PreferImplicitTypeWithInfo());
-            await test.RunAsync();
+}",
+chosenSymbols: null,
+optionsCallback: options => EnableOption(options, GenerateOperatorsId),
+parameters: CSharpLatestImplicit);
         }
 
         [WorkItem(42574, "https://github.com/dotnet/roslyn/issues/42574")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestPartialTypes1()
         {
-            await new TestWithDialog
-            {
-                TestState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
+            await TestWithPickMembersDialogAsync(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"">
+        <Document>
+partial class Goo
 {
     int bar;
     [||]
-}",
-@"partial class Goo
+}
+        </Document>
+        <Document>
+partial class Goo
 {
 
 
-}",
-                    },
-                },
-                FixedState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
+}
+        </Document>
+    </Project>
+</Workspace>",
+@"
+partial class Goo
 {
     int bar;
 
@@ -3835,51 +3057,37 @@ namespace N
     {
         return 999205674 + bar.GetHashCode();
     }
-}",
-@"partial class Goo
-{
-
-
-}",
-                    },
-                },
-                MemberNames = ImmutableArray.Create("bar"),
-                CodeActionIndex = 1,
-            }.RunAsync();
+}
+        ",
+chosenSymbols: new[] { "bar" },
+index: 1);
         }
 
         [WorkItem(42574, "https://github.com/dotnet/roslyn/issues/42574")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestPartialTypes2()
         {
-            await new TestWithDialog
-            {
-                TestState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
+            await TestWithPickMembersDialogAsync(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"">
+        <Document>
+partial class Goo
 {
     int bar;
 
-}",
-@"partial class Goo
+}
+        </Document>
+        <Document>
+partial class Goo
 {
 
 [||]
-}",
-                    },
-                },
-                FixedState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
-{
-    int bar;
-
-}",
-@"partial class Goo
+}
+        </Document>
+    </Project>
+</Workspace>",
+@"
+partial class Goo
 {
     public override bool Equals(object obj)
     {
@@ -3891,41 +3099,37 @@ namespace N
     {
         return 999205674 + bar.GetHashCode();
     }
-}",
-                    },
-                },
-                MemberNames = ImmutableArray.Create("bar"),
-                CodeActionIndex = 1,
-            }.RunAsync();
+}
+        ",
+chosenSymbols: new[] { "bar" },
+index: 1);
         }
 
         [WorkItem(42574, "https://github.com/dotnet/roslyn/issues/42574")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestPartialTypes3()
         {
-            await new TestWithDialog
-            {
-                TestState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
+            await TestWithPickMembersDialogAsync(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"">
+        <Document>
+partial class Goo
 {
 
 [||]
-}",
-@"partial class Goo
+}
+        </Document>
+        <Document>
+partial class Goo
 {
     int bar;
 
-}",
-                    },
-                },
-                FixedState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
+}
+        </Document>
+    </Project>
+</Workspace>",
+@"
+partial class Goo
 {
     public override bool Equals(object obj)
     {
@@ -3937,51 +3141,37 @@ namespace N
     {
         return 999205674 + bar.GetHashCode();
     }
-}",
-@"partial class Goo
-{
-    int bar;
-
-}",
-                    },
-                },
-                MemberNames = ImmutableArray.Create("bar"),
-                CodeActionIndex = 1,
-            }.RunAsync();
+}
+        ",
+chosenSymbols: new[] { "bar" },
+index: 1);
         }
 
         [WorkItem(42574, "https://github.com/dotnet/roslyn/issues/42574")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestPartialTypes4()
         {
-            await new TestWithDialog
-            {
-                TestState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
+            await TestWithPickMembersDialogAsync(
+@"<Workspace>
+    <Project Language=""C#"" CommonReferences=""true"">
+        <Document>
+partial class Goo
 {
 
 
-}",
-@"partial class Goo
+}
+        </Document>
+        <Document>
+partial class Goo
 {
     int bar;
 [||]
-}",
-                    },
-                },
-                FixedState =
-                {
-                    Sources =
-                    {
-@"partial class Goo
-{
-
-
-}",
-@"partial class Goo
+}
+        </Document>
+    </Project>
+</Workspace>",
+@"
+partial class Goo
 {
     int bar;
 
@@ -3995,23 +3185,18 @@ namespace N
     {
         return 999205674 + bar.GetHashCode();
     }
-}",
-                    },
-                },
-                MemberNames = ImmutableArray.Create("bar"),
-                CodeActionIndex = 1,
-            }.RunAsync();
+}
+        ",
+chosenSymbols: new[] { "bar" },
+index: 1);
         }
 
         [WorkItem(43290, "https://github.com/dotnet/roslyn/issues/43290")]
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateEqualsAndGetHashCode)]
         public async Task TestAbstractBase()
         {
-            var code =
-@"
-#nullable enable
-
-namespace System { public struct HashCode { } }
+            await TestInRegularAndScript1Async(
+@"namespace System { public struct HashCode { } }
 
 abstract class Base
 {
@@ -4019,15 +3204,11 @@ abstract class Base
     public abstract override int GetHashCode();
 }
 
-class {|CS0534:{|CS0534:Derived|}|} : Base
+class Derived : Base
 {
     [|public int P { get; }|]
-}";
-            var fixedCode =
-@"
-#nullable enable
-
-using System;
+}",
+@"using System;
 
 namespace System { public struct HashCode { } }
 
@@ -4041,7 +3222,7 @@ class Derived : Base
 {
     public int P { get; }
 
-    public override bool Equals(object? obj)
+    public override bool Equals(object obj)
     {
         return obj is Derived derived &&
                P == derived.P;
@@ -4051,23 +3232,9 @@ class Derived : Base
     {
         return HashCode.Combine(P);
     }
-}";
-
-            await new VerifyCS.Test
-            {
-                TestCode = code,
-                FixedState =
-                {
-                    Sources = { fixedCode },
-                    ExpectedDiagnostics =
-                    {
-                        // /0/Test0.cs(23,25): error CS0117: 'HashCode' does not contain a definition for 'Combine'
-                        DiagnosticResult.CompilerError("CS0117").WithSpan(26, 25, 26, 32).WithArguments("System.HashCode", "Combine"),
-                    },
-                },
-                CodeActionIndex = 1,
-                LanguageVersion = LanguageVersion.Default,
-            }.RunAsync();
+}",
+index: 1,
+parameters: CSharpLatest);
         }
     }
 }

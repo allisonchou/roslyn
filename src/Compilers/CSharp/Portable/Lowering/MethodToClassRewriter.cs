@@ -129,7 +129,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     newLocals,
                     (BoundExpression)this.Visit(node.ExceptionSourceOpt),
                     this.VisitType(node.ExceptionTypeOpt),
-                    (BoundBlock)this.Visit(node.ExceptionFilterPrologueOpt),
                     (BoundExpression)this.Visit(node.ExceptionFilterOpt),
                     (BoundBlock)this.Visit(node.Body),
                     node.IsSynthesizedAsyncCatchAll);

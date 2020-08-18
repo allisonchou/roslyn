@@ -11,12 +11,12 @@ namespace Microsoft.CodeAnalysis.ErrorReporting
     /// </summary>
     internal class WatsonReporter
     {
-        public static void Report(string _1, Exception _2)
+        public static void Report(string description, Exception exception)
         {
             // do nothing
         }
 
-        public static void Report(string _1, Exception _2, Func<IFaultUtility, int> _3)
+        public static void Report(string description, Exception exception, Func<IFaultUtility, int> callback)
         {
             // do nothing
         }

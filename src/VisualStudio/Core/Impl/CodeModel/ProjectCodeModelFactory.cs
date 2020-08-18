@@ -11,20 +11,21 @@ using System.Collections.Immutable;
 using System.ComponentModel.Composition;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using EnvDTE80;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Editor;
 using Microsoft.CodeAnalysis.Editor.Shared.Utilities;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.CodeAnalysis.SolutionCrawler;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 using Roslyn.Utilities;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
 {
     [Export(typeof(IProjectCodeModelFactory))]
     [Export(typeof(ProjectCodeModelFactory))]
-    internal sealed class ProjectCodeModelFactory : IProjectCodeModelFactory
+    internal sealed class ProjectCodeModelFactory : IProjectCodeModelFactory, IDisposable
     {
         private readonly ConcurrentDictionary<ProjectId, ProjectCodeModel> _projectCodeModels = new ConcurrentDictionary<ProjectId, ProjectCodeModel>();
 
@@ -32,6 +33,19 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
         private readonly IServiceProvider _serviceProvider;
 
         private readonly IThreadingContext _threadingContext;
+
+        /// <summary>
+        /// A collection of cleanup tasks that were deferred to the UI thread. In some cases, we have to clean up
+        /// certain things on the UI thread but it's not critical when those are cleared up. This just exists so we can
+        /// wait on them to be shut down before we shut down VS entirely.
+        /// </summary>
+        private readonly JoinableTaskCollection _deferredCleanupTasks;
+
+        /// <summary>
+        /// Cancellation token that controls existing async work that we have kicked off.  Canceled when we're finally
+        /// disposed.
+        /// </summary>
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private readonly IForegroundNotificationService _notificationService;
         private readonly IAsynchronousOperationListener _listener;
@@ -49,6 +63,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
             _visualStudioWorkspace = visualStudioWorkspace;
             _serviceProvider = serviceProvider;
             _threadingContext = threadingContext;
+            _deferredCleanupTasks = new JoinableTaskCollection(threadingContext.JoinableTaskContext);
+            _deferredCleanupTasks.DisplayName = nameof(ProjectCodeModelFactory) + "." + nameof(_deferredCleanupTasks);
 
             _notificationService = notificationService;
             _listener = listenerProvider.GetListener(FeatureAttribute.CodeModel);
@@ -63,7 +79,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
                 // single document down to one notification.
                 EqualityComparer<DocumentId>.Default,
                 _listener,
-                threadingContext.DisposalToken);
+                _cancellationTokenSource.Token);
 
             _visualStudioWorkspace.WorkspaceChanged += OnWorkspaceChanged;
         }
@@ -87,7 +103,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
             bool FireEventsForDocument(DocumentId documentId)
             {
                 // If we've been asked to shutdown, don't bother reporting any more events.
-                if (_threadingContext.DisposalToken.IsCancellationRequested)
+                if (_cancellationTokenSource.IsCancellationRequested)
                     return false;
 
                 var projectCodeModel = this.TryGetProjectCodeModel(documentId.ProjectId);
@@ -182,14 +198,16 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
         public EnvDTE.FileCodeModel GetOrCreateFileCodeModel(ProjectId id, string filePath)
             => GetProjectCodeModel(id).GetOrCreateFileCodeModel(filePath).Handle;
 
-        public void ScheduleDeferredCleanupTask(Action<CancellationToken> a)
+        public void ScheduleDeferredCleanupTask(Action a)
+            => _deferredCleanupTasks.Add(_threadingContext.JoinableTaskFactory.StartOnIdle(a, VsTaskRunContext.UIThreadNormalPriority));
+
+        void IDisposable.Dispose()
         {
-            _ = _threadingContext.RunWithShutdownBlockAsync(async cancellationToken =>
-            {
-                await _threadingContext.JoinableTaskFactory.StartOnIdle(
-                    () => a(cancellationToken),
-                    VsTaskRunContext.UIThreadNormalPriority);
-            });
+            // Stop any outstanding BG work we've queued up.
+            _cancellationTokenSource.Cancel();
+
+            // Now wait for all our cleanup tasks to finish before we return.
+            _deferredCleanupTasks.Join();
         }
     }
 }

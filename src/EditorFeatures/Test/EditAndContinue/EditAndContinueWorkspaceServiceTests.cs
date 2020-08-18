@@ -16,12 +16,14 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Test.Utilities;
 using Microsoft.CodeAnalysis.Debugging;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Editor.UnitTests;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.UnitTests;
+using Microsoft.VisualStudio.Composition;
 using Moq;
 using Roslyn.Test.Utilities;
 using Roslyn.Utilities;
@@ -32,8 +34,9 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
     [UseExportProvider]
     public sealed class EditAndContinueWorkspaceServiceTests : TestBase
     {
-        private static readonly TestComposition s_composition = FeaturesTestCompositions.Features.AddParts(
-            typeof(TestActiveStatementSpanTrackerFactory));
+        private static readonly IExportProviderFactory s_exportProviderFactoryWithTestActiveStatementSpanTracker =
+            ExportProviderCache.GetOrCreateExportProviderFactory(TestExportProvider.EntireAssemblyCatalogWithCSharpAndVisualBasic
+                .WithPart(typeof(TestActiveStatementSpanTrackerFactory)));
 
         private static readonly ActiveStatementProvider s_noActiveStatements =
             cancellationToken => Task.FromResult(ImmutableArray<ActiveStatementDebugInfo>.Empty);
@@ -80,7 +83,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
                 testReportTelemetry: data => EditAndContinueWorkspaceService.LogDebuggingSessionTelemetry(data, (id, message) => _telemetryLog.Add($"{id}: {message.GetMessage()}"), () => ++_telemetryId));
         }
 
-        private static DebuggingSession StartDebuggingSession(EditAndContinueWorkspaceService service, CommittedSolution.DocumentState initialState = CommittedSolution.DocumentState.MatchesBuildOutput)
+        private DebuggingSession StartDebuggingSession(EditAndContinueWorkspaceService service, CommittedSolution.DocumentState initialState = CommittedSolution.DocumentState.MatchesBuildOutput)
         {
             var solution = service.Test_GetWorkspace().CurrentSolution;
 
@@ -183,7 +186,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
             return (debuggeeModuleInfo, moduleId);
         }
 
-        private static SourceText CreateSourceTextFromFile(string path)
+        private SourceText CreateSourceTextFromFile(string path)
         {
             using var stream = File.OpenRead(path);
             return SourceText.From(stream, Encoding.UTF8, SourceHashAlgorithm.Sha256);
@@ -195,10 +198,10 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         [Fact]
         public async Task RunMode_ProjectThatDoesNotSupportEnC()
         {
-            using var workspace = new TestWorkspace(composition: FeaturesTestCompositions.Features.AddParts(
-                typeof(DummyLanguageService),
-                typeof(TestActiveStatementSpanTrackerFactory)));
+            var exportProviderFactory = ExportProviderCache.GetOrCreateExportProviderFactory(
+                TestExportProvider.MinimumCatalogWithCSharpAndVisualBasic.WithPart(typeof(DummyLanguageService)).WithPart(typeof(TestActiveStatementSpanTrackerFactory)));
 
+            using var workspace = new TestWorkspace(exportProvider: exportProviderFactory.CreateExportProvider());
             var solution = workspace.CurrentSolution;
             var project = solution.AddProject("dummy_proj", "dummy_proj", DummyLanguageService.LanguageName);
             var document = project.AddDocument("test", SourceText.From("dummy1"));
@@ -226,7 +229,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         {
             var moduleFile = Temp.CreateFile().WriteAllBytes(TestResources.Basic.Members);
 
-            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             var documentInfo = DocumentInfo.Create(
@@ -270,7 +273,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         [Fact]
         public async Task RunMode_ProjectNotBuilt()
         {
-            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 _mockCompilationOutputsProvider = _ => new MockCompilationOutputs(Guid.Empty);
 
@@ -299,7 +302,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
             // empty module file will cause read error:
             var moduleFile = Temp.CreateFile();
 
-            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
 
@@ -336,7 +339,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         {
             var moduleFile = Temp.CreateFile().WriteAllBytes(TestResources.Basic.Members);
 
-            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
             var service = CreateEditAndContinueService(workspace);
 
             var project = workspace.CurrentSolution.Projects.Single();
@@ -379,7 +382,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         {
             var moduleFile = Temp.CreateFile().WriteAllBytes(TestResources.Basic.Members);
 
-            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             workspace.ChangeSolution(project.Solution.WithProjectOutputFilePath(project.Id, moduleFile.Path));
@@ -419,7 +422,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         {
             var moduleFile = Temp.CreateFile().WriteAllBytes(TestResources.Basic.Members);
 
-            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
                 workspace.ChangeSolution(project.Solution.WithProjectOutputFilePath(project.Id, moduleFile.Path));
@@ -469,7 +472,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
             var source = "class C1 { void M1() { System.Console.WriteLine(1); } }";
             var moduleFile = Temp.CreateFile().WriteAllBytes(TestResources.Basic.Members);
 
-            using var workspace = TestWorkspace.CreateCSharp(source, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(source, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             workspace.ChangeSolution(project.Solution.WithProjectOutputFilePath(project.Id, moduleFile.Path));
@@ -504,11 +507,10 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         [Fact]
         public async Task BreakMode_ProjectThatDoesNotSupportEnC()
         {
-            var composition = FeaturesTestCompositions.Features.AddParts(
-                typeof(DummyLanguageService),
-                typeof(TestActiveStatementSpanTrackerFactory));
+            var exportProviderFactory = ExportProviderCache.GetOrCreateExportProviderFactory(
+                TestExportProvider.MinimumCatalogWithCSharpAndVisualBasic.WithPart(typeof(DummyLanguageService)).WithPart(typeof(TestActiveStatementSpanTrackerFactory)));
 
-            using (var workspace = new TestWorkspace(composition: composition))
+            using (var workspace = new TestWorkspace(exportProvider: exportProviderFactory.CreateExportProvider()))
             {
                 var solution = workspace.CurrentSolution;
                 var project = solution.AddProject("dummy_proj", "dummy_proj", DummyLanguageService.LanguageName);
@@ -537,7 +539,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         [Fact]
         public async Task BreakMode_DesignTimeOnlyDocument_Dynamic()
         {
-            using var workspace = TestWorkspace.CreateCSharp("class C {}", composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp("class C {}", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             var documentInfo = DocumentInfo.Create(
@@ -582,7 +584,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
             var dir = Temp.CreateDirectory();
             var sourceFileA = dir.CreateFile("a.cs").WriteAllText(sourceA);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             // the workspace starts with a version of the source that's not updated with the output of single file generator (or design-time build):
             var documentA = workspace.CurrentSolution.
@@ -651,7 +653,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
             // module file is empty, which will cause a read error:
             var moduleFile = Temp.CreateFile();
 
-            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
                 _mockCompilationOutputsProvider = _ => new CompilationOutputFiles(moduleFile.Path);
@@ -712,7 +714,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("a.cs").WriteAllText(source1);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var document1 = workspace.CurrentSolution.
                 AddProject("test", "test", LanguageNames.CSharp).
@@ -786,7 +788,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("a.cs").WriteAllText(source1);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var document1 = workspace.CurrentSolution.
                 AddProject("test", "test", LanguageNames.CSharp).
@@ -864,7 +866,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
         {
             var moduleFile = Temp.CreateFile().WriteAllBytes(TestResources.Basic.Members);
 
-            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             workspace.ChangeSolution(project.Solution.WithProjectOutputFilePath(project.Id, moduleFile.Path));
@@ -936,7 +938,7 @@ class C1
     System.Console.WriteLine(30); 
   } 
 }";
-            using (var workspace = TestWorkspace.CreateCSharp(source1, composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp(source1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
                 _mockCompilationOutputsProvider = _ => new MockCompilationOutputs(moduleId);
@@ -1001,7 +1003,7 @@ class C1
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("test.cs").WriteAllText(source1, encoding);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var document1 = workspace.CurrentSolution.
                 AddProject("test", "test", LanguageNames.CSharp).
@@ -1037,7 +1039,7 @@ class C1
         {
             var moduleId = Guid.NewGuid();
 
-            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
                 _mockCompilationOutputsProvider = _ => new MockCompilationOutputs(moduleId);
@@ -1091,7 +1093,7 @@ class C1
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("a.cs");
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.
                 AddProject("test", "test", LanguageNames.CSharp).
@@ -1179,7 +1181,7 @@ class C1
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("a.cs").WriteAllText(source1);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             // the workspace starts with a version of the source that's not updated with the output of single file generator (or design-time build):
             var document1 = workspace.CurrentSolution.
@@ -1227,7 +1229,7 @@ class C1
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("a.cs").WriteAllText(source1);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             // the workspace starts with a version of the source that's not updated with the output of single file generator (or design-time build):
             var document1 = workspace.CurrentSolution.
@@ -1287,7 +1289,7 @@ class C1
         {
             var moduleId = Guid.NewGuid();
 
-            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
                 _mockCompilationOutputsProvider = _ => new MockCompilationOutputs(moduleId);
@@ -1336,7 +1338,7 @@ class C1
         {
             var sourceV1 = "class C1 { void M() { System.Console.WriteLine(1); } }";
 
-            using var workspace = TestWorkspace.CreateCSharp(sourceV1, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(sourceV1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             var (_, moduleId) = EmitAndLoadLibraryToDebuggee(sourceV1);
@@ -1391,7 +1393,7 @@ class C1
         [Fact]
         public async Task BreakMode_FileStatus_CompilationError()
         {
-            using (var workspace = TestWorkspace.CreateCSharp("class Program { void Main() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class Program { void Main() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var solution = workspace.CurrentSolution;
                 var projectA = solution.Projects.Single();
@@ -1433,7 +1435,7 @@ class C1
         {
             var sourceV1 = "class C1 { void M() { System.Console.WriteLine(1); } }";
 
-            using var workspace = TestWorkspace.CreateCSharp(sourceV1, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(sourceV1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             EmitAndLoadLibraryToDebuggee(sourceV1);
@@ -1522,7 +1524,7 @@ class C1
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("test.cs").WriteAllText(source1);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             // the workspace starts with a version of the source that's not updated with the output of single file generator (or design-time build):
             var document1 = workspace.CurrentSolution.
@@ -1602,7 +1604,7 @@ class C1
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("test.cs").WriteAllText(source2);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             // the workspace starts with a version of the source that's not updated with the output of single file generator (or design-time build):
             var document2 = workspace.CurrentSolution.
@@ -1675,7 +1677,7 @@ class C1
             var dir = Temp.CreateDirectory();
             var sourceFile = dir.CreateFile("test.cs").WriteAllText(sourceOnDisk);
 
-            using var workspace = new TestWorkspace(composition: s_composition);
+            using var workspace = new TestWorkspace(exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             // the workspace starts with a version of the source that's not updated with the output of single file generator (or design-time build):
             var document1 = workspace.CurrentSolution.
@@ -1745,7 +1747,7 @@ class C1
         {
             var sourceV1 = "class C1 { void M() { System.Console.WriteLine(1); } }";
 
-            using var workspace = TestWorkspace.CreateCSharp(sourceV1, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(sourceV1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             var (debuggeeModuleInfo, moduleId) = EmitAndLoadLibraryToDebuggee(sourceV1);
@@ -1867,7 +1869,7 @@ class C1
             var pdbFile = dir.CreateFile("lib.pdb").WriteAllBytes(pdbStream.ToArray());
             var moduleId = moduleMetadata.GetModuleVersionId();
 
-            using var workspace = TestWorkspace.CreateCSharp(sourceV1, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(sourceV1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
 
             var project = workspace.CurrentSolution.Projects.Single();
             var document1 = workspace.CurrentSolution.Projects.Single().Documents.Single();
@@ -2017,7 +2019,7 @@ class C1
             var pdbFileB = dir.CreateFile("B.pdb").WriteAllBytes(pdbStreamB.ToArray());
             var moduleIdB = moduleMetadataB.GetModuleVersionId();
 
-            using (var workspace = TestWorkspace.CreateCSharp(source1, composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp(source1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var solution = workspace.CurrentSolution;
                 var projectA = solution.Projects.Single();
@@ -2222,7 +2224,7 @@ class C1
         [Fact]
         public async Task BreakMode_ValidSignificantChange_BaselineCreationFailed_NoStream()
         {
-            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp("class C1 { void M() { System.Console.WriteLine(1); } }", exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
                 _mockCompilationOutputsProvider = _ => new MockCompilationOutputs(Guid.NewGuid())
@@ -2260,7 +2262,7 @@ class C1
             var peImage = compilationV1.EmitToArray(new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb), pdbStream: pdbStream);
             pdbStream.Position = 0;
 
-            using (var workspace = TestWorkspace.CreateCSharp(sourceV1, composition: s_composition))
+            using (var workspace = TestWorkspace.CreateCSharp(sourceV1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider()))
             {
                 var project = workspace.CurrentSolution.Projects.Single();
                 _mockCompilationOutputsProvider = _ => new MockCompilationOutputs(Guid.NewGuid())
@@ -2304,7 +2306,7 @@ class C1
             var sourceV1 = "class C { void F() => G(1); void G(int a) => System.Console.WriteLine(1); }";
             var sourceV2 = "class C { int x; void F() => G(1); void G(int a) => System.Console.WriteLine(2); }";
 
-            using var workspace = TestWorkspace.CreateCSharp(sourceV1, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(sourceV1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
             var activeSpan11 = GetSpan(sourceV1, "G(1)");
             var activeSpan12 = GetSpan(sourceV1, "System.Console.WriteLine(1)");
             var activeSpan21 = GetSpan(sourceV2, "G(1)");
@@ -2421,7 +2423,7 @@ class C1
                 "class C { int x; void F() => G(1); void G(int a) => System.Console.WriteLine(2); }" :
                 "class C { int x void F() => G(1); void G(int a) => System.Console.WriteLine(2); }";
 
-            using var workspace = TestWorkspace.CreateCSharp(sourceV1, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(sourceV1, exportProvider: s_exportProviderFactoryWithTestActiveStatementSpanTracker.CreateExportProvider());
             var activeSpan11 = GetSpan(sourceV1, "G(1)");
             var activeSpan12 = GetSpan(sourceV1, "System.Console.WriteLine(1)");
             var activeSpan21 = GetSpan(sourceV2, "G(1)");
@@ -2507,11 +2509,10 @@ class C1
         [Fact]
         public async Task ActiveStatements_ForeignDocument()
         {
-            var composition = FeaturesTestCompositions.Features.AddParts(
-                typeof(DummyLanguageService),
-                typeof(TestActiveStatementSpanTrackerFactory));
+            var exportProviderFactory = ExportProviderCache.GetOrCreateExportProviderFactory(
+                TestExportProvider.MinimumCatalogWithCSharpAndVisualBasic.WithPart(typeof(DummyLanguageService)).WithPart(typeof(TestActiveStatementSpanTrackerFactory)));
 
-            using var workspace = new TestWorkspace(composition: composition);
+            using var workspace = new TestWorkspace(exportProvider: exportProviderFactory.CreateExportProvider());
             var solution = workspace.CurrentSolution;
             var project = solution.AddProject("dummy_proj", "dummy_proj", DummyLanguageService.LanguageName);
             var document = project.AddDocument("test", SourceText.From("dummy1"));

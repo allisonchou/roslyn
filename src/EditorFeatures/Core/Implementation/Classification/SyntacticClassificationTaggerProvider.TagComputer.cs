@@ -418,7 +418,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Classification
                 ClassificationUtilities.ReturnClassifiedSpanList(tempList);
             }
 
-            private static void AddClassifiedSpansForTokens(
+            private void AddClassifiedSpansForTokens(
                 IClassificationService classificationService,
                 SnapshotSpan span,
                 List<ClassifiedSpan> classifiedSpans)

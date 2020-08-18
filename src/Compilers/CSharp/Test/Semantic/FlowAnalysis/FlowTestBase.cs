@@ -76,9 +76,9 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             return CompileAndGetModelAndStatements(program, (model, stmt1, stmt2) => model.AnalyzeControlFlow(stmt1, stmt2));
         }
 
-        protected DataFlowAnalysis CompileAndAnalyzeDataFlowExpression(string program, params MetadataReference[] references)
+        protected DataFlowAnalysis CompileAndAnalyzeDataFlowExpression(string program)
         {
-            return CompileAndGetModelAndExpression(program, (model, expression) => model.AnalyzeDataFlow(expression), references);
+            return CompileAndGetModelAndExpression(program, (model, expression) => model.AnalyzeDataFlow(expression));
         }
 
         protected DataFlowAnalysis CompileAndAnalyzeDataFlowStatements(string program)
@@ -91,9 +91,9 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             return CompileAndGetModelAndStatements(program, (model, stmt1, stmt2) => (model.AnalyzeControlFlow(stmt1, stmt2), model.AnalyzeDataFlow(stmt1, stmt2)));
         }
 
-        protected T CompileAndGetModelAndExpression<T>(string program, Func<SemanticModel, ExpressionSyntax, T> analysisDelegate, params MetadataReference[] references)
+        protected T CompileAndGetModelAndExpression<T>(string program, Func<SemanticModel, ExpressionSyntax, T> analysisDelegate)
         {
-            var comp = CreateCompilation(program, parseOptions: TestOptions.RegularPreview, references: references);
+            var comp = CreateCompilation(program, parseOptions: TestOptions.RegularPreview);
             var tree = comp.SyntaxTrees[0];
             var model = comp.GetSemanticModel(tree);
             int start = program.IndexOf(StartString, StringComparison.Ordinal) + StartString.Length;

@@ -8,15 +8,8 @@ using Xunit;
 
 namespace Microsoft.CodeAnalysis.CompilerServer.UnitTests
 {
-    public sealed class BuildServerControllerTests : IDisposable
+    public sealed class BuildServerControllerTests
     {
-
-        public void Dispose()
-        {
-            NamedPipeTestUtil.DisposeAll();
-
-        }
-
         public sealed class GetKeepAliveTimeoutTests
         {
             private readonly NameValueCollection _appSettings = new NameValueCollection();

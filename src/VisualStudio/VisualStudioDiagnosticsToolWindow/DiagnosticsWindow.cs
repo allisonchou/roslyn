@@ -19,7 +19,7 @@ namespace Roslyn.VisualStudio.DiagnosticsWindow
         /// <summary>
         /// Standard constructor for the tool window.
         /// </summary>
-        public DiagnosticsWindow(object _)
+        public DiagnosticsWindow(object context)
             : base(null)
         {
             // Set the window title reading it from the resources.

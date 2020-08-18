@@ -13,7 +13,6 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp.Test.Utilities;
@@ -27,49 +26,21 @@ using VB = Microsoft.CodeAnalysis.VisualBasic;
 using KeyValuePairUtil = Roslyn.Utilities.KeyValuePairUtil;
 using System.Security.Cryptography;
 using static Roslyn.Test.Utilities.TestHelpers;
-using static Roslyn.Test.Utilities.TestMetadata;
 
 namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 {
     public class CompilationAPITests : CSharpTestBase
     {
-        private CSharpCompilationOptions WithDiagnosticOptions(
-            SyntaxTree tree,
-            params (string, ReportDiagnostic)[] options)
-            => TestOptions.DebugDll.WithSyntaxTreeOptionsProvider(new TestSyntaxTreeOptionsProvider(tree, options));
-
-        [Fact]
-        public void TreeDiagnosticOptionsDoNotAffectTreeDiagnostics()
-        {
-#pragma warning disable CS0618 // This test is intentionally calling the obsolete method to assert the diagnosticOptions input is now ignored
-
-            var tree = SyntaxFactory.ParseSyntaxTree("class C { long _f = 0l;}",
-                options: null,
-                path: "",
-                encoding: null,
-                diagnosticOptions: CreateImmutableDictionary(("CS0078", ReportDiagnostic.Suppress)),
-                cancellationToken: default);
-
-            tree.GetDiagnostics().Verify(
-                // (1,22): warning CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
-                // class C { long _f = 0l;}
-                Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 22));
-
-#pragma warning restore CS0618
-        }
-
         [Fact]
         public void PerTreeVsGlobalSuppress()
         {
             var tree = SyntaxFactory.ParseSyntaxTree("class C { long _f = 0l;}");
-            var options = TestOptions.DebugDll
+            var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                 .WithGeneralDiagnosticOption(ReportDiagnostic.Suppress);
             var comp = CreateCompilation(tree, options: options);
             comp.VerifyDiagnostics();
 
-            options = options.WithSyntaxTreeOptionsProvider(
-                new TestSyntaxTreeOptionsProvider((tree, new[] { ("CS0078", ReportDiagnostic.Warn) })));
-
+            tree = tree.WithDiagnosticOptions(CreateImmutableDictionary(("CS0078", ReportDiagnostic.Warn)));
             comp = CreateCompilation(tree, options: options);
             // Syntax tree diagnostic options override global settting
             comp.VerifyDiagnostics(
@@ -82,6 +53,10 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
         public void PerTreeDiagnosticOptionsParseWarnings()
         {
             var tree = SyntaxFactory.ParseSyntaxTree("class C { long _f = 0l;}");
+            tree.GetDiagnostics().Verify(
+                // (1,22): warning CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
+                // class C { long _f = 0l;}
+                Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 22));
 
             var comp = CreateCompilation(tree);
             comp.VerifyDiagnostics(
@@ -92,9 +67,15 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
                 // class C { long _f = 0l;}
                 Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 16));
 
-            var options = WithDiagnosticOptions(tree, ("CS0078", ReportDiagnostic.Suppress));
-            comp = CreateCompilation(tree, options: options);
-            comp.VerifyDiagnostics(
+            var newTree = tree.WithDiagnosticOptions(CreateImmutableDictionary(("CS0078", ReportDiagnostic.Suppress)));
+            // Diagnostic options on the syntax tree do not affect GetDiagnostics()
+            newTree.GetDiagnostics().Verify(
+                // (1,22): warning CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
+                // class C { long _f = 0l;}
+                Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 22));
+
+            var comp2 = CreateCompilation(newTree);
+            comp2.VerifyDiagnostics(
                 // (1,16): warning CS0414: The field 'C._f' is assigned but its value is never used
                 // class C { long _f = 0l;}
                 Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 16));
@@ -105,7 +86,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
         {
             var tree = SyntaxFactory.ParseSyntaxTree(@"
 class C {
-#pragma warning disable CS0078
+#pragma warning disable CS0078 
 long _f = 0l;
 #pragma warning restore CS0078
 }");
@@ -120,10 +101,10 @@ long _f = 0l;
                 // long _f = 0l;
                 Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(4, 6));
 
-            var options = WithDiagnosticOptions(tree, ("CS0078", ReportDiagnostic.Error));
-            comp = CreateCompilation(tree, options: options);
+            var newTree = tree.WithDiagnosticOptions(CreateImmutableDictionary(("CS0078", ReportDiagnostic.Error)));
+            var comp2 = CreateCompilation(newTree);
             // Pragma should have precedence over per-tree options
-            comp.VerifyDiagnostics(
+            comp2.VerifyDiagnostics(
                 // (4,6): warning CS0414: The field 'C._f' is assigned but its value is never used
                 // long _f = 0l;
                 Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(4, 6));
@@ -132,96 +113,78 @@ long _f = 0l;
         [Fact]
         public void PerTreeDiagnosticOptionsVsSpecificOptions()
         {
-            var tree = SyntaxFactory.ParseSyntaxTree("class C { long _f = 0l; }");
-            var options = WithDiagnosticOptions(tree, ("CS0078", ReportDiagnostic.Suppress));
+            var tree = SyntaxFactory.ParseSyntaxTree(@" class C { long _f = 0l; }")
+                .WithDiagnosticOptions(CreateImmutableDictionary(("CS0078", ReportDiagnostic.Suppress)));
 
-            var comp = CreateCompilation(tree, options: options);
+            tree.GetDiagnostics().Verify(
+                // (1,23): warning CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
+                //  class C { long _f = 0l; }
+                Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 23));
+
+            var comp = CreateCompilation(tree);
             comp.VerifyDiagnostics(
-                // (1,16): warning CS0414: The field 'C._f' is assigned but its value is never used
-                // class C { long _f = 0l; }
-                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 16)
-            );
+                // (1,17): warning CS0414: The field 'C._f' is assigned but its value is never used
+                //  class C { long _f = 0l; }
+                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 17));
 
-            options = options.WithSpecificDiagnosticOptions(
-                CreateImmutableDictionary(("CS0078", ReportDiagnostic.Error)));
+            var newTree = tree.WithDiagnosticOptions(CreateImmutableDictionary(("CS0078", ReportDiagnostic.Error)));
+            var options = TestOptions.DebugDll.WithSpecificDiagnosticOptions(
+                CreateImmutableDictionary(("CS0078", ReportDiagnostic.Suppress)));
 
-            var comp2 = CreateCompilation(tree, options: options);
+            var comp2 = CreateCompilation(newTree, options: options);
             // Per-tree options should have precedence over specific diagnostic options
             comp2.VerifyDiagnostics(
-                // (1,16): warning CS0414: The field 'C._f' is assigned but its value is never used
+                // (1,23): error CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
                 //  class C { long _f = 0l; }
-                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 16));
+                Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 23).WithWarningAsError(true),
+                // (1,17): warning CS0414: The field 'C._f' is assigned but its value is never used
+                //  class C { long _f = 0l; }
+                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 17));
         }
 
         [Fact]
         public void DifferentDiagnosticOptionsForTrees()
         {
-            var tree = SyntaxFactory.ParseSyntaxTree(@" class C { long _f = 0l; }");
-            var newTree = SyntaxFactory.ParseSyntaxTree(@" class D { long _f = 0l; }");
-            var options = TestOptions.DebugDll.WithSyntaxTreeOptionsProvider(
-                new TestSyntaxTreeOptionsProvider(
-                    (tree, new[] { ("CS0078", ReportDiagnostic.Suppress) }),
-                    (newTree, new[] { ("CS0078", ReportDiagnostic.Error) })
-                )
-            );
+            var tree = SyntaxFactory.ParseSyntaxTree(@" class C { long _f = 0l; }")
+                .WithDiagnosticOptions(CreateImmutableDictionary(("CS0078", ReportDiagnostic.Suppress)));
+            var newTree = SyntaxFactory.ParseSyntaxTree(@" class D { long _f = 0l; }")
+                .WithDiagnosticOptions(CreateImmutableDictionary(("CS0078", ReportDiagnostic.Error)));
 
-            var comp = CreateCompilation(new[] { tree, newTree }, options: options);
+            var comp = CreateCompilation(new[] { tree, newTree });
             comp.VerifyDiagnostics(
                 // (1,23): error CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
                 //  class D { long _f = 0l; }
                 Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 23).WithWarningAsError(true),
-                // (1,17): warning CS0414: The field 'D._f' is assigned but its value is never used
-                //  class D { long _f = 0l; }
-                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("D._f").WithLocation(1, 17),
                 // (1,17): warning CS0414: The field 'C._f' is assigned but its value is never used
                 //  class C { long _f = 0l; }
-                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 17)
-            );
+                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 17),
+                // (1,17): warning CS0414: The field 'D._f' is assigned but its value is never used
+                //  class D { long _f = 0l; }
+                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("D._f").WithLocation(1, 17));
         }
 
         [Fact]
         public void TreeOptionsComparerRespected()
         {
-            var tree = SyntaxFactory.ParseSyntaxTree(@" class C { long _f = 0l; }");
+            var options = CreateImmutableDictionary(StringOrdinalComparer.Instance, ("cs0078", ReportDiagnostic.Suppress));
 
-            // Default options have case insensitivity
-            var options = TestOptions.DebugDll.WithSyntaxTreeOptionsProvider(
-                new TestSyntaxTreeOptionsProvider((tree, new[] { ("cs0078", ReportDiagnostic.Suppress) }))
-            );
+            var tree = SyntaxFactory.ParseSyntaxTree(@" class C { long _f = 0l; }")
+                .WithDiagnosticOptions(options);
 
-            CreateCompilation(tree, options: options).VerifyDiagnostics(
-                // (1,17): warning CS0414: The field 'C._f' is assigned but its value is never used
-                //  class C { long _f = 0l; }
-                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 17)
-            );
+            var newTree = SyntaxFactory.ParseSyntaxTree(@" class D { long _f = 0l; }")
+                .WithDiagnosticOptions(options.WithComparers(CaseInsensitiveComparison.Comparer));
 
-            options = TestOptions.DebugDll.WithSyntaxTreeOptionsProvider(
-                new TestSyntaxTreeOptionsProvider(
-                    StringComparer.Ordinal,
-                    (tree, new[] { ("cs0078", ReportDiagnostic.Suppress) }))
-            );
-
-            CreateCompilation(tree, options: options).VerifyDiagnostics(
+            var comp = CreateCompilation(new[] { tree, newTree });
+            comp.VerifyDiagnostics(
                 // (1,23): warning CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
                 //  class C { long _f = 0l; }
                 Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 23),
                 // (1,17): warning CS0414: The field 'C._f' is assigned but its value is never used
                 //  class C { long _f = 0l; }
-                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 17)
-            );
-        }
-
-        [Fact]
-        public void WarningLevelRespectedForLexerWarnings()
-        {
-            var source = @"public class C { public long Field = 0l; }";
-            CreateCompilation(source).VerifyDiagnostics(
-                // (1,39): warning CS0078: The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity
-                // public class C { public long Field = 0l; }
-                Diagnostic(ErrorCode.WRN_LowercaseEllSuffix, "l").WithLocation(1, 39)
-                );
-            CreateCompilation(source, options: TestOptions.ReleaseDll.WithWarningLevel(0)).VerifyDiagnostics(
-                );
+                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("C._f").WithLocation(1, 17),
+                // (1,17): warning CS0414: The field 'D._f' is assigned but its value is never used
+                //  class D { long _f = 0l; }
+                Diagnostic(ErrorCode.WRN_UnreferencedFieldAssg, "_f").WithArguments("D._f").WithLocation(1, 17));
         }
 
         [WorkItem(8360, "https://github.com/dotnet/roslyn/issues/8360")]
@@ -265,7 +228,7 @@ long _f = 0l;
         public void CompilationName()
         {
             // report an error, rather then silently ignoring the directory
-            // (see cli partition II 22.30)
+            // (see cli partition II 22.30) 
             CSharpCompilation.Create(@"C:/goo/Test.exe").VerifyEmitDiagnostics(
                 // warning CS8021: No value for RuntimeMetadataVersion found. No assembly containing System.Object was found nor was a value for RuntimeMetadataVersion specified through options.
                 Diagnostic(ErrorCode.WRN_NoRuntimeMetadataVersion).WithLocation(1, 1),
@@ -331,10 +294,10 @@ long _f = 0l;
             var listSyntaxTree = new List<SyntaxTree>();
             var listRef = new List<MetadataReference>();
 
-            var s1 = @"using Goo;
-namespace A.B {
-   class C {
-     class D {
+            var s1 = @"using Goo; 
+namespace A.B { 
+   class C { 
+     class D { 
        class E { }
      }
    }
@@ -347,7 +310,7 @@ namespace A.B {
             listSyntaxTree.Add(t1);
 
             // System.dll
-            listRef.Add(Net451.System.WithEmbedInteropTypes(true));
+            listRef.Add(TestReferences.NetFx.v4_0_30319.System.WithEmbedInteropTypes(true));
             var ops = TestOptions.ReleaseExe;
             // Create Compilation with Option is not null
             var comp = CSharpCompilation.Create("Compilation", listSyntaxTree, listRef, ops);
@@ -480,15 +443,15 @@ namespace A.B {
             var opt = new CSharpCompilationOptions(OutputKind.ConsoleApplication);
             // Create Compilation takes two args
             var comp = CSharpCompilation.Create("Compilation", options: new CSharpCompilationOptions(OutputKind.ConsoleApplication));
-            var ref1 = Net451.mscorlib;
-            var ref2 = Net451.System;
+            var ref1 = TestReferences.NetFx.v4_0_30319.mscorlib;
+            var ref2 = TestReferences.NetFx.v4_0_30319.System;
             var ref3 = new TestMetadataReference(fullPath: @"c:\xml.bms");
             var ref4 = new TestMetadataReference(fullPath: @"c:\aaa.dll");
-            // Add a new empty item
+            // Add a new empty item 
             comp = comp.AddReferences(Enumerable.Empty<MetadataReference>());
             Assert.Equal(0, comp.ExternalReferences.Length);
 
-            // Add a new valid item
+            // Add a new valid item 
             comp = comp.AddReferences(ref1);
             var assemblySmb = comp.GetReferencedAssemblySymbol(ref1);
             Assert.NotNull(assemblySmb);
@@ -497,13 +460,13 @@ namespace A.B {
             Assert.Equal(MetadataImageKind.Assembly, comp.ExternalReferences[0].Properties.Kind);
             Assert.Equal(ref1, comp.ExternalReferences[0]);
 
-            // Replace an existing item with another valid item
+            // Replace an existing item with another valid item 
             comp = comp.ReplaceReference(ref1, ref2);
             Assert.Equal(1, comp.ExternalReferences.Length);
             Assert.Equal(MetadataImageKind.Assembly, comp.ExternalReferences[0].Properties.Kind);
             Assert.Equal(ref2, comp.ExternalReferences[0]);
 
-            // Remove an existing item
+            // Remove an existing item 
             comp = comp.RemoveReferences(ref2);
             Assert.Equal(0, comp.ExternalReferences.Length);
 
@@ -550,7 +513,7 @@ namespace A.B {
         public void ReferenceDirectiveTests()
         {
             var t1 = Parse(@"
-#r ""a.dll""
+#r ""a.dll"" 
 #r ""a.dll""
 ", filename: "1.csx", options: TestOptions.Script);
 
@@ -582,18 +545,18 @@ namespace A.B {
             var c = CreateCompilationWithMscorlib45(new[] { t1, t2 }, options: TestOptions.ReleaseDll.WithMetadataReferenceResolver(
                 new TestMetadataReferenceResolver(files: new Dictionary<string, PortableExecutableReference>()
                 {
-                    { @"a.dll", Net451.MicrosoftCSharp },
-                    { @"b.dll", Net451.MicrosoftVisualBasic },
+                    { @"a.dll", TestReferences.NetFx.v4_0_30319.Microsoft_CSharp },
+                    { @"b.dll", TestReferences.NetFx.v4_0_30319.Microsoft_VisualBasic },
                 })));
 
             c.VerifyDiagnostics();
 
             // same containing script file name and directive string
-            Assert.Same(Net451.MicrosoftCSharp, c.GetDirectiveReference(rd1[0]));
-            Assert.Same(Net451.MicrosoftCSharp, c.GetDirectiveReference(rd1[1]));
-            Assert.Same(Net451.MicrosoftCSharp, c.GetDirectiveReference(rd2[0]));
-            Assert.Same(Net451.MicrosoftVisualBasic, c.GetDirectiveReference(rd2[1]));
-            Assert.Same(Net451.MicrosoftCSharp, c.GetDirectiveReference(rd3[0]));
+            Assert.Same(TestReferences.NetFx.v4_0_30319.Microsoft_CSharp, c.GetDirectiveReference(rd1[0]));
+            Assert.Same(TestReferences.NetFx.v4_0_30319.Microsoft_CSharp, c.GetDirectiveReference(rd1[1]));
+            Assert.Same(TestReferences.NetFx.v4_0_30319.Microsoft_CSharp, c.GetDirectiveReference(rd2[0]));
+            Assert.Same(TestReferences.NetFx.v4_0_30319.Microsoft_VisualBasic, c.GetDirectiveReference(rd2[1]));
+            Assert.Same(TestReferences.NetFx.v4_0_30319.Microsoft_CSharp, c.GetDirectiveReference(rd3[0]));
 
             // different script name or directive string:
             Assert.Null(c.GetDirectiveReference(rd4[0]));
@@ -752,7 +715,7 @@ namespace A.B {
 namespace NA.NB
 {
   partial class C<T>
-  {
+  { 
     public partial class D
     {
       intttt F;
@@ -764,11 +727,11 @@ namespace NA.NB
             var s3 = @"int x;";
             var s4 = @"Imports System ";
             var s5 = @"
-class D
+class D 
 {
     public static int Goo()
     {
-        long l = 25l;
+        long l = 25l;   
         return 0;
     }
 }
@@ -800,11 +763,11 @@ class D
             comp = comp.AddSyntaxTrees(SyntaxFactory.ParseSyntaxTree(s1));
             Assert.Equal(3, comp.SyntaxTrees.Length);
 
-            // Replace an existing item with another valid item
+            // Replace an existing item with another valid item 
             comp = comp.ReplaceSyntaxTree(t1, SyntaxFactory.ParseSyntaxTree(s1));
             Assert.Equal(3, comp.SyntaxTrees.Length);
 
-            // Replace an existing item with same item
+            // Replace an existing item with same item 
             comp = comp.AddSyntaxTrees(t1).ReplaceSyntaxTree(t1, t1);
             Assert.Equal(4, comp.SyntaxTrees.Length);
 
@@ -818,7 +781,7 @@ class D
             Assert.Throws<ArgumentException>(() => comp = comp.RemoveSyntaxTrees(SyntaxFactory.ParseSyntaxTree(s1)));
             Assert.Equal(4, comp.SyntaxTrees.Length);
 
-            // Remove non-existing item
+            // Remove non-existing item 
             Assert.Throws<ArgumentException>(() => comp = comp.RemoveSyntaxTrees(withErrorTree));
             Assert.Equal(4, comp.SyntaxTrees.Length);
 
@@ -955,7 +918,7 @@ class D
 
             // Create compilation with args is disordered
             CSharpCompilation comp1 = CSharpCompilation.Create(assemblyName: "Compilation", syntaxTrees: null, options: TestOptions.ReleaseDll, references: null);
-            var ref1 = Net451.mscorlib;
+            var ref1 = TestReferences.NetFx.v4_0_30319.mscorlib;
             var listRef = new List<MetadataReference>();
             listRef.Add(ref1);
             listRef.Add(ref1);
@@ -982,7 +945,7 @@ class D
                 references: new MetadataReference[] { netModule1.EmitToImageReference() },
                 source: new string[] {
                     @"
-public class C2 {
+public class C2 { 
 public static void M() {
     var a = new C1();
 }
@@ -996,7 +959,7 @@ public static void M() {
                 references: new MetadataReference[] { netModule2.EmitToImageReference() },
                 source: new string[] {
                 @"
-public class C3 {
+public class C3 { 
 public static void Main(string[] args) {
 var a = new C2();
 }
@@ -1011,7 +974,7 @@ var a = new C2();
                 references: new MetadataReference[] { netModule1.EmitToImageReference(), netModule2.EmitToImageReference() },
                 source: new string[] {
                 @"
-public class C3 {
+public class C3 { 
 public static void Main(string[] args) {
 var a = new C2();
 }
@@ -1037,7 +1000,7 @@ var a = new C2();
                 references: new MetadataReference[] { netModule1.EmitToImageReference() },
                 source: new string[] {
                     @"
-public class C2 {
+public class C2 { 
 public static void M() {
     var a = new C1();
 }
@@ -1051,7 +1014,7 @@ public static void M() {
                 references: new MetadataReference[] { netModule1.EmitToImageReference() },
                 source: new string[] {
                     @"
-public class C2a {
+public class C2a { 
 public static void M() {
     var a = new C1();
 }
@@ -1065,7 +1028,7 @@ public static void M() {
                 references: new MetadataReference[] { netModule2.EmitToImageReference(), netModule3.EmitToImageReference() },
                 source: new string[] {
                 @"
-public class C3 {
+public class C3 { 
 public static void Main(string[] args) {
 var a = new C2();
 }
@@ -1088,7 +1051,7 @@ var a = new C2();
 using System;
 using System.Runtime.InteropServices;
 
-public class C2 {
+public class C2 { 
     [DllImport(""user32.dll"", CharSet = CharSet.Unicode)]
     public static extern int MessageBox(IntPtr hWnd, String text, String caption, uint type);
 }"
@@ -1101,7 +1064,7 @@ public class C2 {
                 references: new MetadataReference[] { netModule1.EmitToImageReference() },
                 source: new string[] {
                 @"
-public class C3 {
+public class C3 { 
 public static void Main(string[] args) {
 var a = new C2();
 }
@@ -1126,7 +1089,7 @@ var a = new C2();
                 references: new MetadataReference[] { netModule1.EmitToImageReference() },
                 source: new string[] {
                     @"
-public class C2 {
+public class C2 { 
 public static void M() {
     var a = new C1();
 }
@@ -1140,7 +1103,7 @@ public static void M() {
                 references: new MetadataReference[] { netModule1.EmitToImageReference(), netModule2.EmitToImageReference() },
                 source: new string[] {
                 @"
-public class C3 {
+public class C3 { 
 public static void Main(string[] args) {
 var a = new C2();
 }
@@ -1174,8 +1137,8 @@ var a = new C2();
 
             var compRef = vbComp.ToMetadataReference(embedInteropTypes: true);
 
-            var ref1 = Net451.mscorlib;
-            var ref2 = Net451.System;
+            var ref1 = TestReferences.NetFx.v4_0_30319.mscorlib;
+            var ref2 = TestReferences.NetFx.v4_0_30319.System;
 
             // Add CompilationReference
             comp = CSharpCompilation.Create(
@@ -1380,14 +1343,14 @@ var a = new C2();
                 comp.GetSemanticModel(null);
             });
 
-            // Throw exception when the parameter of GetTypeByNameAndArity is NULL
+            // Throw exception when the parameter of GetTypeByNameAndArity is NULL 
             //Assert.Throws<Exception>(
             //delegate
             //{
             //    comp.GetTypeByNameAndArity(fullName: null, arity: 1);
             //});
 
-            // Throw exception when the parameter of GetTypeByNameAndArity is less than 0
+            // Throw exception when the parameter of GetTypeByNameAndArity is less than 0 
             //Assert.Throws<Exception>(
             //delegate
             //{
@@ -1395,14 +1358,14 @@ var a = new C2();
             //});
         }
 
-        // Add already existing item
+        // Add already existing item 
         [Fact, WorkItem(537574, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/537574")]
         public void NegReference2()
         {
-            var ref1 = Net451.mscorlib;
-            var ref2 = Net451.System;
-            var ref3 = Net451.SystemData;
-            var ref4 = Net451.SystemXml;
+            var ref1 = TestReferences.NetFx.v4_0_30319.mscorlib;
+            var ref2 = TestReferences.NetFx.v4_0_30319.System;
+            var ref3 = TestReferences.NetFx.v4_0_30319.System_Data;
+            var ref4 = TestReferences.NetFx.v4_0_30319.System_Xml;
             var comp = CSharpCompilation.Create("Compilation");
 
             comp = comp.AddReferences(ref1, ref1);
@@ -1420,7 +1383,7 @@ var a = new C2();
             Assert.Throws<ArgumentException>(() => comp.AddReferences(listRef).AddReferences(ref2).RemoveReferences(ref1, ref2, ref3, ref4).ReplaceReference(ref2, ref2));
         }
 
-        // Add a new invalid item
+        // Add a new invalid item 
         [Fact, WorkItem(537575, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/537575")]
         public void NegReference3()
         {
@@ -1440,7 +1403,7 @@ var a = new C2();
         [Fact, WorkItem(537567, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/537567")]
         public void NegReference4()
         {
-            var ref1 = Net451.mscorlib;
+            var ref1 = TestReferences.NetFx.v4_0_30319.mscorlib;
             var comp = CSharpCompilation.Create("Compilation");
 
             Assert.Throws<ArgumentException>(
@@ -1449,7 +1412,7 @@ var a = new C2();
                 comp = comp.ReplaceReference(ref1, null);
             });
 
-            // Replace null and the arg order of replace is vise
+            // Replace null and the arg order of replace is vise 
             Assert.Throws<ArgumentNullException>(
             delegate
             {
@@ -1461,8 +1424,8 @@ var a = new C2();
         [Fact, WorkItem(537566, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/537566")]
         public void NegReference5()
         {
-            var ref1 = Net451.mscorlib;
-            var ref2 = Net451.SystemXml;
+            var ref1 = TestReferences.NetFx.v4_0_30319.mscorlib;
+            var ref2 = TestReferences.NetFx.v4_0_30319.System_Xml;
             var comp = CSharpCompilation.Create("Compilation");
             Assert.Throws<ArgumentException>(
             delegate
@@ -1476,7 +1439,7 @@ var a = new C2();
             Assert.Throws<ArgumentException>(
             delegate
             {
-                comp.ReplaceReference(newReference: Net451.System, oldReference: ref2);
+                comp.ReplaceReference(newReference: TestReferences.NetFx.v4_0_30319.System, oldReference: ref2);
             });
             Assert.Equal(0, comp.SyntaxTrees.Length);
             Assert.Throws<ArgumentException>(() => comp.ReplaceSyntaxTree(newTree: SyntaxFactory.ParseSyntaxTree("Using System;"), oldTree: t1));
@@ -1884,7 +1847,7 @@ class B
         [Fact, WorkItem(750437, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/750437")]
         public void ConflictingAliases()
         {
-            var alias = Net451.System.WithAliases(new[] { "alias" });
+            var alias = TestReferences.NetFx.v4_0_30319.System.WithAliases(new[] { "alias" });
 
             var text =
 @"extern alias alias;
@@ -2238,8 +2201,8 @@ class C { }", options: TestOptions.Script);
         {
             var references = new MetadataReference[]
             {
-                Net451.mscorlib,
-                Net451.System,
+                TestReferences.NetFx.v4_0_30319.mscorlib,
+                TestReferences.NetFx.v4_0_30319.System,
                 TestReferences.NetFx.silverlight_v5_0_5_0.System
             };
 
@@ -2250,7 +2213,7 @@ class C { }", options: TestOptions.Script);
 
             compilation.VerifyDiagnostics(
                 // error CS1703: Multiple assemblies with equivalent identity have been imported: 'System.dll' and 'System.v5.0.5.0_silverlight.dll'. Remove one of the duplicate references.
-                Diagnostic(ErrorCode.ERR_DuplicateImport).WithArguments("System.dll (net451)", "System.v5.0.5.0_silverlight.dll"));
+                Diagnostic(ErrorCode.ERR_DuplicateImport).WithArguments("System.dll", "System.v5.0.5.0_silverlight.dll"));
 
             var appConfig = new MemoryStream(Encoding.UTF8.GetBytes(
 @"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -2281,7 +2244,7 @@ using System.Runtime.Versioning;
 public class C { public static FrameworkName Goo() { return null; }}";
             var libComp = CreateEmptyCompilation(
                 libSource,
-                references: new[] { MscorlibRef, Net451.System },
+                references: new[] { MscorlibRef, TestReferences.NetFx.v4_0_30319.System },
                 options: TestOptions.ReleaseDll);
 
             libComp.VerifyDiagnostics();
@@ -2291,8 +2254,8 @@ public class C { public static FrameworkName Goo() { return null; }}";
 
             var references = new[]
             {
-                Net451.mscorlib,
-                Net451.System,
+                TestReferences.NetFx.v4_0_30319.mscorlib,
+                TestReferences.NetFx.v4_0_30319.System,
                 TestReferences.NetFx.silverlight_v5_0_5_0.System,
                 mdRef
             };
@@ -2307,7 +2270,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
 
             c1.VerifyDiagnostics(
                 // error CS1703: Multiple assemblies with equivalent identity have been imported: 'System.dll' and 'System.v5.0.5.0_silverlight.dll'. Remove one of the duplicate references.
-                Diagnostic(ErrorCode.ERR_DuplicateImport).WithArguments("System.dll (net451)", "System.v5.0.5.0_silverlight.dll"),
+                Diagnostic(ErrorCode.ERR_DuplicateImport).WithArguments("System.dll", "System.v5.0.5.0_silverlight.dll"),
                 // error CS7069: Reference to type 'System.Runtime.Versioning.FrameworkName' claims it is defined in 'System', but it could not be found
                 Diagnostic(ErrorCode.ERR_MissingTypeInAssembly, "C.Goo").WithArguments(
                     "System.Runtime.Versioning.FrameworkName", "System"));
@@ -2338,7 +2301,7 @@ public class C { public static FrameworkName Goo() { return null; }}";
         public void GetMetadataReferenceAPITest()
         {
             var comp = CSharpCompilation.Create("Compilation");
-            var metadata = Net451.mscorlib;
+            var metadata = TestReferences.NetFx.v4_0_30319.mscorlib;
             comp = comp.AddReferences(metadata);
             var assemblySmb = comp.GetReferencedAssemblySymbol(metadata);
             var reference = comp.GetMetadataReference(assemblySmb);

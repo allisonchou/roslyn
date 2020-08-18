@@ -59,12 +59,12 @@ namespace Microsoft.CodeAnalysis.Editor.ReferenceHighlighting
         }
 
         public bool ExecuteCommand(NavigateToNextHighlightedReferenceCommandArgs args, CommandExecutionContext context)
-            => ExecuteCommandImpl(args, navigateToNext: true);
+            => ExecuteCommandImpl(args, navigateToNext: true, context);
 
         public bool ExecuteCommand(NavigateToPreviousHighlightedReferenceCommandArgs args, CommandExecutionContext context)
-            => ExecuteCommandImpl(args, navigateToNext: false);
+            => ExecuteCommandImpl(args, navigateToNext: false, context);
 
-        private bool ExecuteCommandImpl(EditorCommandArgs args, bool navigateToNext)
+        private bool ExecuteCommandImpl(EditorCommandArgs args, bool navigateToNext, CommandExecutionContext context)
         {
             using (var tagAggregator = _tagAggregatorFactory.CreateTagAggregator<NavigableHighlightTag>(args.TextView))
             {
@@ -121,7 +121,7 @@ namespace Microsoft.CodeAnalysis.Editor.ReferenceHighlighting
             return orderedTagSpans[destIndex];
         }
 
-        private static SnapshotSpan? FindTagUnderCaret(
+        private SnapshotSpan? FindTagUnderCaret(
             ITagAggregator<NavigableHighlightTag> tagAggregator,
             ITextView textView)
         {

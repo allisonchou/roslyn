@@ -195,8 +195,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Diagnostics
         public void RunAnalyzers(IVsHierarchy? hierarchy)
         {
             var project = GetProject(hierarchy);
-            var solution = _workspace.CurrentSolution;
-            var projectOrSolutionName = project?.Name ?? PathUtilities.GetFileName(solution.FilePath);
+            Solution solution = _workspace.CurrentSolution;
+            string? projectOrSolutionName = project?.Name ?? PathUtilities.GetFileName(solution.FilePath);
 
             // Add a message to VS status bar that we are running code analysis.
             var statusBar = _serviceProvider?.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
@@ -229,8 +229,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Diagnostics
 
             void HandleProjectsWithDisabledAnalysis()
             {
-                RoslynDebug.Assert(solution != null);
-
                 // First clear all special host diagostics for all involved projects.
                 var projects = project != null ? SpecializedCollections.SingletonEnumerable(project) : solution.Projects;
                 foreach (var project in projects)

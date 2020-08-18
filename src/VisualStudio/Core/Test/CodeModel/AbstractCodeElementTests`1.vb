@@ -53,9 +53,8 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.CodeModel
 
         Private Protected Overloads Async Function TestElementUpdate(
                 code As XElement, expectedCode As XElement, updater As Action(Of TCodeElement),
-                Optional options As IDictionary(Of OptionKey2, Object) = Nothing,
-                Optional editorConfig As String = "") As Task
-            Using state = CreateCodeModelTestState(GetWorkspaceDefinition(code, editorConfig))
+                Optional options As IDictionary(Of OptionKey2, Object) = Nothing) As Task
+            Using state = CreateCodeModelTestState(GetWorkspaceDefinition(code))
                 Dim workspace = state.Workspace
                 If options IsNot Nothing Then
                     For Each kvp In options
@@ -776,16 +775,14 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.CodeModel
 
         Private Protected Overrides Async Function TestAddProperty(
                 code As XElement, expectedCode As XElement, data As PropertyData,
-                Optional options As IDictionary(Of OptionKey2, Object) = Nothing,
-                Optional editorConfig As String = "") As Task
+                Optional options As IDictionary(Of OptionKey2, Object) = Nothing) As Task
             Await TestElementUpdate(code, expectedCode,
                 Sub(codeElement)
                     Dim prop = AddProperty(codeElement, data)
                     Assert.NotNull(prop)
                     Assert.True(data.GetterName = prop.Name OrElse data.PutterName = prop.Name)
                 End Sub,
-                options,
-                editorConfig)
+                options)
         End Function
 
         Protected Overrides Async Function TestAddVariable(code As XElement, expectedCode As XElement, data As VariableData) As Task

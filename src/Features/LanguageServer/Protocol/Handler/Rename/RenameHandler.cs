@@ -28,10 +28,10 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
         {
         }
 
-        public override async Task<WorkspaceEdit?> HandleRequestAsync(RenameParams request, RequestContext context, CancellationToken cancellationToken)
+        public override async Task<WorkspaceEdit?> HandleRequestAsync(RenameParams request, ClientCapabilities clientCapabilities, string? clientName, CancellationToken cancellationToken)
         {
             WorkspaceEdit? workspaceEdit = null;
-            var document = SolutionProvider.GetDocument(request.TextDocument, context.ClientName);
+            var document = SolutionProvider.GetDocument(request.TextDocument, clientName);
             if (document != null)
             {
                 var oldSolution = document.Project.Solution;

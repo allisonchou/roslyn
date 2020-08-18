@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.ChangeSignature;
 using Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions;
 using Microsoft.CodeAnalysis.Notification;
-using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Test.Utilities.ChangeSignature;
 using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
@@ -22,9 +21,6 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.ChangeSignature
     {
         protected override ParseOptions GetScriptOptions()
             => throw new NotSupportedException();
-
-        protected override TestComposition GetComposition()
-            => base.GetComposition().AddParts(typeof(TestChangeSignatureOptionsService));
 
         internal async Task TestChangeSignatureViaCodeActionAsync(
             string markup,
@@ -46,18 +42,19 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.ChangeSignature
             if (expectedCodeAction)
             {
                 var testOptions = new TestParameters();
+                using (var workspace = CreateWorkspaceFromOptions(markup, testOptions))
+                {
+                    var optionsService = workspace.Services.GetService<IChangeSignatureOptionsService>() as TestChangeSignatureOptionsService;
+                    optionsService.UpdatedSignature = updatedSignature;
 
-                using var workspace = CreateWorkspaceFromOptions(markup, testOptions);
-                var optionsService = (TestChangeSignatureOptionsService)workspace.Services.GetRequiredService<IChangeSignatureOptionsService>();
-                optionsService.UpdatedSignature = updatedSignature;
-
-                var refactoring = await GetCodeRefactoringAsync(workspace, testOptions);
-                await TestActionAsync(workspace, expectedCode, refactoring.CodeActions[index].action,
-                    conflictSpans: ImmutableArray<TextSpan>.Empty,
-                    renameSpans: ImmutableArray<TextSpan>.Empty,
-                    warningSpans: ImmutableArray<TextSpan>.Empty,
-                    navigationSpans: ImmutableArray<TextSpan>.Empty,
-                    parameters: default);
+                    var refactoring = await GetCodeRefactoringAsync(workspace, testOptions);
+                    await TestActionAsync(workspace, expectedCode, refactoring.CodeActions[index].action,
+                        conflictSpans: ImmutableArray<TextSpan>.Empty,
+                        renameSpans: ImmutableArray<TextSpan>.Empty,
+                        warningSpans: ImmutableArray<TextSpan>.Empty,
+                        navigationSpans: ImmutableArray<TextSpan>.Empty,
+                        parameters: default);
+                }
             }
             else
             {
@@ -65,7 +62,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.ChangeSignature
             }
         }
 
-        internal static async Task TestChangeSignatureViaCommandAsync(
+        internal async Task TestChangeSignatureViaCommandAsync(
             string languageName,
             string markup,
             bool expectedSuccess = true,
@@ -85,7 +82,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.ChangeSignature
                 parseOptions,
                 expectedSelectedIndex);
 
-        internal static async Task TestChangeSignatureViaCommandAsync(
+        internal async Task TestChangeSignatureViaCommandAsync(
             string languageName,
             string markup,
             AddedParameterOrExistingIndex[] updatedSignature,
@@ -144,7 +141,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.ChangeSignature
             }
         }
 
-        private static string CreateDiagnosticsString(ImmutableArray<Diagnostic> diagnostics, AddedParameterOrExistingIndex[] permutation, Document document, int? totalParameters, string fileContents)
+        private string CreateDiagnosticsString(ImmutableArray<Diagnostic> diagnostics, AddedParameterOrExistingIndex[] permutation, Document document, int? totalParameters, string fileContents)
         {
             if (diagnostics.Length == 0)
             {
@@ -158,7 +155,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.ChangeSignature
                 fileContents);
         }
 
-        private static string GetSignatureDescriptionString(Document document, AddedParameterOrExistingIndex[] signature, int? totalParameters)
+        private string GetSignatureDescriptionString(Document document, AddedParameterOrExistingIndex[] signature, int? totalParameters)
         {
             var existingParametersKept = signature.Where(p => p.IsExisting).Select(p => p.OldIndex).ToArray();
             var removeDescription = string.Empty;

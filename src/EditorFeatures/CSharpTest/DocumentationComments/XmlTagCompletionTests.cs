@@ -4,11 +4,12 @@
 
 using Microsoft.CodeAnalysis.Editor.CSharp.DocumentationComments;
 using Microsoft.CodeAnalysis.Editor.UnitTests.DocumentationComments;
-using Microsoft.CodeAnalysis.Editor.UnitTests.Extensions;
+using Microsoft.CodeAnalysis.Editor.UnitTests.Utilities;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
+using Microsoft.VisualStudio.Text.Operations;
 using Roslyn.Test.Utilities;
 using Xunit;
 
@@ -253,8 +254,8 @@ class c { }";
             Verify(text, expected, '/');
         }
 
-        internal override IChainedCommandHandler<TypeCharCommandArgs> CreateCommandHandler(TestWorkspace workspace)
-            => workspace.ExportProvider.GetCommandHandler<XmlTagCompletionCommandHandler>(nameof(XmlTagCompletionCommandHandler), ContentTypeNames.CSharpContentType);
+        internal override IChainedCommandHandler<TypeCharCommandArgs> CreateCommandHandler(ITextUndoHistoryRegistry undoHistory)
+            => new XmlTagCompletionCommandHandler(undoHistory);
 
         protected override TestWorkspace CreateTestWorkspace(string initialMarkup)
             => TestWorkspace.CreateCSharp(initialMarkup);

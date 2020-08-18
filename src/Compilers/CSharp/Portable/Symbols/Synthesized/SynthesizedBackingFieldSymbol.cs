@@ -41,7 +41,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         protected override IAttributeTargetSymbol AttributeOwner
-            => _property.AttributesOwner;
+            => _property;
 
         internal override Location ErrorLocation
             => _property.Location;

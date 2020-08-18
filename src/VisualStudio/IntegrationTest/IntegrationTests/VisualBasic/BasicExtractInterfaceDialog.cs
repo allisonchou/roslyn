@@ -20,8 +20,8 @@ namespace Roslyn.VisualStudio.IntegrationTests.VisualBasic
 
         private ExtractInterfaceDialog_OutOfProc ExtractInterfaceDialog => VisualStudio.ExtractInterfaceDialog;
 
-        public BasicExtractInterfaceDialog(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory, nameof(BasicExtractInterfaceDialog))
+        public BasicExtractInterfaceDialog(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper, nameof(BasicExtractInterfaceDialog))
         {
         }
 
@@ -100,7 +100,7 @@ End Class");
             ExtractInterfaceDialog.ClickOK();
             ExtractInterfaceDialog.VerifyClosed();
 
-            _ = new ProjectUtils.Project(ProjectName);
+            var project = new ProjectUtils.Project(ProjectName);
             VisualStudio.Editor.Verify.TextContains(@"Interface IC
     Sub M()
 End Interface
@@ -170,7 +170,7 @@ End Namespace");
             ExtractInterfaceDialog.ClickOK();
             ExtractInterfaceDialog.VerifyClosed();
 
-            _ = new ProjectUtils.Project(ProjectName);
+            var project = new ProjectUtils.Project(ProjectName);
             VisualStudio.Editor.Verify.TextContains(@"Namespace A
     Interface IC
         Sub M()

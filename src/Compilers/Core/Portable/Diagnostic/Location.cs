@@ -6,7 +6,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.Symbols;
 using Microsoft.CodeAnalysis.Text;
 
@@ -30,7 +29,6 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// Returns true if the location represents a specific location in a source code file.
         /// </summary>
-        [MemberNotNullWhen(true, nameof(SourceTree))]
         public bool IsInSource { get { return SourceTree != null; } }
 
         /// <summary>

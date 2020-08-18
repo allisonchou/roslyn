@@ -78,7 +78,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.OutOfProcess
 
             var builder = ArrayBuilder<TextSpan>.GetInstance();
 
-            for (var i = 0; i < tagInfo.Count; i += 2)
+            for (int i = 0; i < tagInfo.Count; i += 2)
             {
                 builder.Add(new TextSpan(tagInfo[i], tagInfo[i + 1]));
             }

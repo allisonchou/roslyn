@@ -31,9 +31,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
         [Fact, Trait(Traits.Feature, Traits.Features.Diagnostics)]
         public async Task SerializationTest_Document()
         {
-            using var workspace = new TestWorkspace(composition: EditorTestCompositions.EditorFeatures.AddParts(
-                typeof(TestPersistentStorageServiceFactory)));
-
+            using var workspace = new TestWorkspace(EditorServicesUtil.ExportProvider, workspaceKind: "DiagnosticDataSerializerTest");
             var document = workspace.CurrentSolution.AddProject("TestProject", "TestProject", LanguageNames.CSharp).AddDocument("TestDocument", "");
 
             var diagnostics = new[]
@@ -109,9 +107,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
         [Fact, Trait(Traits.Feature, Traits.Features.Diagnostics)]
         public async Task SerializationTest_Project()
         {
-            using var workspace = new TestWorkspace(composition: EditorTestCompositions.EditorFeatures.AddParts(
-                typeof(TestPersistentStorageServiceFactory)));
-
+            using var workspace = new TestWorkspace(EditorServicesUtil.ExportProvider, workspaceKind: "DiagnosticDataSerializerTest");
             var document = workspace.CurrentSolution.AddProject("TestProject", "TestProject", LanguageNames.CSharp).AddDocument("TestDocument", "");
 
             var diagnostics = new[]
@@ -275,12 +271,12 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
             Assert.Equal(item1.HelpLink, item2.HelpLink);
         }
 
-        [ExportWorkspaceServiceFactory(typeof(IPersistentStorageService), ServiceLayer.Test), Shared, PartNotDiscoverable]
-        public class TestPersistentStorageServiceFactory : IWorkspaceServiceFactory
+        [ExportWorkspaceServiceFactory(typeof(IPersistentStorageService), "DiagnosticDataSerializerTest"), Shared]
+        public class PersistentStorageServiceFactory : IWorkspaceServiceFactory
         {
             [ImportingConstructor]
             [Obsolete(MefConstruction.ImportingConstructorMessage, error: true)]
-            public TestPersistentStorageServiceFactory()
+            public PersistentStorageServiceFactory()
             {
             }
 

@@ -1079,6 +1079,10 @@ interface I
         [Trait(Traits.Feature, Traits.Features.Interactive)]
         public void OrganizingCommandsDisabledInSubmission()
         {
+            var exportProvider = ExportProviderCache
+                .GetOrCreateExportProviderFactory(TestExportProvider.EntireAssemblyCatalogWithCSharpAndVisualBasic.WithParts(typeof(InteractiveSupportsFeatureService.InteractiveTextBufferSupportsFeatureService)))
+                .CreateExportProvider();
+
             using var workspace = TestWorkspace.Create(XElement.Parse(@"
                 <Workspace>
                     <Submission Language=""C#"" CommonReferences=""true"">  
@@ -1089,13 +1093,13 @@ interface I
                     </Submission>
                 </Workspace> "),
                 workspaceKind: WorkspaceKind.Interactive,
-                composition: EditorTestCompositions.EditorFeaturesWpf);
+                exportProvider: exportProvider);
             // Force initialization.
             workspace.GetOpenDocumentIds().Select(id => workspace.GetTestDocument(id).GetTextView()).ToList();
 
             var textView = workspace.Documents.Single().GetTextView();
 
-            var handler = new OrganizeDocumentCommandHandler(workspace.ExportProvider.GetExportedValue<IThreadingContext>());
+            var handler = new OrganizeDocumentCommandHandler(exportProvider.GetExportedValue<IThreadingContext>());
 
             var state = handler.GetCommandState(new SortAndRemoveUnnecessaryImportsCommandArgs(textView, textView.TextBuffer));
             Assert.True(state.IsUnspecified);

@@ -34,8 +34,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             missingSyntaxKinds.Add(SyntaxKind.FunctionPointerType);
 
             var analyzer = new CSharpTrackingDiagnosticAnalyzer();
-            var options = new AnalyzerOptions(new[] { new TestAdditionalText() }.ToImmutableArray<AdditionalText>());
-            CreateCompilationWithMscorlib45(source).VerifyAnalyzerDiagnostics(new[] { analyzer }, options);
+            CreateCompilationWithMscorlib45(source).VerifyAnalyzerDiagnostics(new[] { analyzer });
             analyzer.VerifyAllAnalyzerMembersWereCalled();
             analyzer.VerifyAnalyzeSymbolCalledForAllSymbolKinds();
             analyzer.VerifyAnalyzeNodeCalledForAllSyntaxKinds(missingSyntaxKinds);
@@ -95,10 +94,8 @@ public class C
         public void AnalyzerDriverIsSafeAgainstAnalyzerExceptions()
         {
             var compilation = CreateCompilationWithMscorlib45(TestResource.AllInOneCSharpCode);
-            var options = new AnalyzerOptions(new[] { new TestAdditionalText() }.ToImmutableArray<AdditionalText>());
-
             ThrowingDiagnosticAnalyzer<SyntaxKind>.VerifyAnalyzerEngineIsSafeAgainstExceptions(analyzer =>
-                compilation.GetAnalyzerDiagnostics(new[] { analyzer }, options));
+                compilation.GetAnalyzerDiagnostics(new[] { analyzer }, null));
         }
 
         [Fact]

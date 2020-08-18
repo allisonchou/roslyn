@@ -105,7 +105,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
 
                     var dialog = await GetDialogAsync(cancellationTokenSource.Token);
 
-                    return dialog.DestinationControl.fileNameTextBox.Text;
+                    return dialog.fileNameTextBox.Text;
                 });
             }
         }

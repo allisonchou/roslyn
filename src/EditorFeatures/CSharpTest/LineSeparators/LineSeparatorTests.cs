@@ -513,13 +513,13 @@ class Program
 
         #endregion
 
-        private static async Task AssertTagsOnBracesOrSemicolonsAsync(string contents, params int[] tokenIndices)
+        private async Task AssertTagsOnBracesOrSemicolonsAsync(string contents, params int[] tokenIndices)
         {
             await AssertTagsOnBracesOrSemicolonsTokensAsync(contents, tokenIndices);
             await AssertTagsOnBracesOrSemicolonsTokensAsync(contents, tokenIndices, Options.Script);
         }
 
-        private static async Task AssertTagsOnBracesOrSemicolonsTokensAsync(string contents, int[] tokenIndices, CSharpParseOptions options = null)
+        private async Task AssertTagsOnBracesOrSemicolonsTokensAsync(string contents, int[] tokenIndices, CSharpParseOptions options = null)
         {
             using var workspace = TestWorkspace.CreateCSharp(contents, options);
             var document = workspace.CurrentSolution.GetDocument(workspace.Documents.First().Id);
@@ -544,5 +544,8 @@ class Program
                 ++i;
             }
         }
+
+        private static SyntaxToken GetOpenBrace(SyntaxTree syntaxTree, SyntaxToken token)
+            => token.Parent.ChildTokens().Where(n => n.Kind() == SyntaxKind.OpenBraceToken).Single();
     }
 }

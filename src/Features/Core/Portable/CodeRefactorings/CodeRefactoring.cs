@@ -30,7 +30,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings
             Provider = provider;
             CodeActions = actions.NullToEmpty();
 
-            if (CodeActions.IsEmpty)
+            if (CodeActions.Length == 0)
             {
                 throw new ArgumentException(FeaturesResources.Actions_can_not_be_empty, nameof(actions));
             }

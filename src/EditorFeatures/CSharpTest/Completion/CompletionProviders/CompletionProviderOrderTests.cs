@@ -29,8 +29,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         [Fact]
         public void TestCompletionProviderOrder()
         {
-            var exportProvider = EditorTestCompositions.EditorFeaturesWpf.ExportProviderFactory.CreateExportProvider();
-            var completionProviderExports = exportProvider.GetExports<CompletionProvider, CompletionProviderMetadata>();
+            var completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports<CompletionProvider, CompletionProviderMetadata>();
             var orderedCSharpCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(export => export.Metadata.Language == LanguageNames.CSharp));
 
             var actualOrder = orderedCSharpCompletionProviders.Select(x => x.Value.GetType()).ToArray();
@@ -86,8 +85,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         [Fact]
         public void TestCompletionProviderOrderMetadata()
         {
-            var exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider();
-            var completionProviderExports = exportProvider.GetExports<CompletionProvider, CompletionProviderMetadata>();
+            var completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports<CompletionProvider, CompletionProviderMetadata>();
             var orderedCSharpCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(export => export.Metadata.Language == LanguageNames.CSharp));
 
             for (var i = 0; i < orderedCSharpCompletionProviders.Count; i++)
@@ -123,8 +121,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         [Fact]
         public void TestCompletionProviderFirstNameMetadata()
         {
-            var exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider();
-            var completionProviderExports = exportProvider.GetExports<CompletionProvider, CompletionProviderMetadata>();
+            var completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports<CompletionProvider, CompletionProviderMetadata>();
             var orderedCSharpCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(export => export.Metadata.Language == LanguageNames.CSharp));
             var firstCompletionProvider = orderedCSharpCompletionProviders.First();
 
@@ -134,8 +131,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         [Fact]
         public void TestCompletionProviderLastNameMetadata()
         {
-            var exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider();
-            var completionProviderExports = exportProvider.GetExports<CompletionProvider, CompletionProviderMetadata>();
+            var completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports<CompletionProvider, CompletionProviderMetadata>();
             var orderedCSharpCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(export => export.Metadata.Language == LanguageNames.CSharp));
             var lastCompletionProvider = orderedCSharpCompletionProviders.Last();
 
@@ -145,8 +141,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         [Fact]
         public void TestCompletionProviderNameMetadata()
         {
-            var exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider();
-            var completionProviderExports = exportProvider.GetExports<CompletionProvider, CompletionProviderMetadata>();
+            var completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports<CompletionProvider, CompletionProviderMetadata>();
             var csharpCompletionProviders = completionProviderExports.Where(export => export.Metadata.Language == LanguageNames.CSharp);
             foreach (var export in csharpCompletionProviders)
             {

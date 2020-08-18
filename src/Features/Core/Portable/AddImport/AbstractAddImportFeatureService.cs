@@ -33,8 +33,6 @@ namespace Microsoft.CodeAnalysis.AddImport
         protected abstract bool CanAddImportForNamespace(string diagnosticId, SyntaxNode node, out TSimpleNameSyntax nameNode);
         protected abstract bool CanAddImportForDeconstruct(string diagnosticId, SyntaxNode node);
         protected abstract bool CanAddImportForGetAwaiter(string diagnosticId, ISyntaxFacts syntaxFactsService, SyntaxNode node);
-        protected abstract bool CanAddImportForGetEnumerator(string diagnosticId, ISyntaxFacts syntaxFactsService, SyntaxNode node);
-        protected abstract bool CanAddImportForGetAsyncEnumerator(string diagnosticId, ISyntaxFacts syntaxFactsService, SyntaxNode node);
         protected abstract bool CanAddImportForQuery(string diagnosticId, SyntaxNode node);
         protected abstract bool CanAddImportForType(string diagnosticId, SyntaxNode node, out TSimpleNameSyntax nameNode);
 
@@ -153,7 +151,7 @@ namespace Microsoft.CodeAnalysis.AddImport
             // things like the Interactive workspace as this will cause us to 
             // create expensive bk-trees which we won't even be able to save for 
             // future use.
-            if (!IsHostOrRemoteWorkspace(project))
+            if (!IsHostOrTestOrRemoteWorkspace(project))
             {
                 return ImmutableArray<Reference>.Empty;
             }
@@ -162,9 +160,10 @@ namespace Microsoft.CodeAnalysis.AddImport
             return fuzzyReferences;
         }
 
-        private static bool IsHostOrRemoteWorkspace(Project project)
+        private static bool IsHostOrTestOrRemoteWorkspace(Project project)
         {
             return project.Solution.Workspace.Kind == WorkspaceKind.Host ||
+                   project.Solution.Workspace.Kind == WorkspaceKind.Test ||
                    project.Solution.Workspace.Kind == WorkspaceKind.RemoteWorkspace;
         }
 
@@ -184,7 +183,7 @@ namespace Microsoft.CodeAnalysis.AddImport
             // things like the Interactive workspace as we can't even add project
             // references to the interactive window.  We could consider adding metadata
             // references with #r in the future.
-            if (IsHostOrRemoteWorkspace(project))
+            if (IsHostOrTestOrRemoteWorkspace(project))
             {
                 // Now search unreferenced projects, and see if they have any source symbols that match
                 // the search string.
@@ -545,20 +544,10 @@ namespace Microsoft.CodeAnalysis.AddImport
             return semanticModel.GetTypeInfo(innerExpression).Type;
         }
 
-        private static ITypeSymbol GetCollectionExpressionType(SemanticModel semanticModel, ISyntaxFacts syntaxFactsService, SyntaxNode node)
-        {
-            var collectionExpression = FirstForeachCollectionExpressionAncestor(syntaxFactsService, node);
-
-            return semanticModel.GetTypeInfo(collectionExpression).Type;
-        }
-
         protected static bool AncestorOrSelfIsAwaitExpression(ISyntaxFacts syntaxFactsService, SyntaxNode node)
             => FirstAwaitExpressionAncestor(syntaxFactsService, node) != null;
 
         private static SyntaxNode FirstAwaitExpressionAncestor(ISyntaxFacts syntaxFactsService, SyntaxNode node)
             => node.FirstAncestorOrSelf<SyntaxNode, ISyntaxFacts>((n, syntaxFactsService) => syntaxFactsService.IsAwaitExpression(n), syntaxFactsService);
-
-        private static SyntaxNode FirstForeachCollectionExpressionAncestor(ISyntaxFacts syntaxFactsService, SyntaxNode node)
-            => node.FirstAncestorOrSelf<SyntaxNode, ISyntaxFacts>((n, syntaxFactsService) => syntaxFactsService.IsExpressionOfForeach(n), syntaxFactsService);
     }
 }

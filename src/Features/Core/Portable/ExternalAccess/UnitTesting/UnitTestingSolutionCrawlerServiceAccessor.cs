@@ -10,7 +10,6 @@ using Microsoft.CodeAnalysis.SolutionCrawler;
 
 namespace Microsoft.CodeAnalysis.ExternalAccess.UnitTesting
 {
-    [Obsolete]
     internal sealed class UnitTestingSolutionCrawlerServiceAccessor : IUnitTestingSolutionCrawlerServiceAccessor
     {
         private readonly ISolutionCrawlerRegistrationService _registrationService;

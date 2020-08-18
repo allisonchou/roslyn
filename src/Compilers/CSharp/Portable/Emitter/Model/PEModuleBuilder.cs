@@ -1567,29 +1567,19 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                 return null;
             }
 
-            var builder = ArrayBuilder<bool>.GetInstance();
-            CSharpCompilation.NativeIntegerTransformsEncoder.Encode(builder, type);
-
-            Debug.Assert(builder.Any());
-            Debug.Assert(builder.Contains(true));
-
-            SynthesizedAttributeData attribute;
-            if (builder.Count == 1 && builder[0])
+            if (type.IsNativeIntegerType)
             {
-                attribute = SynthesizeNativeIntegerAttribute(WellKnownMember.System_Runtime_CompilerServices_NativeIntegerAttribute__ctor, ImmutableArray<TypedConstant>.Empty);
+                return SynthesizeNativeIntegerAttribute(WellKnownMember.System_Runtime_CompilerServices_NativeIntegerAttribute__ctor, ImmutableArray<TypedConstant>.Empty);
             }
             else
             {
                 NamedTypeSymbol booleanType = Compilation.GetSpecialType(SpecialType.System_Boolean);
                 Debug.Assert((object)booleanType != null);
-                var transformFlags = builder.SelectAsArray((flag, constantType) => new TypedConstant(constantType, TypedConstantKind.Primitive, flag), booleanType);
+                var transformFlags = CSharpCompilation.NativeIntegerTransformsEncoder.Encode(type, booleanType);
                 var boolArray = ArrayTypeSymbol.CreateSZArray(booleanType.ContainingAssembly, TypeWithAnnotations.Create(booleanType));
                 var arguments = ImmutableArray.Create(new TypedConstant(boolArray, transformFlags));
-                attribute = SynthesizeNativeIntegerAttribute(WellKnownMember.System_Runtime_CompilerServices_NativeIntegerAttribute__ctorTransformFlags, arguments);
+                return SynthesizeNativeIntegerAttribute(WellKnownMember.System_Runtime_CompilerServices_NativeIntegerAttribute__ctorTransformFlags, arguments);
             }
-
-            builder.Free();
-            return attribute;
         }
 
         internal virtual SynthesizedAttributeData SynthesizeNativeIntegerAttribute(WellKnownMember member, ImmutableArray<TypedConstant> arguments)

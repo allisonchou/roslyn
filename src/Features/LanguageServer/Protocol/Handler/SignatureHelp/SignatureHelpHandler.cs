@@ -31,9 +31,10 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
             : base(solutionProvider)
             => _allProviders = allProviders;
 
-        public override async Task<LSP.SignatureHelp> HandleRequestAsync(LSP.TextDocumentPositionParams request, RequestContext context, CancellationToken cancellationToken)
+        public override async Task<LSP.SignatureHelp> HandleRequestAsync(LSP.TextDocumentPositionParams request, LSP.ClientCapabilities clientCapabilities,
+            string? clientName, CancellationToken cancellationToken)
         {
-            var document = SolutionProvider.GetDocument(request.TextDocument, context.ClientName);
+            var document = SolutionProvider.GetDocument(request.TextDocument, clientName);
             if (document == null)
             {
                 return new LSP.SignatureHelp();
@@ -55,7 +56,7 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
                     foreach (var item in items.Items)
                     {
                         LSP.SignatureInformation sigInfo;
-                        if (context.ClientCapabilities?.HasVisualStudioLspCapability() == true)
+                        if (clientCapabilities?.HasVisualStudioLspCapability() == true)
                         {
                             sigInfo = new LSP.VSSignatureInformation
                             {

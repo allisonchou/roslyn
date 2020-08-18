@@ -107,13 +107,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.AutomaticCompletion.Sessions
             return true;
         }
 
-        private static IEnumerable<AbstractFormattingRule> GetFormattingRules(Document document)
+        private IEnumerable<AbstractFormattingRule> GetFormattingRules(Document document)
         {
             var indentStyle = document.GetOptionsAsync(CancellationToken.None).WaitAndGetResult_CanCallOnBackground(CancellationToken.None).GetOption(FormattingOptions.SmartIndent);
             return SpecializedCollections.SingletonEnumerable<AbstractFormattingRule>(BraceCompletionFormattingRule.ForIndentStyle(indentStyle)).Concat(Formatter.GetDefaultFormattingRules(document));
         }
 
-        private static void FormatTrackingSpan(IBraceCompletionSession session, bool shouldHonorAutoFormattingOnCloseBraceOption, IEnumerable<AbstractFormattingRule> rules = null)
+        private void FormatTrackingSpan(IBraceCompletionSession session, bool shouldHonorAutoFormattingOnCloseBraceOption, IEnumerable<AbstractFormattingRule> rules = null)
         {
             if (!session.SubjectBuffer.GetFeatureOnOffOption(FeatureOnOffOptions.AutoFormattingOnCloseBrace) && shouldHonorAutoFormattingOnCloseBraceOption)
             {

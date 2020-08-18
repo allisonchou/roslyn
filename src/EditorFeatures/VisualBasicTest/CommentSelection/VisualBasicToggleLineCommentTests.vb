@@ -107,7 +107,7 @@ End Class
             ToggleCommentMultiple(markup, expected)
         End Sub
 
-        Private Shared Function ReplaceLineEndings(markup As String) As String
+        Private Function ReplaceLineEndings(markup As String) As String
             ' do this since xml value put only vbLf
             Return markup.Replace(vbLf, vbCrLf)
         End Function
@@ -118,8 +118,8 @@ End Class
                 AbstractCommentSelectionBase(Of ValueTuple))
         End Function
 
-        Friend Overrides Function GetWorkspace(markup As String, composition As TestComposition) As TestWorkspace
-            Return TestWorkspace.CreateVisualBasic(markup, composition:=composition)
+        Friend Overrides Function GetWorkspace(markup As String, exportProvider As ExportProvider) As TestWorkspace
+            Return TestWorkspace.CreateVisualBasic(markup, exportProvider:=exportProvider)
         End Function
     End Class
 End Namespace

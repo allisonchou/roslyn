@@ -145,7 +145,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
             var roslynPackageGuid = RoslynPackageId;
             var vsShell = GetGlobalService<SVsShell, IVsShell>();
 
-            var hresult = vsShell.LoadPackage(ref roslynPackageGuid, out _);
+            var hresult = vsShell.LoadPackage(ref roslynPackageGuid, out var roslynPackage);
             Marshal.ThrowExceptionForHR(hresult);
         }
 

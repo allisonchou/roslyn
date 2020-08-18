@@ -21,11 +21,11 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.GoToDefinition
         <WpfFact, Trait(Traits.Feature, Traits.Features.GoToDefinition)>
         Public Sub TestCancellation()
             ' Run without cancelling.
-            Dim updates As Integer = Cancel(Integer.MaxValue, False)
+            Dim updates As Integer = Me.Cancel(Integer.MaxValue, False)
             Assert.InRange(updates, 0, Integer.MaxValue)
             Dim i As Integer = 0
             While i < updates
-                Dim n As Integer = Cancel(i, True)
+                Dim n As Integer = Me.Cancel(i, True)
                 Assert.Equal(n, i + 1)
                 i = i + 1
             End While
@@ -57,7 +57,9 @@ class C
     </Project>
 </Workspace>
 
-            Using workspace = TestWorkspace.Create(definition, composition:=GoToTestHelpers.Composition)
+            Using workspace = TestWorkspace.Create(
+                    definition,
+                    exportProvider:=ExportProviderCache.GetOrCreateExportProviderFactory(GoToTestHelpers.Catalog.WithPart(GetType(CSharpGoToDefinitionService))).CreateExportProvider())
 
                 Dim baseDocument = workspace.Documents.First(Function(d) Not d.IsLinkFile)
                 Dim linkDocument = workspace.Documents.First(Function(d) d.IsLinkFile)
@@ -66,19 +68,20 @@ class C
                 Dim mockDocumentNavigationService =
                     DirectCast(workspace.Services.GetService(Of IDocumentNavigationService)(), MockDocumentNavigationService)
 
-                GoToDefinitionCommandHandler.TryExecuteCommand(view.TextSnapshot, baseDocument.CursorPosition.Value, TestCommandExecutionContext.Create())
+                Dim commandHandler = New GoToDefinitionCommandHandler()
+                commandHandler.TryExecuteCommand(view.TextSnapshot, baseDocument.CursorPosition.Value, TestCommandExecutionContext.Create())
                 Assert.True(mockDocumentNavigationService._triedNavigationToSpan)
                 Assert.Equal(New TextSpan(78, 2), mockDocumentNavigationService._span)
 
                 workspace.SetDocumentContext(linkDocument.Id)
 
-                GoToDefinitionCommandHandler.TryExecuteCommand(view.TextSnapshot, baseDocument.CursorPosition.Value, TestCommandExecutionContext.Create())
+                commandHandler.TryExecuteCommand(view.TextSnapshot, baseDocument.CursorPosition.Value, TestCommandExecutionContext.Create())
                 Assert.True(mockDocumentNavigationService._triedNavigationToSpan)
                 Assert.Equal(New TextSpan(121, 2), mockDocumentNavigationService._span)
             End Using
         End Sub
 
-        Private Shared Function Cancel(updatesBeforeCancel As Integer, expectedCancel As Boolean) As Integer
+        Private Function Cancel(updatesBeforeCancel As Integer, expectedCancel As Boolean) As Integer
             Dim definition =
 <Workspace>
     <Project Language="C#" CommonReferences="true">
@@ -88,7 +91,7 @@ class C
     </Project>
 </Workspace>
 
-            Using workspace = TestWorkspace.Create(definition, composition:=GoToTestHelpers.Composition)
+            Using workspace = TestWorkspace.Create(definition, exportProvider:=GoToTestHelpers.ExportProviderFactory.CreateExportProvider())
                 Dim cursorDocument = workspace.Documents.First(Function(d) d.CursorPosition.HasValue)
                 Dim cursorPosition = cursorDocument.CursorPosition.Value
 
@@ -104,7 +107,9 @@ class C
                 Dim goToDefService = New CSharpGoToDefinitionService(threadingContext, New Lazy(Of IStreamingFindUsagesPresenter)(Function() presenter))
 
                 Dim waitContext = New TestUIThreadOperationContext(updatesBeforeCancel)
-                GoToDefinitionCommandHandler.TryExecuteCommand(document, cursorPosition, goToDefService, New CommandExecutionContext(waitContext))
+                Dim commandHandler = New GoToDefinitionCommandHandler()
+
+                commandHandler.TryExecuteCommand(document, cursorPosition, goToDefService, New CommandExecutionContext(waitContext))
 
                 Assert.Equal(navigatedTo OrElse mockDocumentNavigationService._triedNavigationToSpan, Not expectedCancel)
 

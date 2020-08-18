@@ -3065,7 +3065,7 @@ End Class
 
             Dim c1 = VisualBasicCompilation.Create("Test1",
                 syntaxTrees:={Parse(SemanticResourceUtil.OverloadResolutionTestSource), optionStrictOffTree},
-                references:={TestMetadata.Net40.mscorlib},
+                references:={TestReferences.NetFx.v4_0_21006.mscorlib},
                 options:=TestOptions.ReleaseExe.WithOverflowChecks(False))
 
             Dim sourceModule = DirectCast(c1.Assembly.Modules(0), SourceModuleSymbol)

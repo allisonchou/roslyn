@@ -208,7 +208,6 @@ type_parameter_constraint_clause
 type_parameter_constraint
   : class_or_struct_constraint
   | constructor_constraint
-  | default_constraint
   | type_constraint
   ;
 
@@ -219,10 +218,6 @@ class_or_struct_constraint
 
 constructor_constraint
   : 'new' '(' ')'
-  ;
-
-default_constraint
-  : 'default'
   ;
 
 type_constraint
@@ -714,7 +709,7 @@ anonymous_function_expression
   ;
 
 anonymous_method_expression
-  : modifier* 'delegate' parameter_list? block expression?
+  : 'async'? 'delegate' parameter_list? block expression?
   ;
 
 lambda_expression
@@ -723,11 +718,11 @@ lambda_expression
   ;
 
 parenthesized_lambda_expression
-  : modifier* parameter_list '=>' (block | expression)
+  : 'async'? parameter_list '=>' (block | expression)
   ;
 
 simple_lambda_expression
-  : modifier* parameter '=>' (block | expression)
+  : 'async'? parameter '=>' (block | expression)
   ;
 
 anonymous_object_creation_expression

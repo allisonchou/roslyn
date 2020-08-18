@@ -64,8 +64,7 @@ namespace Microsoft.CodeAnalysis.Indentation
                     new ChainedFormattingRules(this.Rules, OptionSet.AsAnalyzerConfigOptions(OptionService, Root.Language)),
                     _tabSize,
                     this.OptionSet.GetOption(FormattingOptions.IndentationSize, Root.Language),
-                    tokenStream: null,
-                    _syntaxFacts);
+                    tokenStream: null);
             }
 
             public IndentationResult? GetDesiredIndentation(FormattingOptions.IndentStyle indentStyle)

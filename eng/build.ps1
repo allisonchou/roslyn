@@ -43,7 +43,6 @@ param (
   [switch]$useGlobalNuGetCache = $true,
   [switch]$warnAsError = $false,
   [switch]$sourceBuild = $false,
-  [switch]$oop64bit = $true,
 
   # official build settings
   [string]$officialBuildId = "",
@@ -200,7 +199,8 @@ function Process-Arguments() {
 }
 
 function BuildSolution() {
-  $solution = "Roslyn.sln"
+  # Roslyn.sln can't be built with dotnet due to WPF and VSIX build task dependencies
+  $solution = if ($msbuildEngine -eq 'dotnet') { "Compilers.sln" } else { "Roslyn.sln" }
 
   Write-Host "$($solution):"
 
@@ -213,7 +213,7 @@ function BuildSolution() {
   $projects = Join-Path $RepoRoot $solution
   $toolsetBuildProj = InitializeToolset
 
-  $testTargetFrameworks = if ($testCoreClr) { 'net5.0%3Bnetcoreapp3.1' } else { "" }
+  $testTargetFrameworks = if ($testCoreClr) { "netcoreapp3.1" } else { "" }
   
   $ibcDropName = GetIbcDropName
 
@@ -309,8 +309,6 @@ function GetIbcDropName() {
     
     # Find the matching drop
     $branch = GetIbcSourceBranchName
-    Write-Host "Optimization data branch name is '$branch'."
-
     $drop = Find-OptimizationInputsStoreForBranch -ProjectName "DevDiv" -RepositoryName "VS" -BranchName $branch
     return $drop.Name
 }
@@ -407,7 +405,6 @@ function TestUsingOptimizedRunner() {
 
   # Exclude out the multi-targetted netcore app projects
   $dlls = $dlls | ?{ -not ($_.FullName -match ".*netcoreapp.*") }
-  $dlls = $dlls | ?{ -not ($_.FullName -match ".*net5.0.*") }
 
   # Exclude out the ref assemblies
   $dlls = $dlls | ?{ -not ($_.FullName -match ".*\\ref\\.*") }
@@ -595,8 +592,6 @@ function Setup-IntegrationTestRun() {
     # Make sure we can capture a screenshot. An exception at this point will fail-fast the build.
     Capture-Screenshot $screenshotPath
   }
-
-  $env:ROSLYN_OOP64BIT = "$oop64bit"
 }
 
 function Prepare-TempDir() {

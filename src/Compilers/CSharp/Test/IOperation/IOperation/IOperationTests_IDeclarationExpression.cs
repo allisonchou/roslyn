@@ -92,11 +92,7 @@ Block[B0] - Entry
               Expression: 
                 IInvalidOperation (OperationKind.Invalid, Type: System.Void, IsInvalid) (Syntax: 'M2(b ? out  ... out var i2)')
                   Children(3):
-                      IConversionOperation (TryCast: False, Unchecked) (OperationKind.Conversion, Type: System.Int32, IsInvalid, IsImplicit) (Syntax: 'b ? ')
-                        Conversion: CommonConversion (Exists: False, IsIdentity: False, IsNumeric: False, IsReference: False, IsUserDefined: False) (MethodSymbol: null)
-                          (NoConversion)
-                        Operand: 
-                          IFlowCaptureReferenceOperation: 0 (OperationKind.FlowCaptureReference, Type: ?, IsInvalid, IsImplicit) (Syntax: 'b ? ')
+                      IFlowCaptureReferenceOperation: 0 (OperationKind.FlowCaptureReference, Type: ?, IsInvalid, IsImplicit) (Syntax: 'b ? ')
                       IDeclarationExpressionOperation (OperationKind.DeclarationExpression, Type: var) (Syntax: 'var i1')
                         ILocalReferenceOperation: i1 (IsDeclaration: True) (OperationKind.LocalReference, Type: var) (Syntax: 'i1')
                       IDeclarationExpressionOperation (OperationKind.DeclarationExpression, Type: var) (Syntax: 'var i2')

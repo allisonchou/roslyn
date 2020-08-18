@@ -83,9 +83,6 @@ dotnet_style_readonly_field = true:suggestion
 # Parameter preferences
 dotnet_code_quality_unused_parameters = all:suggestion
 
-# Suppression preferences
-dotnet_remove_unnecessary_suppression_exclusions = none
-
 #### C# Coding Conventions ####
 
 # var preferences
@@ -106,7 +103,6 @@ csharp_style_expression_bodied_properties = true:silent
 # Pattern matching preferences
 csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
 csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
-csharp_style_prefer_pattern_matching = true:silent
 csharp_style_prefer_switch_expression = true:suggestion
 
 # Null-checking preferences
@@ -300,9 +296,6 @@ dotnet_style_readonly_field = true:suggestion
 # Parameter preferences
 dotnet_code_quality_unused_parameters = all:suggestion
 
-# Suppression preferences
-dotnet_remove_unnecessary_suppression_exclusions = none
-
 #### C# Coding Conventions ####
 
 # var preferences
@@ -323,7 +316,6 @@ csharp_style_expression_bodied_properties = true:silent
 # Pattern matching preferences
 csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
 csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
-csharp_style_prefer_pattern_matching = true:silent
 csharp_style_prefer_switch_expression = true:suggestion
 
 # Null-checking preferences

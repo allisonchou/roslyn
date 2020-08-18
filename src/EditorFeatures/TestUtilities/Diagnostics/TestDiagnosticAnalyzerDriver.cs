@@ -8,8 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics;
-using Microsoft.CodeAnalysis.Host.Mef;
-using Microsoft.CodeAnalysis.Test.Utilities;
+using Microsoft.CodeAnalysis.Execution;
+using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Remote;
+using Microsoft.CodeAnalysis.Serialization;
 using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 using Xunit;
@@ -18,13 +20,12 @@ namespace Microsoft.CodeAnalysis.UnitTests.Diagnostics
 {
     public class TestDiagnosticAnalyzerDriver
     {
-        private readonly DiagnosticAnalyzerService _diagnosticAnalyzerService;
+        private readonly TestDiagnosticAnalyzerService _diagnosticAnalyzerService;
         private readonly bool _includeSuppressedDiagnostics;
 
-        public TestDiagnosticAnalyzerDriver(Workspace workspace, Project project, bool includeSuppressedDiagnostics = false)
+        public TestDiagnosticAnalyzerDriver(Project project, bool includeSuppressedDiagnostics = false)
         {
-            Assert.IsType<MockDiagnosticUpdateSourceRegistrationService>(((IMefHostExportProvider)workspace.Services.HostServices).GetExportedValue<IDiagnosticUpdateSourceRegistrationService>());
-            _diagnosticAnalyzerService = Assert.IsType<DiagnosticAnalyzerService>(((IMefHostExportProvider)workspace.Services.HostServices).GetExportedValue<IDiagnosticAnalyzerService>());
+            _diagnosticAnalyzerService = new TestDiagnosticAnalyzerService();
             _diagnosticAnalyzerService.CreateIncrementalAnalyzer(project.Solution.Workspace);
             _includeSuppressedDiagnostics = includeSuppressedDiagnostics;
         }

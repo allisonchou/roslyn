@@ -186,6 +186,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Snippets
             AssertIsForeground();
 
             var snippetListBuilder = ImmutableArray.CreateBuilder<SnippetInfo>();
+
+            uint count = 0;
+            uint fetched = 0;
             var snippetInfo = new VsExpansion();
             var pSnippetInfo = new IntPtr[1];
 
@@ -193,12 +196,11 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Snippets
             {
                 // Allocate enough memory for one VSExpansion structure. This memory is filled in by the Next method.
                 pSnippetInfo[0] = Marshal.AllocCoTaskMem(Marshal.SizeOf(snippetInfo));
-
-                expansionEnumerator.GetCount(out var count);
+                expansionEnumerator.GetCount(out count);
 
                 for (uint i = 0; i < count; i++)
                 {
-                    expansionEnumerator.Next(1, pSnippetInfo, out var fetched);
+                    expansionEnumerator.Next(1, pSnippetInfo, out fetched);
                     if (fetched > 0)
                     {
                         // Convert the returned blob of data into a structure that can be read in managed code.

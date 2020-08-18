@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeFixes
     [UseExportProvider]
     public class ExtensionOrderingTests
     {
-        private static ExportProvider ExportProvider => EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider();
+        private ExportProvider ExportProvider => TestExportProvider.ExportProviderWithCSharpAndVisualBasic;
 
         [ConditionalFact(typeof(x86))]
         public void TestNoCyclesInFixProviders()

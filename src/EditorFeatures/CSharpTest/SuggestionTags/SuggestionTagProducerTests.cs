@@ -23,6 +23,8 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.SuggestionTags
     [UseExportProvider]
     public class SuggestionTagProducerTests
     {
+        private readonly DiagnosticTagProducer<DiagnosticsSuggestionTaggerProvider> _producer = new DiagnosticTagProducer<DiagnosticsSuggestionTaggerProvider>();
+
         [WpfFact, Trait(Traits.Feature, Traits.Features.SuggestionTags)]
         public async Task SuggestionTagTest1()
         {
@@ -37,7 +39,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.SuggestionTags
             Assert.Equal(selection, spans.Single().Span.Span.ToTextSpan());
         }
 
-        private static async Task<(ImmutableArray<ITagSpan<IErrorTag>> spans, TextSpan selection)> GetTagSpansAndSelectionAsync(string content)
+        private async Task<(ImmutableArray<ITagSpan<IErrorTag>> spans, TextSpan selection)> GetTagSpansAndSelectionAsync(string content)
         {
             using var workspace = TestWorkspace.CreateCSharp(content);
             var analyzerMap = new Dictionary<string, ImmutableArray<DiagnosticAnalyzer>>()
@@ -45,7 +47,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.SuggestionTags
                 { LanguageNames.CSharp, ImmutableArray.Create<DiagnosticAnalyzer>(new CSharpUseObjectInitializerDiagnosticAnalyzer()) }
             };
 
-            var spans = (await TestDiagnosticTagProducer<DiagnosticsSuggestionTaggerProvider>.GetDiagnosticsAndErrorSpans(workspace, analyzerMap)).Item2;
+            var spans = (await _producer.GetDiagnosticsAndErrorSpans(workspace, analyzerMap)).Item2;
             return (spans, workspace.Documents.Single().SelectedSpans.Single());
         }
     }

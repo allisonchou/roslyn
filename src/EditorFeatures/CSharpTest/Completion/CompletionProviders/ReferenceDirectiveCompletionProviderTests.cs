@@ -19,10 +19,9 @@ using Xunit;
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionProviders
 {
     [Trait(Traits.Feature, Traits.Features.Completion)]
-    public class ReferenceDirectiveCompletionProviderTests : AbstractInteractiveCSharpCompletionProviderTests
+    public class ReferenceDirectiveCompletionProviderTests : AbstractCSharpCompletionProviderTests
     {
-        public ReferenceDirectiveCompletionProviderTests(InteractiveCSharpTestWorkspaceFixture workspaceFixture)
-            : base(workspaceFixture)
+        public ReferenceDirectiveCompletionProviderTests(CSharpTestWorkspaceFixture workspaceFixture) : base(workspaceFixture)
         {
         }
 
@@ -67,7 +66,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         [InlineData(EnterKeyRule.AfterFullyTypedWord)]
         [InlineData(EnterKeyRule.Always)] // note: GAC completion helper uses its own EnterKeyRule
         public async Task SendEnterThroughToEditorTest(EnterKeyRule enterKeyRule)
-            => await VerifySendEnterThroughToEnterAsync("#r \"System$$", "System", enterKeyRule, expected: false);
+            => await VerifySendEnterThroughToEnterAsync("#r \"System$$", "System", enterKeyRule, expected: false, SourceCodeKind.Script);
 
         [ConditionalFact(typeof(WindowsOnly))]
         public async Task GacReference()
@@ -86,6 +85,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         {
             var systemDir = Path.GetFullPath(Environment.SystemDirectory);
             var windowsDir = Directory.GetParent(systemDir);
+            var windowsDirPath = windowsDir.FullName;
             var windowsRoot = Directory.GetDirectoryRoot(systemDir);
 
             // we need to get the exact casing from the file system:

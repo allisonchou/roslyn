@@ -1,11 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <RootNamespace>Microsoft.CodeAnalysis.Interactive</RootNamespace>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net472</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePerformanceSensitiveAttribute>true</GeneratePerformanceSensitiveAttribute>
 
@@ -15,7 +14,7 @@
       .NET Compiler Platform ("Roslyn") interactive host implementation.
     </PackageDescription>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Label="Project References">
     <ProjectReference Include="..\..\Compilers\Core\Portable\Microsoft.CodeAnalysis.csproj" />
     <ProjectReference Include="..\..\Scripting\Core\Microsoft.CodeAnalysis.Scripting.csproj">
       <Aliases>global,Scripting</Aliases>
@@ -27,11 +26,15 @@
     <InternalsVisibleTo Include="Microsoft.CodeAnalysis.EditorFeatures.Wpf" />
     <InternalsVisibleTo Include="InteractiveHost.UnitTests" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.LanguageServices" />
-    <InternalsVisibleTo Include="Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests" />
   </ItemGroup>
   <ItemGroup>
     <PublicAPI Include="PublicAPI.Unshipped.txt" />
     <PublicAPI Include="PublicAPI.Shipped.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\Compilers\Core\Portable\InternalUtilities\NonCopyableAttribute.cs" Link="Utilities\NonCopyableAttribute.cs" />
@@ -57,9 +60,17 @@
     <Compile Include="..\..\Compilers\Core\Portable\FileSystem\PathKind.cs" Link="Utilities\PathKind.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="StreamJsonRpc" Version="$(StreamJsonRpcVersion)" />
+    <Compile Update="InteractiveHostResources.Designer.cs">
+      <DependentUpon>InteractiveHostResources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="InteractiveHostResources.resx" GenerateSource="true" />
+    <EmbeddedResource Update="InteractiveHostResources.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>InteractiveHostResources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

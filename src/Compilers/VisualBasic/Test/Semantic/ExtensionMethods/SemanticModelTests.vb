@@ -1423,7 +1423,7 @@ Module E
     End Sub
 End Module
 ]]></file>
-</compilation>, {TestMetadata.Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             compilation.AssertTheseDiagnostics(<errors><![CDATA[
 BC30456: 'F' is not a member of 'B'.
         _b.F()

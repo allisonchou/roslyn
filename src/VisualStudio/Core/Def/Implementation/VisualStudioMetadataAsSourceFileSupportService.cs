@@ -4,6 +4,8 @@
 
 using System;
 using System.ComponentModel.Composition;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Editor;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.MetadataAsSource;
 using Microsoft.VisualStudio.Shell;
@@ -15,10 +17,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
     internal sealed class VisualStudioMetadataAsSourceFileSupportService : IVsSolutionEvents
     {
         private readonly IMetadataAsSourceFileService _metadataAsSourceFileService;
-
-#pragma warning disable IDE0052 // Remove unread private members - Used to store the AdviseSolutionEvents cookie.
         private readonly uint _eventCookie;
-#pragma warning restore IDE0052 // Remove unread private members
 
         [ImportingConstructor]
         [Obsolete(MefConstruction.ImportingConstructorMessage, error: true)]

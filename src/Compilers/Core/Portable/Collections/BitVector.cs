@@ -340,8 +340,6 @@ namespace Microsoft.CodeAnalysis
         {
             get
             {
-                if (index < 0)
-                    throw new IndexOutOfRangeException();
                 if (index >= _capacity)
                     return false;
                 int i = (index >> Log2BitsPerWord) - 1;
@@ -352,8 +350,6 @@ namespace Microsoft.CodeAnalysis
 
             set
             {
-                if (index < 0)
-                    throw new IndexOutOfRangeException();
                 if (index >= _capacity)
                     EnsureCapacity(index + 1);
                 int i = (index >> Log2BitsPerWord) - 1;

@@ -10,7 +10,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Threading;
-using Roslyn.Utilities;
 
 namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
 {
@@ -46,8 +45,6 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
             CloseWindow();
 
             _interactiveWindow = AcquireInteractiveWindow();
-
-            Contract.ThrowIfNull(_interactiveWindow);
         }
 
         protected abstract IInteractiveWindow AcquireInteractiveWindow();
@@ -63,16 +60,16 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
         }
 
         public bool IsInitializing
-            => InvokeOnUIThread(cancellationToken => _interactiveWindow.IsInitializing);
+            => _interactiveWindow.IsInitializing;
 
         public string GetReplText()
-            => InvokeOnUIThread(cancellationToken => _interactiveWindow.TextView.TextBuffer.CurrentSnapshot.GetText());
+            => _interactiveWindow.TextView.TextBuffer.CurrentSnapshot.GetText();
 
         protected override bool HasActiveTextView()
-            => InvokeOnUIThread(cancellationToken => _interactiveWindow.TextView) is object;
+            => _interactiveWindow.TextView is object;
 
         protected override IWpfTextView GetActiveTextView()
-            => InvokeOnUIThread(cancellationToken => _interactiveWindow.TextView);
+            => _interactiveWindow.TextView;
 
         /// <summary>
         /// Gets the contents of the REPL window without the prompt text.
@@ -152,7 +149,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
                 firstNewLineIndex = replText.IndexOf(Environment.NewLine, lastSubmissionTextIndex);
             }
 
-            var lastReplInputWithReplSubmissionText = (firstNewLineIndex <= 0) ? replText : replText.Substring(0, firstNewLineIndex);
+            string lastReplInputWithReplSubmissionText = (firstNewLineIndex <= 0) ? replText : replText.Substring(0, firstNewLineIndex);
 
             return lastReplInputWithReplSubmissionText.Replace(ReplSubmissionText, string.Empty);
         }
@@ -208,7 +205,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
 
         public void InsertCode(string text)
         {
-            InvokeOnUIThread(cancellationToken => _interactiveWindow.InsertCode(text));
+            _interactiveWindow.InsertCode(text);
         }
 
         public void WaitForLastReplOutput(string outputText)
@@ -223,12 +220,12 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
         private void WaitForPredicate(Func<string> getValue, Func<string, bool> isExpectedValue)
         {
             var beginTime = DateTime.UtcNow;
-            while (!isExpectedValue(getValue()) && DateTime.UtcNow < beginTime.AddMilliseconds(_timeoutInMilliseconds))
+            string value;
+            while (!isExpectedValue(value = getValue()) && DateTime.UtcNow < beginTime.AddMilliseconds(_timeoutInMilliseconds))
             {
                 Thread.Sleep(50);
             }
 
-            string value;
             if (!isExpectedValue(value = getValue()))
             {
                 throw new Exception($"Unable to find expected content in REPL within {_timeoutInMilliseconds} milliseconds and no exceptions were thrown. Actual content:{Environment.NewLine}[[{value}]]");
@@ -237,7 +234,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
 
         protected override ITextBuffer GetBufferContainingCaret(IWpfTextView view)
         {
-            return InvokeOnUIThread(cancellationToken => _interactiveWindow.TextView.TextBuffer);
+            return _interactiveWindow.TextView.TextBuffer;
         }
     }
 }

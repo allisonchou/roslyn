@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests.Debugging
 {
     public partial class ProximityExpressionsGetterTests
     {
-        private static async Task TestCachingAsync(string markup, params string[][] expectedArray)
+        private async Task TestCachingAsync(string markup, params string[][] expectedArray)
         {
             using var workspace = TestWorkspace.CreateCSharp(markup);
             var testDocument = workspace.Documents.Single();

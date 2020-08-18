@@ -31,7 +31,8 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
         {
         }
 
-        public override async Task<LSP.CompletionItem> HandleRequestAsync(LSP.CompletionItem completionItem, RequestContext context, CancellationToken cancellationToken)
+        public override async Task<LSP.CompletionItem> HandleRequestAsync(LSP.CompletionItem completionItem, LSP.ClientCapabilities clientCapabilities,
+            string? clientName, CancellationToken cancellationToken)
         {
             CompletionResolveData data;
             if (completionItem.Data is CompletionResolveData)
@@ -43,7 +44,7 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
                 data = ((JToken)completionItem.Data).ToObject<CompletionResolveData>();
             }
 
-            var document = SolutionProvider.GetDocument(data.TextDocument, context.ClientName);
+            var document = SolutionProvider.GetDocument(data.TextDocument, clientName);
             if (document == null)
             {
                 return completionItem;
@@ -66,7 +67,7 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
 
             var description = await completionService.GetDescriptionAsync(document, selectedItem, cancellationToken).ConfigureAwait(false);
 
-            var lspVSClientCapability = context.ClientCapabilities?.HasVisualStudioLspCapability() == true;
+            var lspVSClientCapability = clientCapabilities?.HasVisualStudioLspCapability() == true;
             LSP.CompletionItem resolvedCompletionItem;
             if (lspVSClientCapability)
             {
@@ -101,8 +102,7 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
                 Kind = completionItem.Kind,
                 Label = completionItem.Label,
                 SortText = completionItem.SortText,
-                TextEdit = completionItem.TextEdit,
-                Preselect = completionItem.Preselect
+                TextEdit = completionItem.TextEdit
             };
         }
     }

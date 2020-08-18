@@ -45,8 +45,6 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public readonly BinderFlags Location;
 
-        public readonly Binder Binder;
-
         private ForEachEnumeratorInfo(
             TypeSymbol collectionType,
             TypeWithAnnotations elementType,
@@ -60,15 +58,13 @@ namespace Microsoft.CodeAnalysis.CSharp
             Conversion collectionConversion,
             Conversion currentConversion,
             Conversion enumeratorConversion,
-            BinderFlags location,
-            Binder binder)
+            BinderFlags location)
         {
             Debug.Assert((object)collectionType != null, "Field 'collectionType' cannot be null");
             Debug.Assert(elementType.HasType, "Field 'elementType' cannot be null");
             Debug.Assert((object)getEnumeratorMethod != null, "Field 'getEnumeratorMethod' cannot be null");
             Debug.Assert((object)currentPropertyGetter != null, "Field 'currentPropertyGetter' cannot be null");
             Debug.Assert((object)moveNextMethod != null, "Field 'moveNextMethod' cannot be null");
-            Debug.Assert(binder != null, "Field 'binder' cannot be null");
 
             this.CollectionType = collectionType;
             this.ElementTypeWithAnnotations = elementType;
@@ -83,7 +79,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             this.CurrentConversion = currentConversion;
             this.EnumeratorConversion = enumeratorConversion;
             this.Location = location;
-            this.Binder = binder;
         }
 
         // Mutable version of ForEachEnumeratorInfo.  Convert to immutable using Build.
@@ -106,8 +101,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             public Conversion CurrentConversion;
             public Conversion EnumeratorConversion;
 
-            public Binder Binder;
-
             public ForEachEnumeratorInfo Build(BinderFlags location)
             {
                 Debug.Assert((object)CollectionType != null, "'CollectionType' cannot be null");
@@ -116,7 +109,6 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 Debug.Assert(MoveNextMethod != null);
                 Debug.Assert(CurrentPropertyGetter != null);
-                Debug.Assert(Binder != null);
 
                 return new ForEachEnumeratorInfo(
                     CollectionType,
@@ -131,8 +123,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     CollectionConversion,
                     CurrentConversion,
                     EnumeratorConversion,
-                    location,
-                    Binder);
+                    location);
             }
 
             public bool IsIncomplete

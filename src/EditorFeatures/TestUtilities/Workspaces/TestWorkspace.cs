@@ -17,7 +17,6 @@ using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.MetadataAsSource;
 using Microsoft.CodeAnalysis.Notification;
 using Microsoft.CodeAnalysis.Options;
-using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Text.Shared.Extensions;
 using Microsoft.VisualStudio.Composition;
@@ -54,13 +53,16 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 
         private readonly Dictionary<string, ITextBuffer> _createdTextBuffers = new Dictionary<string, ITextBuffer>();
 
-        public TestWorkspace(ExportProvider? exportProvider = null, TestComposition? composition = null, string? workspaceKind = null, bool disablePartialSolutions = true, bool ignoreUnchangeableDocumentsWhenApplyingChanges = true)
-            : base(GetHostServices(exportProvider, composition), workspaceKind ?? WorkspaceKind.Host)
+        public TestWorkspace()
+            : this(TestExportProvider.ExportProviderWithCSharpAndVisualBasic, WorkspaceKind.Test)
         {
-            Contract.ThrowIfTrue(exportProvider != null && composition != null);
+        }
 
+        public TestWorkspace(ExportProvider exportProvider, string? workspaceKind = null, bool disablePartialSolutions = true, bool ignoreUnchangeableDocumentsWhenApplyingChanges = true)
+            : base(VisualStudioMefHostServices.Create(exportProvider), workspaceKind ?? WorkspaceKind.Test)
+        {
             this.TestHookPartialSolutionsDisabled = disablePartialSolutions;
-            this.ExportProvider = exportProvider ?? GetComposition(composition).ExportProviderFactory.CreateExportProvider();
+            this.ExportProvider = exportProvider;
             this.Projects = new List<TestHostProject>();
             this.Documents = new List<TestHostDocument>();
             this.AdditionalDocuments = new List<TestHostDocument>();
@@ -94,16 +96,10 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
             _backgroundParser = new BackgroundParser(this);
             _backgroundParser.Start();
 
-            _metadataAsSourceFileService = ExportProvider.GetExportedValues<IMetadataAsSourceFileService>().FirstOrDefault();
+            _metadataAsSourceFileService = exportProvider.GetExportedValues<IMetadataAsSourceFileService>().FirstOrDefault();
 
-            RegisterDocumentOptionProviders(ExportProvider.GetExports<IDocumentOptionsProviderFactory, OrderableMetadata>());
+            RegisterDocumentOptionProviders(exportProvider.GetExports<IDocumentOptionsProviderFactory, OrderableMetadata>());
         }
-
-        internal static TestComposition GetComposition(TestComposition? composition)
-            => composition ?? EditorTestCompositions.EditorFeatures;
-
-        private static HostServices GetHostServices(ExportProvider? exportProvider = null, TestComposition? composition = null)
-           => (exportProvider != null) ? VisualStudioMefHostServices.Create(exportProvider) : GetComposition(composition).GetHostServices();
 
         protected internal override bool PartialSemanticsEnabled
         {
@@ -311,7 +307,8 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
             var hostProject = this.GetTestProject(info.Id.ProjectId);
             var hostDocument = new TestHostDocument(
                 text.ToString(), info.Name, info.SourceCodeKind,
-                info.Id, folders: info.Folders, exportProvider: ExportProvider);
+                info.Id, folders: info.Folders,
+                exportProvider: ExportProvider);
             hostProject.AddDocument(hostDocument);
             this.OnDocumentAdded(hostDocument.ToDocumentInfo());
         }
@@ -333,7 +330,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
         protected override void ApplyAdditionalDocumentAdded(DocumentInfo info, SourceText text)
         {
             var hostProject = this.GetTestProject(info.Id.ProjectId);
-            var hostDocument = new TestHostDocument(text.ToString(), info.Name, id: info.Id, exportProvider: ExportProvider);
+            var hostDocument = new TestHostDocument(text.ToString(), info.Name, id: info.Id);
             hostProject.AddAdditionalDocument(hostDocument);
             this.OnAdditionalDocumentAdded(hostDocument.ToDocumentInfo());
         }
@@ -355,7 +352,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
         protected override void ApplyAnalyzerConfigDocumentAdded(DocumentInfo info, SourceText text)
         {
             var hostProject = this.GetTestProject(info.Id.ProjectId);
-            var hostDocument = new TestHostDocument(text.ToString(), info.Name, id: info.Id, filePath: info.FilePath, folders: info.Folders, exportProvider: ExportProvider);
+            var hostDocument = new TestHostDocument(text.ToString(), info.Name, id: info.Id, filePath: info.FilePath, folders: info.Folders);
             hostProject.AddAnalyzerConfigDocument(hostDocument);
             this.OnAnalyzerConfigDocumentAdded(hostDocument.ToDocumentInfo());
         }
@@ -499,7 +496,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
             return projectionDocument;
         }
 
-        private static void GetSpansAndCaretFromSurfaceBufferMarkup(
+        private void GetSpansAndCaretFromSurfaceBufferMarkup(
             string markup, IList<TestHostDocument> baseDocuments,
             out IList<object> projectionBufferSpans,
             out Dictionary<string, ImmutableArray<TextSpan>> mappedMarkupSpans, out int? mappedCaretLocation)
@@ -596,7 +593,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
             MapMarkupSpans(markupSpans, out mappedMarkupSpans, projectionBufferSpans, projectionBufferSpanStartingPositions);
         }
 
-        private static void MapMarkupSpans(
+        private void MapMarkupSpans(
             IDictionary<string, ImmutableArray<TextSpan>> markupSpans,
             out Dictionary<string, ImmutableArray<TextSpan>> mappedMarkupSpans,
             IList<object> projectionBufferSpans, IList<int> projectionBufferSpanStartingPositions)

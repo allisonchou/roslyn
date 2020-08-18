@@ -164,11 +164,13 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities
 
         private static T Retry<T>(Func<CancellationToken, T> action, Func<T, CancellationToken, bool> stoppingCondition, TimeSpan delay, CancellationToken cancellationToken)
         {
+            DateTime beginTime = DateTime.UtcNow;
+            T retval = default;
+
             do
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                T retval;
                 try
                 {
                     retval = action(cancellationToken);

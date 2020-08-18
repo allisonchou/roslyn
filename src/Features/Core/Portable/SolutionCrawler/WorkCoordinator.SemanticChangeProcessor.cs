@@ -25,7 +25,7 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
         /// </summary>
         public const string EnqueueItem = nameof(EnqueueItem);
 
-        internal sealed partial class WorkCoordinator
+        private sealed partial class WorkCoordinator
         {
             private sealed class SemanticChangeProcessor : IdleProcessor
             {

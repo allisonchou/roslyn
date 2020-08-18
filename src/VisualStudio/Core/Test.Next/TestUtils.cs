@@ -27,7 +27,7 @@ namespace Roslyn.VisualStudio.Next.UnitTests
                     continue;
                 }
 
-                Assert.True(storage.TryGetAsset(kv.Key, out object _));
+                Assert.True(storage.TryGetAsset(kv.Key, out object data));
             }
         }
     }

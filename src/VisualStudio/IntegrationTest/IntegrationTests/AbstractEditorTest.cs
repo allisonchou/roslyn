@@ -16,21 +16,22 @@ namespace Roslyn.VisualStudio.IntegrationTests
         private readonly string _solutionName;
         private readonly string _projectTemplate;
 
-        protected AbstractEditorTest(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory)
+        protected AbstractEditorTest(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper)
         {
         }
 
-        protected AbstractEditorTest(VisualStudioInstanceFactory instanceFactory, string solutionName)
-            : this(instanceFactory, solutionName, WellKnownProjectTemplates.ClassLibrary)
+        protected AbstractEditorTest(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper, string solutionName)
+            : this(instanceFactory, testOutputHelper, solutionName, WellKnownProjectTemplates.ClassLibrary)
         {
         }
 
         protected AbstractEditorTest(
             VisualStudioInstanceFactory instanceFactory,
+            ITestOutputHelper testOutputHelper,
             string solutionName,
             string projectTemplate)
-           : base(instanceFactory)
+           : base(instanceFactory, testOutputHelper)
         {
             _solutionName = solutionName;
             _projectTemplate = projectTemplate;
@@ -65,7 +66,7 @@ namespace Roslyn.VisualStudio.IntegrationTests
 
         protected void SetUpEditor(string markupCode)
         {
-            MarkupTestFile.GetPosition(markupCode, out var code, out int caretPosition);
+            MarkupTestFile.GetPosition(markupCode, out string code, out int caretPosition);
 
             VisualStudio.Editor.DismissCompletionSessions();
             VisualStudio.Editor.DismissLightBulbSession();

@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +15,12 @@ namespace Microsoft.CodeAnalysis.CompilerServer
         /// <summary>
         /// Called when the server updates the keep alive value.
         /// </summary>
-        void UpdateKeepAlive(TimeSpan keepAlive);
+        void UpdateKeepAlive(TimeSpan timeSpan);
+
+        /// <summary>
+        /// Called each time the server listens for new connections.
+        /// </summary>
+        void ConnectionListening();
 
         /// <summary>
         /// Called when a connection to the server occurs.
@@ -24,9 +28,9 @@ namespace Microsoft.CodeAnalysis.CompilerServer
         void ConnectionReceived();
 
         /// <summary>
-        /// Called when a connection has finished processing.
+        /// Called when a connection has finished processing and notes the <paramref name="reason"/>
         /// </summary>
-        void ConnectionCompleted(CompletionData completionData);
+        void ConnectionCompleted(CompletionReason reason);
 
         /// <summary>
         /// Called when the server is shutting down because the keep alive timeout was reached.
@@ -36,7 +40,11 @@ namespace Microsoft.CodeAnalysis.CompilerServer
 
     internal sealed class EmptyDiagnosticListener : IDiagnosticListener
     {
-        public void UpdateKeepAlive(TimeSpan keepAlive)
+        public void UpdateKeepAlive(TimeSpan timeSpan)
+        {
+        }
+
+        public void ConnectionListening()
         {
         }
 
@@ -44,7 +52,7 @@ namespace Microsoft.CodeAnalysis.CompilerServer
         {
         }
 
-        public void ConnectionCompleted(CompletionData completionData)
+        public void ConnectionCompleted(CompletionReason reason)
         {
         }
 

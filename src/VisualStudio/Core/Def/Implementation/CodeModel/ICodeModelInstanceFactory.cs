@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
 {
-    internal interface ICodeModelInstanceFactory
+    interface ICodeModelInstanceFactory
     {
         /// <summary>
         /// Requests the project system to create a <see cref="EnvDTE.FileCodeModel"/> through the project system.

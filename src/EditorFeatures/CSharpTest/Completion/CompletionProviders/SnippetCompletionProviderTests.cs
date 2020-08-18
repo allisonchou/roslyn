@@ -27,8 +27,8 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
         internal override Type GetCompletionProviderType()
             => typeof(SnippetCompletionProvider);
 
-        protected override TestComposition GetComposition()
-            => base.GetComposition().AddParts(typeof(MockSnippetInfoService));
+        protected override ComposableCatalog GetExportCatalog()
+            => base.GetExportCatalog().WithPart(typeof(MockSnippetInfoService));
 
         [Fact, Trait(Traits.Feature, Traits.Features.Completion)]
         public async Task SnippetsInEmptyFile()
@@ -128,7 +128,9 @@ class C
             await VerifyItemIsAbsentAsync(@"#!$$", MockSnippetInfoService.SnippetShortcut, sourceCodeKind: SourceCodeKind.Script);
         }
 
-        [ExportLanguageService(typeof(ISnippetInfoService), LanguageNames.CSharp, ServiceLayer.Test), Shared, PartNotDiscoverable]
+        [ExportLanguageService(typeof(ISnippetInfoService), LanguageNames.CSharp, ServiceLayer.Host)]
+        [Shared]
+        [PartNotDiscoverable]
         private class MockSnippetInfoService : ISnippetInfoService
         {
             internal const string SnippetShortcut = nameof(SnippetShortcut);

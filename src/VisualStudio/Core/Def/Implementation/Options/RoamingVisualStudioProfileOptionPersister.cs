@@ -258,6 +258,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Options
 
             if (roamingSerialization == null)
             {
+                value = null;
                 return false;
             }
 

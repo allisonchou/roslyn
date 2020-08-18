@@ -50,7 +50,7 @@ namespace Microsoft.CodeAnalysis.Editor.CommandHandlers
         public bool ExecuteCommand(GoToPreviousMemberCommandArgs args, CommandExecutionContext context)
             => ExecuteCommandImpl(args, gotoNextMember: false, context);
 
-        private static CommandState GetCommandStateImpl(EditorCommandArgs args)
+        private CommandState GetCommandStateImpl(EditorCommandArgs args)
         {
             var subjectBuffer = args.SubjectBuffer;
             var caretPoint = args.TextView.GetCaretPoint(subjectBuffer);

@@ -10,7 +10,9 @@ using Microsoft.CodeAnalysis.Host.Mef;
 
 namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
 {
-    [ExportWorkspaceService(typeof(IActiveStatementSpanTrackerFactory), ServiceLayer.Test), Shared, PartNotDiscoverable]
+    [ExportWorkspaceService(typeof(IActiveStatementSpanTrackerFactory), ServiceLayer.Host)]
+    [Shared]
+    [PartNotDiscoverable]
     internal class TestActiveStatementSpanTrackerFactory : IActiveStatementSpanTrackerFactory
     {
         [ImportingConstructor]

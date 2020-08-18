@@ -6,13 +6,12 @@ Imports System.Threading.Tasks
 Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Microsoft.VisualStudio.GraphModel
 Imports Microsoft.VisualStudio.LanguageServices.Implementation.Progression
-Imports Roslyn.Test.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
 
-    <UseExportProvider, Trait(Traits.Feature, Traits.Features.Progression)>
+    <[UseExportProvider]>
     Public Class OverridesGraphQueryTests
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestOverridesMethod1() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -36,7 +35,7 @@ class Goo : Base, IComparable
                         </Project>
                     </Workspace>)
 
-                Dim inputGraph = Await testState.GetGraphWithMarkedSymbolNodeAsync()
+                Dim inputGraph = await testState.GetGraphWithMarkedSymbolNodeAsync()
                 Dim outputContext = Await testState.GetGraphContextAfterQuery(inputGraph, New OverridesGraphQuery(), GraphContextDirection.Target)
 
                 AssertSimplifiedGraphIs(
@@ -57,7 +56,7 @@ class Goo : Base, IComparable
             End Using
         End Function
 
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestOverridesMethod2() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -81,7 +80,7 @@ class Goo : Base, IComparable
                         </Project>
                     </Workspace>)
 
-                Dim inputGraph = Await testState.GetGraphWithMarkedSymbolNodeAsync()
+                Dim inputGraph = await testState.GetGraphWithMarkedSymbolNodeAsync()
                 Dim outputContext = Await testState.GetGraphContextAfterQuery(inputGraph, New OverridesGraphQuery(), GraphContextDirection.Target)
 
                 AssertSimplifiedGraphIs(

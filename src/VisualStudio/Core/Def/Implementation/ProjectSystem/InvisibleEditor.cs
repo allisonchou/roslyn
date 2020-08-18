@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
-
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -30,7 +28,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
         private ITextBuffer _buffer;
         private IVsTextLines _vsTextLines;
         private IVsInvisibleEditor _invisibleEditor;
-        private OLE.Interop.IOleUndoManager? _manager;
+        private OLE.Interop.IOleUndoManager _manager;
         private readonly bool _needsUndoRestored;
 
         /// <remarks>
@@ -40,7 +38,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
         /// <see cref="IVsUIShellOpenDocument4.IsDocumentInAProject2"/>, which performs a much slower query of all
         /// projects in the solution.</para>
         /// </remarks>
-        public InvisibleEditor(IServiceProvider serviceProvider, string filePath, IVsHierarchy? hierarchy, bool needsSave, bool needsUndoDisabled)
+        public InvisibleEditor(IServiceProvider serviceProvider, string filePath, IVsHierarchy hierarchyOpt, bool needsSave, bool needsUndoDisabled)
             : base(serviceProvider.GetMefService<IThreadingContext>(), assertIsForeground: true)
         {
             _serviceProvider = serviceProvider;
@@ -48,8 +46,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
             _needsSave = needsSave;
 
             var invisibleEditorManager = (IIntPtrReturningVsInvisibleEditorManager)serviceProvider.GetService(typeof(SVsInvisibleEditorManager));
-            var vsProject = hierarchy as IVsProject;
-            Marshal.ThrowExceptionForHR(invisibleEditorManager.RegisterInvisibleEditor(filePath, vsProject, 0, null, out var invisibleEditorPtr));
+            var vsProject = TryGetProjectOfHierarchy(hierarchyOpt);
+            var invisibleEditorPtr = IntPtr.Zero;
+            Marshal.ThrowExceptionForHR(invisibleEditorManager.RegisterInvisibleEditor(filePath, vsProject, 0, null, out invisibleEditorPtr));
 
             try
             {
@@ -61,13 +60,14 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
                 try
                 {
                     var docData = Marshal.GetObjectForIUnknown(docDataPtr);
-                    _vsTextLines = (IVsTextLines)docData;
+                    _vsTextLines = docData as IVsTextLines;
+                    var vsTextBuffer = (IVsTextBuffer)docData;
                     var editorAdapterFactoryService = serviceProvider.GetMefService<IVsEditorAdaptersFactoryService>();
-                    _buffer = editorAdapterFactoryService.GetDocumentBuffer(_vsTextLines);
+                    _buffer = editorAdapterFactoryService.GetDocumentBuffer(vsTextBuffer);
                     if (needsUndoDisabled)
                     {
-                        Marshal.ThrowExceptionForHR(_vsTextLines.GetUndoManager(out _manager));
-                        Marshal.ThrowExceptionForHR(((IVsUndoState)_manager).IsEnabled(out var isEnabled));
+                        Marshal.ThrowExceptionForHR(vsTextBuffer.GetUndoManager(out _manager));
+                        Marshal.ThrowExceptionForHR((_manager as IVsUndoState).IsEnabled(out var isEnabled));
                         _needsUndoRestored = isEnabled != 0;
                         if (_needsUndoRestored)
                         {
@@ -86,6 +86,34 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
                 // We need to clean up the extra reference we have, now that we have an RCW holding onto the object.
                 Marshal.Release(invisibleEditorPtr);
             }
+        }
+
+        private IVsProject TryGetProjectOfHierarchy(IVsHierarchy hierarchyOpt)
+        {
+            // The invisible editor manager will fail in cases where the IVsProject passed to it is not consistent with
+            // the IVsProject known to IVsSolution (e.g. if the object is a wrapper like AbstractHostObject created by
+            // the CPS-based project system). This method returns an IVsProject instance known to the solution, or null
+            // if the project could not be determined.
+            if (hierarchyOpt == null)
+            {
+                return null;
+            }
+
+            if (!ErrorHandler.Succeeded(hierarchyOpt.GetGuidProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
+                out var projectId)))
+            {
+                return null;
+            }
+
+            var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+            if (!ErrorHandler.Succeeded(solution.GetProjectOfGuid(projectId, out var projectHierarchy)))
+            {
+                return null;
+            }
+
+            return projectHierarchy as IVsProject;
         }
 
         public IVsTextLines VsTextLines
@@ -116,8 +144,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
         {
             AssertIsForeground();
 
-            _buffer = null!;
-            _vsTextLines = null!;
+            _buffer = null;
+            _vsTextLines = null;
 
             try
             {
@@ -150,7 +178,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
 
                 // Clean up our RCW. This RCW is a unique RCW, so this is actually safe to do!
                 Marshal.ReleaseComObject(_invisibleEditor);
-                _invisibleEditor = null!;
+                _invisibleEditor = null;
 
                 GC.SuppressFinalize(this);
             }

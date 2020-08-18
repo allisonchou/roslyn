@@ -10,6 +10,7 @@ Imports Microsoft.VisualStudio.TextManager.Interop
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Snippets
     Friend Class SnippetExpansionClientTestsHelper
         Public Shared Sub TestProjectionBuffer(snippetExpansionClient As AbstractSnippetExpansionClient,
+                 subjectBufferDocument As TestHostDocument,
                  surfaceBufferDocument As TestHostDocument,
                  expectedSurfaceBuffer As XElement)
 

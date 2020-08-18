@@ -56,7 +56,7 @@ delegate void D();
             End Using
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestAssemblyLevelAttribute()
             Dim code =
 <Code>
@@ -1013,7 +1013,7 @@ class D
 </Workspace>
 
             Using originalWorkspaceAndFileCodeModel = CreateCodeModelTestState(GetWorkspaceDefinition(oldCode))
-                Using changedworkspace = TestWorkspace.Create(changedDefinition, composition:=VisualStudioTestCompositions.LanguageServices)
+                Using changedworkspace = TestWorkspace.Create(changedDefinition, exportProvider:=VisualStudioTestExportProvider.Factory.CreateExportProvider())
 
                     Dim originalDocument = originalWorkspaceAndFileCodeModel.Workspace.CurrentSolution.GetDocument(originalWorkspaceAndFileCodeModel.Workspace.Documents(0).Id)
                     Dim originalTree = Await originalDocument.GetSyntaxTreeAsync()

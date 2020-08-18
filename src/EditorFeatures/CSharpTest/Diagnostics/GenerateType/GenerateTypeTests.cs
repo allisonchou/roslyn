@@ -10,8 +10,6 @@ using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.CodeFixes.GenerateType;
 using Microsoft.CodeAnalysis.CSharp.Test.Utilities;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Editor.UnitTests;
-using Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Roslyn.Test.Utilities;
 using Xunit;
@@ -25,12 +23,6 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Diagnostics.GenerateTyp
 
         protected override ImmutableArray<CodeAction> MassageActions(ImmutableArray<CodeAction> codeActions)
             => FlattenActions(codeActions);
-
-        // TODO: Requires WPF due to IInlineRenameService dependency (https://github.com/dotnet/roslyn/issues/46153)
-        protected override TestComposition GetComposition()
-            => EditorTestCompositions.EditorFeaturesWpf
-                .AddExcludedPartTypes(typeof(IDiagnosticUpdateSourceRegistrationService))
-                .AddParts(typeof(MockDiagnosticUpdateSourceRegistrationService));
 
         #region Generate Class
 

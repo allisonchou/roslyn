@@ -9,7 +9,7 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
     <UseExportProvider>
     Public NotInheritable Class ProjectStructureTests
         <Fact>
-        Public Async Function ProjectContainsDocuments() As Task
+        Public Async Sub ProjectContainsDocuments()
             Dim lsif = Await TestLsifOutput.GenerateForWorkspaceAsync(
                 TestWorkspace.CreateWorkspace(
                     <Workspace>
@@ -19,11 +19,11 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
                         </Project>
                     </Workspace>))
 
-            Dim projectVertex = Assert.Single(lsif.Vertices.OfType(Of Graph.LsifProject))
-            Dim documentVertices = lsif.GetLinkedVertices(Of Graph.LsifDocument)(projectVertex, "contains")
+            Dim projectVertex = Assert.Single(lsif.Vertices.OfType(Of Graph.Project))
+            Dim documentVertices = lsif.GetLinkedVertices(Of Graph.Document)(projectVertex, "contains")
 
             Assert.Single(documentVertices, Function(d) d.Uri.LocalPath = "Z:\A.cs")
             Assert.Single(documentVertices, Function(d) d.Uri.LocalPath = "Z:\B.cs")
-        End Function
+        End Sub
     End Class
 End Namespace

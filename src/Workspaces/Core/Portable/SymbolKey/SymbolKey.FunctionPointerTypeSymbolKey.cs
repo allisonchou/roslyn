@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
-
 namespace Microsoft.CodeAnalysis
 {
     internal partial struct SymbolKey
@@ -18,7 +16,7 @@ namespace Microsoft.CodeAnalysis
                 visitor.WriteParameterTypesArray(symbol.Signature.Parameters);
             }
 
-            public static SymbolKeyResolution Resolve(SymbolKeyReader reader, out string? failureReason)
+            public static SymbolKeyResolution Resolve(SymbolKeyReader reader, out string failureReason)
             {
                 var returnRefKind = reader.ReadRefKind();
                 var returnType = reader.ReadSymbolKey(out var returnTypeFailureReason);

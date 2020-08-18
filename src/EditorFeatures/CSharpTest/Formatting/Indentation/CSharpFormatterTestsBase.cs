@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Indentation;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Editor.UnitTests;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Formatting;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Utilities;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
@@ -28,8 +27,6 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Formatting.Indentation
     [UseExportProvider]
     public class CSharpFormatterTestsBase : CSharpFormattingEngineTestBase
     {
-        private static readonly TestComposition s_composition = EditorTestCompositions.EditorFeatures.AddParts(typeof(TestFormattingRuleFactoryServiceFactory));
-
         public CSharpFormatterTestsBase(ITestOutputHelper output) : base(output) { }
 
         protected const string HtmlMarkup = @"<html>
@@ -97,7 +94,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Formatting.Indentation
             edit.Apply();
         }
 
-        protected static async Task<int> GetSmartTokenFormatterIndentationAsync(
+        protected async Task<int> GetSmartTokenFormatterIndentationAsync(
             string code,
             int indentationLine,
             char ch,
@@ -106,13 +103,15 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Formatting.Indentation
             TextSpan span = default)
         {
             // create tree service
-            using var workspace = TestWorkspace.CreateCSharp(code, composition: s_composition);
+            using var workspace = TestWorkspace.CreateCSharp(code);
             workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(workspace.Options
                 .WithChangedOption(FormattingOptions2.UseTabs, LanguageNames.CSharp, useTabs)));
 
             if (baseIndentation.HasValue)
             {
-                var factory = (TestFormattingRuleFactoryServiceFactory.Factory)workspace.Services.GetService<IHostDependentFormattingRuleFactoryService>();
+                var factory = workspace.Services.GetService<IHostDependentFormattingRuleFactoryService>()
+                            as TestFormattingRuleFactoryServiceFactory.Factory;
+
                 factory.BaseIndentation = baseIndentation.Value;
                 factory.TextSpan = span;
             }

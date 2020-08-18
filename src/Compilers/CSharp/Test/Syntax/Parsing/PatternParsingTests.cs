@@ -9924,61 +9924,79 @@ switch (e)
         public void PrecedenceInversionWithBlockLambda()
         {
             UsingExpression("() => {} + d",
-                // (1,10): warning CS8848: Operator '+' cannot be used here due to precedence. Use parentheses to disambiguate.
+                TestOptions.Regular.WithStrictFeature(),
+                // (1,10): error CS1073: Unexpected token '+'
                 // () => {} + d
-                Diagnostic(ErrorCode.WRN_PrecedenceInversion, "+").WithArguments("+").WithLocation(1, 10)
+                Diagnostic(ErrorCode.ERR_UnexpectedToken, "+").WithArguments("+").WithLocation(1, 10)
                 );
-            N(SyntaxKind.AddExpression);
+            verify();
+
+            UsingExpression("()=>{} + d");
+            verify();
+
+            void verify()
             {
-                N(SyntaxKind.ParenthesizedLambdaExpression);
+                N(SyntaxKind.AddExpression);
                 {
-                    N(SyntaxKind.ParameterList);
+                    N(SyntaxKind.ParenthesizedLambdaExpression);
                     {
-                        N(SyntaxKind.OpenParenToken);
-                        N(SyntaxKind.CloseParenToken);
+                        N(SyntaxKind.ParameterList);
+                        {
+                            N(SyntaxKind.OpenParenToken);
+                            N(SyntaxKind.CloseParenToken);
+                        }
+                        N(SyntaxKind.EqualsGreaterThanToken);
+                        N(SyntaxKind.Block);
+                        {
+                            N(SyntaxKind.OpenBraceToken);
+                            N(SyntaxKind.CloseBraceToken);
+                        }
                     }
-                    N(SyntaxKind.EqualsGreaterThanToken);
-                    N(SyntaxKind.Block);
+                    N(SyntaxKind.PlusToken);
+                    N(SyntaxKind.IdentifierName);
                     {
-                        N(SyntaxKind.OpenBraceToken);
-                        N(SyntaxKind.CloseBraceToken);
+                        N(SyntaxKind.IdentifierToken, "d");
                     }
                 }
-                N(SyntaxKind.PlusToken);
-                N(SyntaxKind.IdentifierName);
-                {
-                    N(SyntaxKind.IdentifierToken, "d");
-                }
+                EOF();
             }
-            EOF();
         }
 
         [Fact, WorkItem(10492, "https://github.com/dotnet/roslyn/issues/10492")]
         public void PrecedenceInversionWithAnonymousMethod()
         {
             UsingExpression("delegate {} + d",
-                // (1,13): warning CS8848: Operator '+' cannot be used here due to precedence. Use parentheses to disambiguate.
+                TestOptions.Regular.WithStrictFeature(),
+                // (1,13): error CS1073: Unexpected token '+'
                 // delegate {} + d
-                Diagnostic(ErrorCode.WRN_PrecedenceInversion, "+").WithArguments("+").WithLocation(1, 13)
+                Diagnostic(ErrorCode.ERR_UnexpectedToken, "+").WithArguments("+").WithLocation(1, 13)
                 );
-            N(SyntaxKind.AddExpression);
+            verify();
+
+            UsingExpression("delegate {} + d");
+            verify();
+
+            void verify()
             {
-                N(SyntaxKind.AnonymousMethodExpression);
+                N(SyntaxKind.AddExpression);
                 {
-                    N(SyntaxKind.DelegateKeyword);
-                    N(SyntaxKind.Block);
+                    N(SyntaxKind.AnonymousMethodExpression);
                     {
-                        N(SyntaxKind.OpenBraceToken);
-                        N(SyntaxKind.CloseBraceToken);
+                        N(SyntaxKind.DelegateKeyword);
+                        N(SyntaxKind.Block);
+                        {
+                            N(SyntaxKind.OpenBraceToken);
+                            N(SyntaxKind.CloseBraceToken);
+                        }
+                    }
+                    N(SyntaxKind.PlusToken);
+                    N(SyntaxKind.IdentifierName);
+                    {
+                        N(SyntaxKind.IdentifierToken, "d");
                     }
                 }
-                N(SyntaxKind.PlusToken);
-                N(SyntaxKind.IdentifierName);
-                {
-                    N(SyntaxKind.IdentifierToken, "d");
-                }
+                EOF();
             }
-            EOF();
         }
 
         [Fact, WorkItem(36515, "https://github.com/dotnet/roslyn/issues/36515")]
@@ -11043,170 +11061,6 @@ switch (e)
                         }
                     }
                     N(SyntaxKind.SemicolonToken);
-                }
-                EOF();
-            }
-        }
-
-        [Fact, WorkItem(45757, "https://github.com/dotnet/roslyn/issues/45757")]
-        public void IncompleteTuplePatternInPropertySubpattern()
-        {
-            var source = @"_ = this is Program { P1: (1,  }";
-            var expectedErrors = new[]
-            {
-                // (1,32): error CS1026: ) expected
-                // _ = this is Program { P1: (1,  }
-                Diagnostic(ErrorCode.ERR_CloseParenExpected, "}").WithLocation(1, 32),
-                // (1,33): error CS1002: ; expected
-                // _ = this is Program { P1: (1,  }
-                Diagnostic(ErrorCode.ERR_SemicolonExpected, "").WithLocation(1, 33)
-            };
-            UsingStatement(source,
-                TestOptions.RegularWithPatternCombinators,
-                expectedErrors
-                );
-            verifyTree();
-            UsingStatement(source,
-                TestOptions.RegularWithoutPatternCombinators,
-                expectedErrors
-                );
-            verifyTree();
-
-            void verifyTree()
-            {
-                N(SyntaxKind.ExpressionStatement);
-                {
-                    N(SyntaxKind.SimpleAssignmentExpression);
-                    {
-                        N(SyntaxKind.IdentifierName);
-                        {
-                            N(SyntaxKind.IdentifierToken, "_");
-                        }
-                        N(SyntaxKind.EqualsToken);
-                        N(SyntaxKind.IsPatternExpression);
-                        {
-                            N(SyntaxKind.ThisExpression);
-                            {
-                                N(SyntaxKind.ThisKeyword);
-                            }
-                            N(SyntaxKind.IsKeyword);
-                            N(SyntaxKind.RecursivePattern);
-                            {
-                                N(SyntaxKind.IdentifierName);
-                                {
-                                    N(SyntaxKind.IdentifierToken, "Program");
-                                }
-                                N(SyntaxKind.PropertyPatternClause);
-                                {
-                                    N(SyntaxKind.OpenBraceToken);
-                                    N(SyntaxKind.Subpattern);
-                                    {
-                                        N(SyntaxKind.NameColon);
-                                        {
-                                            N(SyntaxKind.IdentifierName);
-                                            {
-                                                N(SyntaxKind.IdentifierToken, "P1");
-                                            }
-                                            N(SyntaxKind.ColonToken);
-                                        }
-                                        N(SyntaxKind.RecursivePattern);
-                                        {
-                                            N(SyntaxKind.PositionalPatternClause);
-                                            {
-                                                N(SyntaxKind.OpenParenToken);
-                                                N(SyntaxKind.Subpattern);
-                                                {
-                                                    N(SyntaxKind.ConstantPattern);
-                                                    {
-                                                        N(SyntaxKind.NumericLiteralExpression);
-                                                        {
-                                                            N(SyntaxKind.NumericLiteralToken, "1");
-                                                        }
-                                                    }
-                                                }
-                                                N(SyntaxKind.CommaToken);
-                                                M(SyntaxKind.CloseParenToken);
-                                            }
-                                        }
-                                    }
-                                    N(SyntaxKind.CloseBraceToken);
-                                }
-                            }
-                        }
-                    }
-                    M(SyntaxKind.SemicolonToken);
-                }
-                EOF();
-            }
-        }
-
-        [Fact, WorkItem(45757, "https://github.com/dotnet/roslyn/issues/45757")]
-        public void IncompleteTuplePattern()
-        {
-            var source = @"_ = i is (1,   }";
-            var expectedErrors = new[]
-            {
-                // (1,1): error CS1073: Unexpected token '}'
-                // _ = i is (1,   }
-                Diagnostic(ErrorCode.ERR_UnexpectedToken, "_ = i is (1,   ").WithArguments("}").WithLocation(1, 1),
-                // (1,16): error CS1026: ) expected
-                // _ = i is (1,   }
-                Diagnostic(ErrorCode.ERR_CloseParenExpected, "}").WithLocation(1, 16),
-                // (1,16): error CS1002: ; expected
-                // _ = i is (1,   }
-                Diagnostic(ErrorCode.ERR_SemicolonExpected, "}").WithLocation(1, 16)
-            };
-            UsingStatement(source,
-                TestOptions.RegularWithPatternCombinators,
-                expectedErrors
-                );
-            verifyTree();
-            UsingStatement(source,
-                TestOptions.RegularWithoutPatternCombinators,
-                expectedErrors
-                );
-            verifyTree();
-
-            void verifyTree()
-            {
-                N(SyntaxKind.ExpressionStatement);
-                {
-                    N(SyntaxKind.SimpleAssignmentExpression);
-                    {
-                        N(SyntaxKind.IdentifierName);
-                        {
-                            N(SyntaxKind.IdentifierToken, "_");
-                        }
-                        N(SyntaxKind.EqualsToken);
-                        N(SyntaxKind.IsPatternExpression);
-                        {
-                            N(SyntaxKind.IdentifierName);
-                            {
-                                N(SyntaxKind.IdentifierToken, "i");
-                            }
-                            N(SyntaxKind.IsKeyword);
-                            N(SyntaxKind.RecursivePattern);
-                            {
-                                N(SyntaxKind.PositionalPatternClause);
-                                {
-                                    N(SyntaxKind.OpenParenToken);
-                                    N(SyntaxKind.Subpattern);
-                                    {
-                                        N(SyntaxKind.ConstantPattern);
-                                        {
-                                            N(SyntaxKind.NumericLiteralExpression);
-                                            {
-                                                N(SyntaxKind.NumericLiteralToken, "1");
-                                            }
-                                        }
-                                    }
-                                    N(SyntaxKind.CommaToken);
-                                    M(SyntaxKind.CloseParenToken);
-                                }
-                            }
-                        }
-                    }
-                    M(SyntaxKind.SemicolonToken);
                 }
                 EOF();
             }

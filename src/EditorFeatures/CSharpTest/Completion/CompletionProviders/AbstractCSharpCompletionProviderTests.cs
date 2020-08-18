@@ -16,19 +16,9 @@ using RoslynTrigger = Microsoft.CodeAnalysis.Completion.CompletionTrigger;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionProviders
 {
-    public abstract class AbstractCSharpCompletionProviderTests : AbstractCSharpCompletionProviderTests<CSharpTestWorkspaceFixture>
+    public abstract class AbstractCSharpCompletionProviderTests : AbstractCompletionProviderTests<CSharpTestWorkspaceFixture>
     {
-        protected AbstractCSharpCompletionProviderTests(CSharpTestWorkspaceFixture workspaceFixture)
-            : base(workspaceFixture)
-        {
-        }
-    }
-
-    public abstract class AbstractCSharpCompletionProviderTests<TWorkspaceFixture> : AbstractCompletionProviderTests<TWorkspaceFixture>
-        where TWorkspaceFixture : TestWorkspaceFixture, new()
-    {
-        protected AbstractCSharpCompletionProviderTests(TWorkspaceFixture workspaceFixture)
-            : base(workspaceFixture)
+        protected AbstractCSharpCompletionProviderTests(CSharpTestWorkspaceFixture workspaceFixture) : base(workspaceFixture)
         {
         }
 
@@ -122,7 +112,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
                 inlineDescription, matchingFilters);
         }
 
-        protected static string AddInsideMethod(string text)
+        protected string AddInsideMethod(string text)
         {
             return
 @"class C
@@ -134,7 +124,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
 }";
         }
 
-        protected static string AddUsingDirectives(string usingDirectives, string text)
+        protected string AddUsingDirectives(string usingDirectives, string text)
         {
             return
 usingDirectives +
@@ -145,10 +135,11 @@ usingDirectives +
 text;
         }
 
-        protected async Task VerifySendEnterThroughToEnterAsync(string initialMarkup, string textTypedSoFar, EnterKeyRule sendThroughEnterOption, bool expected)
+        protected async Task VerifySendEnterThroughToEnterAsync(string initialMarkup, string textTypedSoFar, EnterKeyRule sendThroughEnterOption, bool expected, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
-            using var workspace = CreateWorkspace(initialMarkup);
+            using var workspace = TestWorkspace.CreateCSharp(initialMarkup, exportProvider: ExportProvider);
             var hostDocument = workspace.DocumentWithCursor;
+            workspace.OnDocumentSourceCodeKindChanged(hostDocument.Id, sourceCodeKind);
 
             var documentId = workspace.GetDocumentId(hostDocument);
             var document = workspace.CurrentSolution.GetDocument(documentId);

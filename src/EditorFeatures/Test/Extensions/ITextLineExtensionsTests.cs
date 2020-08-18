@@ -124,19 +124,19 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Extensions
             Assert.False(value);
         }
 
-        private static TextLine GetLine(string codeLine)
+        private TextLine GetLine(string codeLine)
         {
             var text = SourceText.From(codeLine);
             return text.Lines[0];
         }
 
-        private static bool IsEmptyOrWhitespace(string codeLine)
+        private bool IsEmptyOrWhitespace(string codeLine)
         {
             var line = GetLine(codeLine);
             return line.IsEmptyOrWhitespace();
         }
 
-        private static int? GetFirstNonWhitespacePosition(string codeLine)
+        private int? GetFirstNonWhitespacePosition(string codeLine)
         {
             var line = GetLine(codeLine);
             return line.GetFirstNonWhitespacePosition();

@@ -11,15 +11,17 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Execution;
 using Microsoft.CodeAnalysis.Experiments;
 using Microsoft.CodeAnalysis.Host;
+using Microsoft.CodeAnalysis.Remote;
 using Microsoft.VisualStudio.LanguageServices.Remote;
 using Nerdbank;
 using Roslyn.Utilities;
 using StreamJsonRpc;
 
-namespace Microsoft.CodeAnalysis.Remote.Testing
+namespace Roslyn.Test.Utilities.Remote
 {
     internal sealed class InProcRemoteHostClient : RemoteHostClient, IRemoteHostServiceCallback
     {

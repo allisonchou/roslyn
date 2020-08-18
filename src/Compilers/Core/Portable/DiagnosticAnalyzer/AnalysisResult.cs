@@ -24,14 +24,12 @@ namespace Microsoft.CodeAnalysis.Diagnostics
             ImmutableArray<DiagnosticAnalyzer> analyzers,
             ImmutableDictionary<SyntaxTree, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> localSyntaxDiagnostics,
             ImmutableDictionary<SyntaxTree, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> localSemanticDiagnostics,
-            ImmutableDictionary<AdditionalText, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> localAdditionalFileDiagnostics,
             ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>> nonLocalDiagnostics,
             ImmutableDictionary<DiagnosticAnalyzer, AnalyzerTelemetryInfo> analyzerTelemetryInfo)
         {
             Analyzers = analyzers;
             SyntaxDiagnostics = localSyntaxDiagnostics;
             SemanticDiagnostics = localSemanticDiagnostics;
-            AdditionalFileDiagnostics = localAdditionalFileDiagnostics;
             CompilationDiagnostics = nonLocalDiagnostics;
             AnalyzerTelemetryInfo = analyzerTelemetryInfo;
         }
@@ -39,32 +37,27 @@ namespace Microsoft.CodeAnalysis.Diagnostics
         /// <summary>
         /// Analyzers corresponding to this analysis result.
         /// </summary>
-        public ImmutableArray<DiagnosticAnalyzer> Analyzers { get; }
+        public ImmutableArray<DiagnosticAnalyzer> Analyzers { get; private set; }
 
         /// <summary>
         /// Syntax diagnostics reported by the <see cref="Analyzers"/>.
         /// </summary>
-        public ImmutableDictionary<SyntaxTree, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> SyntaxDiagnostics { get; }
+        public ImmutableDictionary<SyntaxTree, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> SyntaxDiagnostics { get; private set; }
 
         /// <summary>
         /// Semantic diagnostics reported by the <see cref="Analyzers"/>.
         /// </summary>
-        public ImmutableDictionary<SyntaxTree, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> SemanticDiagnostics { get; }
-
-        /// <summary>
-        /// Diagnostics in additional files reported by the <see cref="Analyzers"/>.
-        /// </summary>
-        public ImmutableDictionary<AdditionalText, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> AdditionalFileDiagnostics { get; }
+        public ImmutableDictionary<SyntaxTree, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> SemanticDiagnostics { get; private set; }
 
         /// <summary>
         /// Compilation diagnostics reported by the <see cref="Analyzers"/>.
         /// </summary>
-        public ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>> CompilationDiagnostics { get; }
+        public ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>> CompilationDiagnostics { get; private set; }
 
         /// <summary>
         /// Analyzer telemetry info (register action counts and execution times).
         /// </summary>
-        public ImmutableDictionary<DiagnosticAnalyzer, AnalyzerTelemetryInfo> AnalyzerTelemetryInfo { get; }
+        public ImmutableDictionary<DiagnosticAnalyzer, AnalyzerTelemetryInfo> AnalyzerTelemetryInfo { get; private set; }
 
         /// <summary>
         /// Gets all the diagnostics reported by the given <paramref name="analyzer"/>.
@@ -76,7 +69,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 throw new ArgumentException(CodeAnalysisResources.UnsupportedAnalyzerInstance, nameof(analyzer));
             }
 
-            return GetDiagnostics(SpecializedCollections.SingletonEnumerable(analyzer));
+            return GetDiagnostics(SpecializedCollections.SingletonEnumerable(analyzer), getLocalSyntaxDiagnostics: true, getLocalSemanticDiagnostics: true, getNonLocalDiagnostics: true);
         }
 
         /// <summary>
@@ -84,25 +77,45 @@ namespace Microsoft.CodeAnalysis.Diagnostics
         /// </summary>
         public ImmutableArray<Diagnostic> GetAllDiagnostics()
         {
-            return GetDiagnostics(Analyzers);
+            return GetDiagnostics(Analyzers, getLocalSyntaxDiagnostics: true, getLocalSemanticDiagnostics: true, getNonLocalDiagnostics: true);
         }
 
-        private ImmutableArray<Diagnostic> GetDiagnostics(IEnumerable<DiagnosticAnalyzer> analyzers)
+        internal ImmutableArray<Diagnostic> GetSyntaxDiagnostics(ImmutableArray<DiagnosticAnalyzer> analyzers)
+        {
+            return GetDiagnostics(analyzers, getLocalSyntaxDiagnostics: true, getLocalSemanticDiagnostics: false, getNonLocalDiagnostics: false);
+        }
+
+        internal ImmutableArray<Diagnostic> GetSemanticDiagnostics(ImmutableArray<DiagnosticAnalyzer> analyzers)
+        {
+            return GetDiagnostics(analyzers, getLocalSyntaxDiagnostics: false, getLocalSemanticDiagnostics: true, getNonLocalDiagnostics: false);
+        }
+
+        internal ImmutableArray<Diagnostic> GetDiagnostics(IEnumerable<DiagnosticAnalyzer> analyzers, bool getLocalSyntaxDiagnostics, bool getLocalSemanticDiagnostics, bool getNonLocalDiagnostics)
         {
             var excludedAnalyzers = Analyzers.Except(analyzers);
             var excludedAnalyzersSet = excludedAnalyzers.Any() ? excludedAnalyzers.ToImmutableHashSet() : ImmutableHashSet<DiagnosticAnalyzer>.Empty;
-            return GetDiagnostics(excludedAnalyzersSet);
+            return GetDiagnostics(excludedAnalyzersSet, getLocalSyntaxDiagnostics, getLocalSemanticDiagnostics, getNonLocalDiagnostics);
         }
 
-        private ImmutableArray<Diagnostic> GetDiagnostics(ImmutableHashSet<DiagnosticAnalyzer> excludedAnalyzers)
+        private ImmutableArray<Diagnostic> GetDiagnostics(ImmutableHashSet<DiagnosticAnalyzer> excludedAnalyzers, bool getLocalSyntaxDiagnostics, bool getLocalSemanticDiagnostics, bool getNonLocalDiagnostics)
         {
-            if (SyntaxDiagnostics.Count > 0 || SemanticDiagnostics.Count > 0 || AdditionalFileDiagnostics.Count > 0 || CompilationDiagnostics.Count > 0)
+            if (SyntaxDiagnostics.Count > 0 || SemanticDiagnostics.Count > 0 || CompilationDiagnostics.Count > 0)
             {
                 var builder = ImmutableArray.CreateBuilder<Diagnostic>();
-                AddLocalDiagnostics(SyntaxDiagnostics, excludedAnalyzers, builder);
-                AddLocalDiagnostics(SemanticDiagnostics, excludedAnalyzers, builder);
-                AddLocalDiagnostics(AdditionalFileDiagnostics, excludedAnalyzers, builder);
-                AddNonLocalDiagnostics(CompilationDiagnostics, excludedAnalyzers, builder);
+                if (getLocalSyntaxDiagnostics)
+                {
+                    AddLocalDiagnostics(SyntaxDiagnostics, excludedAnalyzers, builder);
+                }
+
+                if (getLocalSemanticDiagnostics)
+                {
+                    AddLocalDiagnostics(SemanticDiagnostics, excludedAnalyzers, builder);
+                }
+
+                if (getNonLocalDiagnostics)
+                {
+                    AddNonLocalDiagnostics(CompilationDiagnostics, excludedAnalyzers, builder);
+                }
 
                 return builder.ToImmutable();
             }
@@ -110,11 +123,10 @@ namespace Microsoft.CodeAnalysis.Diagnostics
             return ImmutableArray<Diagnostic>.Empty;
         }
 
-        private static void AddLocalDiagnostics<T>(
-            ImmutableDictionary<T, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> localDiagnostics,
+        private static void AddLocalDiagnostics(
+            ImmutableDictionary<SyntaxTree, ImmutableDictionary<DiagnosticAnalyzer, ImmutableArray<Diagnostic>>> localDiagnostics,
             ImmutableHashSet<DiagnosticAnalyzer> excludedAnalyzers,
             ImmutableArray<Diagnostic>.Builder builder)
-            where T : notnull
         {
             foreach (var diagnosticsByTree in localDiagnostics)
             {

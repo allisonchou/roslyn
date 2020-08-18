@@ -260,7 +260,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             int originalInputSlot = MakeSlot(expression);
             if (originalInputSlot <= 0)
             {
-                originalInputSlot = makeDagTempSlot(expressionType.ToTypeWithAnnotations(compilation), rootTemp);
+                originalInputSlot = makeDagTempSlot(expressionType.ToTypeWithAnnotations(), rootTemp);
                 initialState[originalInputSlot] = expressionType.State;
             }
 
@@ -456,7 +456,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 if (variableAccess is BoundLocal { LocalSymbol: SourceLocalSymbol local } boundLocal)
                                 {
                                     var value = TypeWithState.Create(tempType, tempState);
-                                    var inferredType = value.ToTypeWithAnnotations(compilation, asAnnotatedType: boundLocal.DeclarationKind == BoundLocalDeclarationKind.WithInferredType);
+                                    var inferredType = boundLocal.DeclarationKind == BoundLocalDeclarationKind.WithInferredType ? value.ToAnnotatedTypeWithAnnotations() : value.ToTypeWithAnnotations();
                                     if (_variableTypes.TryGetValue(local, out var existingType))
                                     {
                                         // merge inferred nullable annotation from different branches of the decision tree
@@ -593,13 +593,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 SetState(defaultLabelState.state);
                 var nodes = node.DecisionDag.TopologicallySortedNodes;
                 var leaf = nodes.Where(n => n is BoundLeafDecisionDagNode leaf && leaf.Label == node.DefaultLabel).First();
-                var samplePattern = PatternExplainer.SamplePatternForPathToDagNode(
-                    BoundDagTemp.ForOriginalInput(node.Expression), nodes, leaf, nullPaths: true, out bool requiresFalseWhenClause);
-                ErrorCode warningCode = requiresFalseWhenClause ? ErrorCode.WRN_SwitchExpressionNotExhaustiveForNullWithWhen : ErrorCode.WRN_SwitchExpressionNotExhaustiveForNull;
                 ReportDiagnostic(
-                    warningCode,
+                    ErrorCode.WRN_SwitchExpressionNotExhaustiveForNull,
                     ((SwitchExpressionSyntax)node.Syntax).SwitchKeyword.GetLocation(),
-                    samplePattern);
+                    PatternExplainer.SamplePatternForPathToDagNode(BoundDagTemp.ForOriginalInput(node.Expression), nodes, leaf, nullPaths: true)
+                    );
             }
 
             // collect expressions, conversions and result types
@@ -624,7 +622,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Join(ref endState, ref this.State);
 
                 // Build placeholders for inference in order to preserve annotations.
-                placeholderBuilder.Add(CreatePlaceholderIfNecessary(expression, armType.ToTypeWithAnnotations(compilation)));
+                placeholderBuilder.Add(CreatePlaceholderIfNecessary(expression, armType.ToTypeWithAnnotations()));
             }
 
             var placeholders = placeholderBuilder.ToImmutableAndFree();
@@ -647,7 +645,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var inferredState = BestTypeInferrer.GetNullableState(resultTypes);
             var resultType = TypeWithState.Create(inferredType, inferredState);
-            inferredTypeWithAnnotations = resultType.ToTypeWithAnnotations(compilation);
+            inferredTypeWithAnnotations = resultType.ToTypeWithAnnotations();
             if (resultType.State == NullableFlowState.MaybeDefault)
             {
                 inferredTypeWithAnnotations = inferredTypeWithAnnotations.AsAnnotated();

@@ -964,20 +964,45 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal static class NativeIntegerTransformsEncoder
         {
-            internal static void Encode(ArrayBuilder<bool> builder, TypeSymbol type)
+            internal static ImmutableArray<TypedConstant> Encode(TypeSymbol type, TypeSymbol booleanType)
             {
-                type.VisitType((typeSymbol, builder, isNested) => AddFlags(typeSymbol, builder), builder);
+                var builder = ArrayBuilder<bool>.GetInstance();
+                type.VisitType((typeSymbol, builder, isNested) => AddFlags(typeSymbol, builder, isNested), builder);
+                Debug.Assert(builder.Any());
+                Debug.Assert(builder.Contains(true));
+
+                var result = builder.SelectAsArray((flag, constantType) => new TypedConstant(constantType, TypedConstantKind.Primitive, flag), booleanType);
+                builder.Free();
+                return result;
             }
 
-            private static bool AddFlags(TypeSymbol type, ArrayBuilder<bool> builder)
+            private static bool AddFlags(TypeSymbol type, ArrayBuilder<bool> builder, bool isNestedNamedType)
             {
-                switch (type.SpecialType)
+                switch (type.TypeKind)
                 {
-                    case SpecialType.System_IntPtr:
-                    case SpecialType.System_UIntPtr:
-                        builder.Add(type.IsNativeIntegerType);
+                    case TypeKind.Array:
+                    case TypeKind.Pointer:
+                    case TypeKind.FunctionPointer:
+                    case TypeKind.TypeParameter:
+                    case TypeKind.Dynamic:
+                        builder.Add(false);
                         break;
+                    case TypeKind.Class:
+                    case TypeKind.Struct:
+                    case TypeKind.Interface:
+                    case TypeKind.Delegate:
+                    case TypeKind.Enum:
+                    case TypeKind.Error:
+                        // For nested named types, a single false is encoded for the entire type name, followed by flags for all of the type arguments.
+                        if (!isNestedNamedType)
+                        {
+                            builder.Add(type.IsNativeIntegerType);
+                        }
+                        break;
+                    default:
+                        throw ExceptionUtilities.UnexpectedValue(type.TypeKind);
                 }
+
                 // Continue walking types
                 return false;
             }

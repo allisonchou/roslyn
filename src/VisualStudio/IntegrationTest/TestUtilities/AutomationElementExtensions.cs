@@ -254,13 +254,15 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities
 
         public static IUIAutomationElement FindDescendantByPath(this IUIAutomationElement element, string path)
         {
-            var pathParts = path.Split(".".ToCharArray());
+            string[] pathParts = path.Split(".".ToCharArray());
 
             // traverse the path
-            var item = element;
-            foreach (var pathPart in pathParts)
+            IUIAutomationElement item = element;
+            IUIAutomationElement next = null;
+
+            foreach (string pathPart in pathParts)
             {
-                var next = item.FindFirst(TreeScope.TreeScope_Descendants, Helper.Automation.CreatePropertyCondition(AutomationElementIdentifiers.LocalizedControlTypeProperty.Id, pathPart));
+                next = item.FindFirst(TreeScope.TreeScope_Descendants, Helper.Automation.CreatePropertyCondition(AutomationElementIdentifiers.LocalizedControlTypeProperty.Id, pathPart));
 
                 if (next == null)
                 {
@@ -281,7 +283,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities
             try
             {
                 var children = item.GetCachedChildren();
-                for (var i = 0; i < children.Length; i++)
+                for (int i = 0; i < children.Length; i++)
                 {
                     validChildren.Add(SimpleControlTypeName(children.GetElement(i)));
                 }

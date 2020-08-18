@@ -44,17 +44,16 @@ namespace Microsoft.CodeAnalysis.GenerateMember.GenerateVariable
                 _equivalenceKey = Title;
             }
 
-            protected override async Task<Document> GetChangedDocumentAsync(CancellationToken cancellationToken)
+            protected override Task<Document> GetChangedDocumentAsync(CancellationToken cancellationToken)
             {
                 var solution = _semanticDocument.Project.Solution;
                 var generateUnsafe = _state.TypeMemberType.RequiresUnsafeModifier() &&
                                      !_state.IsContainedInUnsafeType;
 
-                var options = new CodeGenerationOptions(
+                var otions = new CodeGenerationOptions(
                     afterThisLocation: _state.AfterThisLocation,
                     beforeThisLocation: _state.BeforeThisLocation,
-                    contextLocation: _state.IdentifierToken.GetLocation(),
-                    options: await _semanticDocument.Document.GetOptionsAsync(cancellationToken).ConfigureAwait(false));
+                    contextLocation: _state.IdentifierToken.GetLocation());
 
                 if (_generateProperty)
                 {
@@ -76,8 +75,8 @@ namespace Microsoft.CodeAnalysis.GenerateMember.GenerateVariable
                         getMethod: getAccessor,
                         setMethod: setAccessor);
 
-                    return await CodeGenerator.AddPropertyDeclarationAsync(
-                        solution, _state.TypeToGenerateIn, propertySymbol, options, cancellationToken).ConfigureAwait(false);
+                    return CodeGenerator.AddPropertyDeclarationAsync(
+                        solution, _state.TypeToGenerateIn, propertySymbol, otions, cancellationToken);
                 }
                 else
                 {
@@ -90,8 +89,8 @@ namespace Microsoft.CodeAnalysis.GenerateMember.GenerateVariable
                         type: _state.TypeMemberType,
                         name: _state.IdentifierToken.ValueText);
 
-                    return await CodeGenerator.AddFieldDeclarationAsync(
-                        solution, _state.TypeToGenerateIn, fieldSymbol, options, cancellationToken).ConfigureAwait(false);
+                    return CodeGenerator.AddFieldDeclarationAsync(
+                        solution, _state.TypeToGenerateIn, fieldSymbol, otions, cancellationToken);
                 }
             }
 

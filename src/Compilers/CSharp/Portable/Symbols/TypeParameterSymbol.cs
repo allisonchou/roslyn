@@ -574,9 +574,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal sealed override ManagedKind GetManagedKind(ref HashSet<DiagnosticInfo> useSiteDiagnostics)
+        internal sealed override ManagedKind ManagedKind
         {
-            return HasUnmanagedTypeConstraint ? ManagedKind.Unmanaged : ManagedKind.Managed;
+            get
+            {
+                return HasUnmanagedTypeConstraint ? ManagedKind.Unmanaged : ManagedKind.Managed;
+            }
         }
 
         public sealed override bool IsRefLikeType

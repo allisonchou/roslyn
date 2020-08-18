@@ -488,13 +488,10 @@ namespace Microsoft.CodeAnalysis.CodeFixes.Configuration
                                         key.EndsWith(SeveritySuffix, StringComparison.Ordinal))
                                     {
                                         var diagIdLength = key.Length - (DiagnosticOptionPrefix.Length + SeveritySuffix.Length);
-                                        if (diagIdLength > 0)
+                                        var diagId = key.Substring(DiagnosticOptionPrefix.Length, diagIdLength);
+                                        if (string.Equals(diagId, _diagnostic.Id, StringComparison.OrdinalIgnoreCase))
                                         {
-                                            var diagId = key.Substring(DiagnosticOptionPrefix.Length, diagIdLength);
-                                            if (string.Equals(diagId, _diagnostic.Id, StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                textChange = new TextChange(curLine.Span, $"{key} = {_newSeverity}{commentValue}");
-                                            }
+                                            textChange = new TextChange(curLine.Span, $"{key} = {_newSeverity}{commentValue}");
                                         }
                                     }
 

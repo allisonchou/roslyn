@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
             {
                 if (inline != null)
                 {
-                    var inlineText = GetStringFromInline(inline);
+                    string inlineText = GetStringFromInline(inline);
                     if (!string.IsNullOrEmpty(inlineText))
                     {
                         sb.Append(inlineText);
@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
 
         private static string GetStringFromInline(Inline currentInline)
         {
-            if (currentInline is LineBreak)
+            if (currentInline is LineBreak lineBreak)
             {
                 return Environment.NewLine;
             }

@@ -1,7 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-extern alias InteractiveHost;
 
 using System;
 using System.Collections.Generic;
@@ -19,8 +18,6 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.CodeAnalysis.Internal.Log;
-using Roslyn.Utilities;
-using InteractiveHost::Microsoft.CodeAnalysis.Interactive;
 
 namespace Microsoft.VisualStudio.LanguageServices.Interactive
 {
@@ -96,13 +93,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Interactive
 
             if (_vsInteractiveWindow is ToolWindowPane interactiveWindowPane)
             {
-                evaluator.OnBeforeReset += platform => interactiveWindowPane.Caption = Title + platform switch
-                {
-                    InteractiveHostPlatform.Desktop64 => " (.NET Framework " + ServicesVSResources.Bitness64 + ")",
-                    InteractiveHostPlatform.Desktop32 => " (.NET Framework " + ServicesVSResources.Bitness32 + ")",
-                    InteractiveHostPlatform.Core => " (.NET Core)",
-                    _ => throw ExceptionUtilities.Unreachable
-                };
+                evaluator.OnBeforeReset += is64bit => interactiveWindowPane.Caption = Title + (is64bit ? " (64-bit)" : " (32-bit)");
             }
 
             var window = _vsInteractiveWindow.InteractiveWindow;

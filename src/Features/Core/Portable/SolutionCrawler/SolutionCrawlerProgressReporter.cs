@@ -22,7 +22,7 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
         /// due to how solution cralwer calls Start/Stop (see caller of those 2), those 2 can't have a race
         /// and that is all we care for this reporter
         /// </summary>
-        internal sealed class SolutionCrawlerProgressReporter : ISolutionCrawlerProgressReporter
+        private class SolutionCrawlerProgressReporter : ISolutionCrawlerProgressReporter
         {
             // we use ref count here since solution crawler has multiple queues per priority
             // where an item can be enqueued and dequeued independently. 

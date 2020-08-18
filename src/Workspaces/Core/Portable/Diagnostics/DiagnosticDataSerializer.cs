@@ -39,9 +39,9 @@ namespace Microsoft.CodeAnalysis.Workspaces.Diagnostics
             Version = version;
         }
 
-        public async Task<bool> SerializeAsync(IPersistentStorageService persistentService, Project project, TextDocument? textDocument, string key, ImmutableArray<DiagnosticData> items, CancellationToken cancellationToken)
+        public async Task<bool> SerializeAsync(IPersistentStorageService persistentService, Project project, Document? document, string key, ImmutableArray<DiagnosticData> items, CancellationToken cancellationToken)
         {
-            Contract.ThrowIfFalse(textDocument == null || textDocument.Project == project);
+            Contract.ThrowIfFalse(document == null || document.Project == project);
 
             using var stream = SerializableBytes.CreateWritableStream();
 
@@ -54,28 +54,21 @@ namespace Microsoft.CodeAnalysis.Workspaces.Diagnostics
 
             stream.Position = 0;
 
-            var writeTask = (textDocument != null) ?
-                textDocument is Document document ?
-                    storage.WriteStreamAsync(document, key, stream, cancellationToken) :
-                    storage.WriteStreamAsync(GetSerializationKeyForNonSourceDocument(textDocument, key), stream, cancellationToken) :
+            var writeTask = (document != null) ?
+                storage.WriteStreamAsync(document, key, stream, cancellationToken) :
                 storage.WriteStreamAsync(project, key, stream, cancellationToken);
 
             return await writeTask.ConfigureAwait(false);
         }
 
-        private static string GetSerializationKeyForNonSourceDocument(TextDocument document, string key)
-            => document.Id + ";" + key;
-
-        public async ValueTask<ImmutableArray<DiagnosticData>> DeserializeAsync(IPersistentStorageService persistentService, Project project, TextDocument? textDocument, string key, CancellationToken cancellationToken)
+        public async ValueTask<ImmutableArray<DiagnosticData>> DeserializeAsync(IPersistentStorageService persistentService, Project project, Document? document, string key, CancellationToken cancellationToken)
         {
-            Contract.ThrowIfFalse(textDocument == null || textDocument.Project == project);
+            Contract.ThrowIfFalse(document == null || document.Project == project);
 
             using var storage = persistentService.GetStorage(project.Solution);
 
-            var readTask = (textDocument != null) ?
-                textDocument is Document document ?
-                    storage.ReadStreamAsync(document, key, cancellationToken) :
-                    storage.ReadStreamAsync(GetSerializationKeyForNonSourceDocument(textDocument, key), cancellationToken) :
+            var readTask = (document != null) ?
+                storage.ReadStreamAsync(document, key, cancellationToken) :
                 storage.ReadStreamAsync(project, key, cancellationToken);
 
             using var stream = await readTask.ConfigureAwait(false);
@@ -86,7 +79,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Diagnostics
                 return default;
             }
 
-            return ReadDiagnosticData(reader, project, textDocument, cancellationToken);
+            return ReadDiagnosticData(reader, project, document, cancellationToken);
         }
 
         public void WriteDiagnosticData(ObjectWriter writer, ImmutableArray<DiagnosticData> items, CancellationToken cancellationToken)
@@ -183,7 +176,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Diagnostics
             writer.WriteInt32(item.MappedEndColumn);
         }
 
-        public ImmutableArray<DiagnosticData> ReadDiagnosticData(ObjectReader reader, Project project, TextDocument? document, CancellationToken cancellationToken)
+        public ImmutableArray<DiagnosticData> ReadDiagnosticData(ObjectReader reader, Project project, Document? document, CancellationToken cancellationToken)
         {
             try
             {
@@ -214,7 +207,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Diagnostics
             }
         }
 
-        private static ImmutableArray<DiagnosticData> ReadDiagnosticDataArray(ObjectReader reader, Project project, TextDocument? document, CancellationToken cancellationToken)
+        private static ImmutableArray<DiagnosticData> ReadDiagnosticDataArray(ObjectReader reader, Project project, Document? document, CancellationToken cancellationToken)
         {
             var count = reader.ReadInt32();
             if (count == 0)
@@ -279,7 +272,7 @@ namespace Microsoft.CodeAnalysis.Workspaces.Diagnostics
             return builder.ToImmutableAndFree();
         }
 
-        private static DiagnosticDataLocation? ReadLocation(Project project, ObjectReader reader, TextDocument? document)
+        private static DiagnosticDataLocation? ReadLocation(Project project, ObjectReader reader, Document? document)
         {
             var exists = reader.ReadBoolean();
             if (!exists)

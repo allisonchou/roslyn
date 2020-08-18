@@ -19,22 +19,22 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.QuickInfo
     [UseExportProvider]
     public abstract class AbstractSemanticQuickInfoSourceTests
     {
-        protected static FormattedClassification Text(string text)
+        protected FormattedClassification Text(string text)
             => FormattedClassifications.Text(text);
 
-        protected static string Lines(params string[] lines)
+        protected string Lines(params string[] lines)
             => string.Join("\r\n", lines);
 
-        protected static FormattedClassification[] ExpectedClassifications(
+        protected FormattedClassification[] ExpectedClassifications(
             params FormattedClassification[] expectedClassifications)
         {
             return expectedClassifications;
         }
 
-        protected static Tuple<string, string>[] NoClassifications()
+        protected Tuple<string, string>[] NoClassifications()
             => null;
 
-        internal static Action<QuickInfoItem> SymbolGlyph(Glyph expectedGlyph)
+        internal Action<QuickInfoItem> SymbolGlyph(Glyph expectedGlyph)
         {
             return qi =>
             {
@@ -42,10 +42,10 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.QuickInfo
             };
         }
 
-        internal static Action<QuickInfoItem> WarningGlyph(Glyph expectedGlyph)
+        internal Action<QuickInfoItem> WarningGlyph(Glyph expectedGlyph)
             => SymbolGlyph(expectedGlyph);
 
-        internal static void AssertSection(
+        internal void AssertSection(
             string expectedText,
             ImmutableArray<QuickInfoSection> sections,
             string textBlockKind,
@@ -56,74 +56,72 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.QuickInfo
             AssertTaggedText(expectedText, text, expectedClassifications);
         }
 
-        protected static void AssertTaggedText(
+        protected void AssertTaggedText(
             string expectedText,
             ImmutableArray<TaggedText> taggedText,
-#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/45893
             FormattedClassification[] expectedClassifications = null)
-#pragma warning restore IDE0060 // Remove unused parameter
         {
             var actualText = string.Concat(taggedText.Select(tt => tt.Text));
             Assert.Equal(expectedText, actualText);
         }
 
-        protected static Action<QuickInfoItem> MainDescription(
+        protected Action<QuickInfoItem> MainDescription(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
             return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.Description, expectedClassifications);
         }
 
-        protected static Action<QuickInfoItem> Documentation(
+        protected Action<QuickInfoItem> Documentation(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
             return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.DocumentationComments, expectedClassifications);
         }
 
-        protected static Action<QuickInfoItem> Remarks(
+        protected Action<QuickInfoItem> Remarks(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
             return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.RemarksDocumentationComments, expectedClassifications);
         }
 
-        protected static Action<QuickInfoItem> Returns(
+        protected Action<QuickInfoItem> Returns(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
-            return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.ReturnsDocumentationComments, expectedClassifications);
+            return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.ReturnsDocumentationComments);
         }
 
-        protected static Action<QuickInfoItem> Value(
+        protected Action<QuickInfoItem> Value(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
-            return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.ValueDocumentationComments, expectedClassifications);
+            return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.ValueDocumentationComments);
         }
 
-        protected static Action<QuickInfoItem> TypeParameterMap(
+        protected Action<QuickInfoItem> TypeParameterMap(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
             return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.TypeParameters, expectedClassifications);
         }
 
-        protected static Action<QuickInfoItem> AnonymousTypes(
+        protected Action<QuickInfoItem> AnonymousTypes(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
             return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.AnonymousTypes, expectedClassifications);
         }
 
-        protected static Action<QuickInfoItem> NullabilityAnalysis(
+        protected Action<QuickInfoItem> NullabilityAnalysis(
             string expectedText,
             FormattedClassification[] expectedClassifications = null)
         {
             return item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.NullabilityAnalysis, expectedClassifications);
         }
 
-        protected static Action<QuickInfoItem> NoTypeParameterMap
+        protected Action<QuickInfoItem> NoTypeParameterMap
         {
             get
             {
@@ -131,7 +129,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.QuickInfo
             }
         }
 
-        protected static Action<QuickInfoItem> Usage(string expectedText, bool expectsWarningGlyph = false)
+        protected Action<QuickInfoItem> Usage(string expectedText, bool expectsWarningGlyph = false)
         {
             return item =>
             {
@@ -148,10 +146,10 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.QuickInfo
             };
         }
 
-        protected static Action<QuickInfoItem> Exceptions(string expectedText)
+        protected Action<QuickInfoItem> Exceptions(string expectedText)
             => item => AssertSection(expectedText, item.Sections, QuickInfoSectionKinds.Exception);
 
-        protected static Action<QuickInfoItem> Captures(string capturesText)
+        protected Action<QuickInfoItem> Captures(string capturesText)
             => item => AssertSection(capturesText, item.Sections, QuickInfoSectionKinds.Captures);
 
         protected static async Task<bool> CanUseSpeculativeSemanticModelAsync(Document document, int position)

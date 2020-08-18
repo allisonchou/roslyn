@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
-
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -32,13 +30,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <param name="nullableOption">Whether Nullable Reference Types feature is enabled globally</param>
         /// <param name="specificDiagnosticOptions">How specific diagnostics should be reported</param>
         /// <returns>A diagnostic updated to reflect the options, or null if it has been filtered out</returns>
-        internal static Diagnostic? Filter(
-            Diagnostic d,
-            int warningLevelOption,
-            NullableContextOptions nullableOption,
-            ReportDiagnostic generalDiagnosticOption,
-            IDictionary<string, ReportDiagnostic> specificDiagnosticOptions,
-            SyntaxTreeOptionsProvider? syntaxTreeOptions)
+        public static Diagnostic Filter(Diagnostic d, int warningLevelOption, NullableContextOptions nullableOption, ReportDiagnostic generalDiagnosticOption, IDictionary<string, ReportDiagnostic> specificDiagnosticOptions)
         {
             if (d == null)
             {
@@ -79,29 +71,18 @@ namespace Microsoft.CodeAnalysis.CSharp
                     d.IsEnabledByDefault,
                     CSharp.MessageProvider.Instance.GetIdForErrorCode((int)ErrorCode.WRN_ALinkWarn),
                     ErrorFacts.GetWarningLevel(ErrorCode.WRN_ALinkWarn),
-                    d.Location,
+                    d.Location as Location,
                     d.Category,
                     warningLevelOption,
                     nullableOption,
                     generalDiagnosticOption,
                     specificDiagnosticOptions,
-                    syntaxTreeOptions,
                     out hasPragmaSuppression);
             }
             else
             {
-                reportAction = GetDiagnosticReport(d.Severity,
-                    d.IsEnabledByDefault,
-                    d.Id,
-                    d.WarningLevel,
-                    d.Location,
-                    d.Category,
-                    warningLevelOption,
-                    nullableOption,
-                    generalDiagnosticOption,
-                    specificDiagnosticOptions,
-                    syntaxTreeOptions,
-                    out hasPragmaSuppression);
+                reportAction = GetDiagnosticReport(d.Severity, d.IsEnabledByDefault, d.Id, d.WarningLevel, d.Location as Location,
+                    d.Category, warningLevelOption, nullableOption, generalDiagnosticOption, specificDiagnosticOptions, out hasPragmaSuppression);
             }
 
             if (hasPragmaSuppression)
@@ -136,13 +117,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             NullableContextOptions nullableOption,
             ReportDiagnostic generalDiagnosticOption,
             IDictionary<string, ReportDiagnostic> specificDiagnosticOptions,
-            SyntaxTreeOptionsProvider? syntaxTreeOptions,
             out bool hasPragmaSuppression)
         {
             hasPragmaSuppression = false;
 
-            Debug.Assert(location.SourceTree is null || location.SourceTree is CSharpSyntaxTree);
-            var tree = location.SourceTree as CSharpSyntaxTree;
+            Debug.Assert(location?.SourceTree is null || location.SourceTree is CSharpSyntaxTree);
+            var tree = location?.SourceTree as CSharpSyntaxTree;
             var position = location.SourceSpan.Start;
 
             bool isNullableFlowAnalysisWarning = ErrorFacts.NullableWarnings.Contains(id);
@@ -153,11 +133,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     Syntax.NullableContextState.State.Enabled => true,
                     Syntax.NullableContextState.State.Disabled => false,
-                    Syntax.NullableContextState.State.ExplicitlyRestored => nullableOption.WarningsEnabled(),
-                    Syntax.NullableContextState.State.Unknown =>
-                        tree?.IsGeneratedCode(syntaxTreeOptions) != true && nullableOption.WarningsEnabled(),
-                    null => nullableOption.WarningsEnabled(),
-                    _ => throw ExceptionUtilities.UnexpectedValue(warningsState)
+                    _ => nullableOption == NullableContextOptions.Enable || nullableOption == NullableContextOptions.Warnings
                 };
 
                 if (!nullableWarningsEnabled)
@@ -175,15 +151,16 @@ namespace Microsoft.CodeAnalysis.CSharp
             ReportDiagnostic report;
             bool isSpecified = false;
 
-            if (tree != null && syntaxTreeOptions != null &&
-                syntaxTreeOptions.TryGetDiagnosticValue(tree, id, out report))
+            if (tree != null && tree.DiagnosticOptions.TryGetValue(id, out var treeReport))
             {
                 // 2. Syntax tree level
+                report = treeReport;
                 isSpecified = true;
             }
-            else if (specificDiagnosticOptions.TryGetValue(id, out report))
+            else if (specificDiagnosticOptions.TryGetValue(id, out var specificReport))
             {
                 // 3. Compilation level
+                report = specificReport;
                 isSpecified = true;
             }
             else

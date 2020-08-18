@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 {
-    [ExportLanguageService(typeof(IContentTypeLanguageService), NoCompilationConstants.LanguageName, ServiceLayer.Test), Shared, PartNotDiscoverable]
+    [ExportLanguageService(typeof(IContentTypeLanguageService), NoCompilationConstants.LanguageName), Shared]
     internal class NoCompilationContentTypeLanguageService : IContentTypeLanguageService
     {
         private readonly IContentTypeRegistryService _contentTypeRegistry;

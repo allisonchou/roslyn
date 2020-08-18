@@ -99,6 +99,10 @@ End Module
         <Trait(Traits.Feature, Traits.Features.ChangeSignature)>
         <Trait(Traits.Feature, Traits.Features.Interactive)>
         Public Sub TestChangeSignatureCommandDisabledInSubmission()
+            Dim exportProvider = ExportProviderCache _
+                .GetOrCreateExportProviderFactory(TestExportProvider.EntireAssemblyCatalogWithCSharpAndVisualBasic.WithParts(GetType(InteractiveSupportsFeatureService.InteractiveTextBufferSupportsFeatureService))) _
+                .CreateExportProvider()
+
             Using workspace = TestWorkspace.Create(
                 <Workspace>
                     <Submission Language="Visual Basic" CommonReferences="true">  
@@ -109,14 +113,14 @@ End Module
                     </Submission>
                 </Workspace>,
                 workspaceKind:=WorkspaceKind.Interactive,
-                composition:=EditorTestCompositions.EditorFeaturesWpf)
+                exportProvider:=exportProvider)
 
                 ' Force initialization.
                 workspace.GetOpenDocumentIds().Select(Function(id) workspace.GetTestDocument(id).GetTextView()).ToList()
 
                 Dim textView = workspace.Documents.Single().GetTextView()
 
-                Dim handler = New VisualBasicChangeSignatureCommandHandler(workspace.ExportProvider.GetExportedValue(Of IThreadingContext)())
+                Dim handler = New VisualBasicChangeSignatureCommandHandler(exportProvider.GetExportedValue(Of IThreadingContext)())
 
                 Dim state = handler.GetCommandState(New ReorderParametersCommandArgs(textView, textView.TextBuffer))
                 Assert.True(state.IsUnspecified)

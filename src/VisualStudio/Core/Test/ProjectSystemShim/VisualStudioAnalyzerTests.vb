@@ -6,7 +6,6 @@ Imports System.IO
 Imports System.Reflection
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.Diagnostics
-Imports Microsoft.CodeAnalysis.Editor.UnitTests
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 Imports Microsoft.CodeAnalysis.Test.Utilities
@@ -17,23 +16,15 @@ Imports Roslyn.Test.Utilities
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
     <UseExportProvider>
     Public Class VisualStudioAnalyzerTests
-        Private Shared ReadOnly s_compositionWithMockDiagnosticUpdateSourceRegistrationService As TestComposition = EditorTestCompositions.EditorFeatures _
-            .AddExcludedPartTypes(GetType(IDiagnosticUpdateSourceRegistrationService)) _
-            .AddParts(GetType(MockDiagnosticUpdateSourceRegistrationService))
-
         <WpfFact, Trait(Traits.Feature, Traits.Features.Diagnostics)>
         Public Sub GetReferenceCalledMultipleTimes()
-            Dim composition = s_compositionWithMockDiagnosticUpdateSourceRegistrationService
-            Dim exportProvider = composition.ExportProviderFactory.CreateExportProvider()
-
-            Using workspace = New TestWorkspace(composition:=composition)
+            Using workspace = New TestWorkspace()
                 Dim lazyWorkspace = New Lazy(Of VisualStudioWorkspaceImpl)(
                                     Function()
                                         Return Nothing
                                     End Function)
 
-                Dim registrationService = Assert.IsType(Of MockDiagnosticUpdateSourceRegistrationService)(exportProvider.GetExportedValue(Of IDiagnosticUpdateSourceRegistrationService)())
-                Dim hostDiagnosticUpdateSource = New HostDiagnosticUpdateSource(lazyWorkspace, registrationService)
+                Dim hostDiagnosticUpdateSource = New HostDiagnosticUpdateSource(lazyWorkspace, New MockDiagnosticUpdateSourceRegistrationService())
 
                 Using analyzer = New VisualStudioAnalyzer("C:\Goo\Bar.dll", hostDiagnosticUpdateSource, ProjectId.CreateNewId(), LanguageNames.VisualBasic)
                     Dim reference1 = analyzer.GetReference()
@@ -46,23 +37,19 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
 
         <WpfFact, Trait(Traits.Feature, Traits.Features.Diagnostics)>
         Public Sub AnalyzerErrorsAreUpdated()
-            Dim composition = s_compositionWithMockDiagnosticUpdateSourceRegistrationService
-            Dim exportProvider = composition.ExportProviderFactory.CreateExportProvider()
-
             Dim lazyWorkspace = New Lazy(Of VisualStudioWorkspaceImpl)(
                                     Function()
                                         Return Nothing
                                     End Function)
 
-            Dim registrationService = Assert.IsType(Of MockDiagnosticUpdateSourceRegistrationService)(exportProvider.GetExportedValue(Of IDiagnosticUpdateSourceRegistrationService)())
-            Dim hostDiagnosticUpdateSource = New HostDiagnosticUpdateSource(lazyWorkspace, registrationService)
+            Dim hostDiagnosticUpdateSource = New HostDiagnosticUpdateSource(lazyWorkspace, New MockDiagnosticUpdateSourceRegistrationService())
 
             Dim file = Path.GetTempFileName()
             Dim eventHandler = New EventHandlers(file)
 
             AddHandler hostDiagnosticUpdateSource.DiagnosticsUpdated, AddressOf eventHandler.DiagnosticAddedTest
 
-            Using workspace = New TestWorkspace(composition:=composition)
+            Using workspace = New TestWorkspace()
                 Using analyzer = New VisualStudioAnalyzer(file, hostDiagnosticUpdateSource, ProjectId.CreateNewId(), LanguageNames.VisualBasic)
                     Dim reference = analyzer.GetReference()
                     reference.GetAnalyzers(LanguageNames.VisualBasic)

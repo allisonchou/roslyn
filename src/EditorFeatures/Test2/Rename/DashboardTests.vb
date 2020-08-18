@@ -6,7 +6,6 @@ Imports System.Threading
 Imports System.Threading.Tasks
 Imports Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 Imports Microsoft.CodeAnalysis.Options
-Imports Microsoft.CodeAnalysis.Remote.Testing
 Imports Microsoft.CodeAnalysis.Rename
 
 Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
@@ -14,7 +13,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
     Public Class DashboardTests
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function RenameWithNoOverload(host As RenameTestHost) As Task
+        Public Async Function RenameWithNoOverload(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameOverloads, True)
             Await VerifyDashboard(
@@ -42,7 +41,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function RenameWithOverload(host As RenameTestHost) As Task
+        Public Async Function RenameWithOverload(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameOverloads, True)
             Await VerifyDashboard(
@@ -76,7 +75,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
         <WpfTheory>
         <WorkItem(883263, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/883263")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function RenameWithInvalidOverload(host As RenameTestHost) As Task
+        Public Async Function RenameWithInvalidOverload(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameOverloads, True)
             Await VerifyDashboard(
@@ -108,7 +107,7 @@ class Program
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
         <WorkItem(853839, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/853839")>
-        Public Async Function RenameAttributeAlias(host As RenameTestHost) As Task
+        Public Async Function RenameAttributeAlias(host As TestHost) As Task
             Await VerifyDashboard(
                     (<Workspace>
                          <Project Language="C#" CommonReferences="true">
@@ -128,7 +127,7 @@ class AttributeAttribute : System.Attribute { }
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
         <WorkItem(700923, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700923"), WorkItem(700925, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700925")>
-        Public Async Function RenameWithOverloadAndInStringsAndComments(host As RenameTestHost) As Task
+        Public Async Function RenameWithOverloadAndInStringsAndComments(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameOverloads, True)
             changingOptions.Add(RenameOptions.RenameInStrings, True)
@@ -167,7 +166,7 @@ class AttributeAttribute : System.Attribute { }
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
         <WorkItem(700923, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700923"), WorkItem(700925, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700925")>
-        Public Async Function RenameInComments(host As RenameTestHost) As Task
+        Public Async Function RenameInComments(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameInComments, True)
             Await VerifyDashboard(
@@ -207,7 +206,7 @@ class $$Program
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
         <WorkItem(700923, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700923"), WorkItem(700925, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700925")>
-        Public Async Function RenameInStrings(host As RenameTestHost) As Task
+        Public Async Function RenameInStrings(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameInStrings, True)
             Await VerifyDashboard(
@@ -247,7 +246,7 @@ class $$Program
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
         <WorkItem(700923, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700923"), WorkItem(700925, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/700925")>
-        Public Async Function RenameInCommentsAndStrings(host As RenameTestHost) As Task
+        Public Async Function RenameInCommentsAndStrings(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameInComments, True)
             changingOptions.Add(RenameOptions.RenameInStrings, True)
@@ -287,7 +286,7 @@ class $$Program
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function NonConflictingEditWithMultipleLocations(host As RenameTestHost) As Task
+        Public Async Function NonConflictingEditWithMultipleLocations(host As TestHost) As Task
             Await VerifyDashboard(
                     (<Workspace>
                          <Project Language="C#" CommonReferences="true">
@@ -308,7 +307,7 @@ class $$Program
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function NonConflictingEditWithSingleLocation(host As RenameTestHost) As Task
+        Public Async Function NonConflictingEditWithSingleLocation(host As TestHost) As Task
             Await VerifyDashboard(
                     (<Workspace>
                          <Project Language="C#" CommonReferences="true">
@@ -329,7 +328,7 @@ class $$Program
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function ParameterConflictingWithInstanceField(host As RenameTestHost) As Task
+        Public Async Function ParameterConflictingWithInstanceField(host As TestHost) As Task
             Await VerifyDashboard(
                 (<Workspace>
                      <Project Language="C#">
@@ -354,7 +353,7 @@ class $$Program
         <WorkItem(5923, "DevDiv_Projects/Roslyn")>
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function ParameterConflictingWithInstanceFieldMoreThanOnce(host As RenameTestHost) As Task
+        Public Async Function ParameterConflictingWithInstanceFieldMoreThanOnce(host As TestHost) As Task
             Await VerifyDashboard(
                 (<Workspace>
                      <Project Language="C#">
@@ -378,7 +377,7 @@ class $$Program
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function ParameterConflictingWithLocal_Unresolvable(host As RenameTestHost) As Task
+        Public Async Function ParameterConflictingWithLocal_Unresolvable(host As TestHost) As Task
             Await VerifyDashboard(
                 (<Workspace>
                      <Project Language="C#">
@@ -401,7 +400,7 @@ class $$Program
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function MoreThanOneUnresolvableConflicts(host As RenameTestHost) As Task
+        Public Async Function MoreThanOneUnresolvableConflicts(host As TestHost) As Task
             Await VerifyDashboard(
                 (<Workspace>
                      <Project Language="C#">
@@ -426,7 +425,7 @@ class $$Program
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function ConflictsAcrossLanguages_Resolvable(host As RenameTestHost) As Task
+        Public Async Function ConflictsAcrossLanguages_Resolvable(host As TestHost) As Task
             Await VerifyDashboard(
                 (<Workspace>
                      <Project Language="C#" AssemblyName="CSharpAssembly" CommonReferences="true">
@@ -463,7 +462,7 @@ class $$Program
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function RenameWithNameof_FromDefinition_DoesNotForceRenameOverloadsOption(host As RenameTestHost) As Task
+        Public Async Function RenameWithNameof_FromDefinition_DoesNotForceRenameOverloadsOption(host As TestHost) As Task
             Await VerifyDashboard(
                 (<Workspace>
                      <Project Language="C#" AssemblyName="CSharpAssembly" CommonReferences="true">
@@ -487,7 +486,7 @@ class C
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function RenameWithNameof_FromReference_DoesForceRenameOverloadsOption(host As RenameTestHost) As Task
+        Public Async Function RenameWithNameof_FromReference_DoesForceRenameOverloadsOption(host As TestHost) As Task
             Await VerifyDashboard(
                 (<Workspace>
                      <Project Language="C#" AssemblyName="CSharpAssembly" CommonReferences="true">
@@ -511,7 +510,7 @@ class C
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function RenameWithNameof_FromDefinition_WithRenameOverloads_Cascading(host As RenameTestHost) As Task
+        Public Async Function RenameWithNameof_FromDefinition_WithRenameOverloads_Cascading(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameOverloads, True)
             Await VerifyDashboard(
@@ -550,7 +549,7 @@ class D : B
             test As XElement,
             newName As String,
             searchResultText As String,
-            host As RenameTestHost,
+            host As TestHost,
             Optional hasRenameOverload As Boolean = False,
             Optional isRenameOverloadsEditable As Boolean = True,
             Optional changedOptionSet As Dictionary(Of OptionKey, Object) = Nothing,
@@ -636,7 +635,7 @@ class D : B
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Async Function RenameWithReferenceInUnchangeableDocument(host As RenameTestHost) As Task
+        Public Async Function RenameWithReferenceInUnchangeableDocument(host As TestHost) As Task
             Dim changingOptions = New Dictionary(Of OptionKey, Object)()
             changingOptions.Add(RenameOptions.RenameOverloads, True)
             Await VerifyDashboard(

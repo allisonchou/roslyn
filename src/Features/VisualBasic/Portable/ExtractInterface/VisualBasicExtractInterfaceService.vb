@@ -2,7 +2,6 @@
 ' The .NET Foundation licenses this file to you under the MIT license.
 ' See the LICENSE file in the project root for more information.
 
-Imports System.Collections.Immutable
 Imports System.Composition
 Imports System.Threading
 Imports Microsoft.CodeAnalysis.ExtractInterface
@@ -44,6 +43,15 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExtractInterface
             Dim span = New TextSpan(spanStart, spanEnd - spanStart)
 
             Return If(span.IntersectsWith(position), typeDeclaration, Nothing)
+        End Function
+
+        Friend Overrides Function GetGeneratedNameTypeParameterSuffix(typeParameters As IList(Of ITypeParameterSymbol), workspace As Workspace) As String
+            If typeParameters.IsEmpty() Then
+                Return String.Empty
+            End If
+
+            Dim typeParameterList = SyntaxFactory.TypeParameterList(SyntaxFactory.SeparatedList(typeParameters.Select(Function(p) SyntaxFactory.TypeParameter(p.Name))))
+            Return Formatter.Format(typeParameterList, workspace).ToString()
         End Function
 
         Friend Overrides Function GetContainingNamespaceDisplay(typeSymbol As INamedTypeSymbol, compilationOptions As CompilationOptions) As String
@@ -99,7 +107,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExtractInterface
         Protected Overrides Async Function UpdateMembersWithExplicitImplementationsAsync(
             unformattedSolution As Solution, documentIds As IReadOnlyList(Of DocumentId), extractedInterfaceSymbol As INamedTypeSymbol,
             typeToExtractFrom As INamedTypeSymbol, includedMembers As IEnumerable(Of ISymbol),
-            symbolToDeclarationAnnotationMap As ImmutableDictionary(Of ISymbol, SyntaxAnnotation), cancellationToken As CancellationToken) As Task(Of Solution)
+            symbolToDeclarationAnnotationMap As Dictionary(Of ISymbol, SyntaxAnnotation), cancellationToken As CancellationToken) As Task(Of Solution)
 
             Dim docToRootMap = New Dictionary(Of DocumentId, CompilationUnitSyntax)
 

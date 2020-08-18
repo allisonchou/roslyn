@@ -4,7 +4,7 @@
 
 namespace Microsoft.VisualStudio.LanguageServices.LiveShare
 {
-    internal class LiveShareConstants
+    class LiveShareConstants
     {
         // The service name for an LSP server implemented using Roslyn designed to be used with the Roslyn client
         public const string RoslynContractName = "Roslyn";

@@ -114,15 +114,15 @@ Namespace Microsoft.VisualStudio.LanguageServices.VisualBasic.ObjectBrowser
         Protected Overrides Sub BuildMethodDeclaration(methodSymbol As IMethodSymbol, options As _VSOBJDESCOPTIONS)
             Select Case methodSymbol.MethodKind
                 Case MethodKind.Conversion, MethodKind.UserDefinedOperator
-                    BuildOperatorDeclaration(methodSymbol)
+                    BuildOperatorDeclaration(methodSymbol, options)
                 Case MethodKind.DeclareMethod
-                    BuildDeclareMethodDeclaration(methodSymbol)
+                    BuildDeclareMethodDeclaration(methodSymbol, options)
                 Case Else
-                    BuildRegularMethodDeclaration(methodSymbol)
+                    BuildRegularMethodDeclaration(methodSymbol, options)
             End Select
         End Sub
 
-        Private Sub BuildOperatorDeclaration(methodSymbol As IMethodSymbol)
+        Private Sub BuildOperatorDeclaration(methodSymbol As IMethodSymbol, options As _VSOBJDESCOPTIONS)
             BuildMemberModifiers(methodSymbol)
 
             Select Case methodSymbol.Name
@@ -147,7 +147,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.VisualBasic.ObjectBrowser
             End If
         End Sub
 
-        Private Sub BuildDeclareMethodDeclaration(methodSymbol As IMethodSymbol)
+        Private Sub BuildDeclareMethodDeclaration(methodSymbol As IMethodSymbol, options As _VSOBJDESCOPTIONS)
             BuildMemberModifiers(methodSymbol)
 
             AddText("Declare ")
@@ -194,7 +194,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.VisualBasic.ObjectBrowser
             End If
         End Sub
 
-        Private Sub BuildRegularMethodDeclaration(methodSymbol As IMethodSymbol)
+        Private Sub BuildRegularMethodDeclaration(methodSymbol As IMethodSymbol, options As _VSOBJDESCOPTIONS)
             BuildMemberModifiers(methodSymbol)
 
             If methodSymbol.ReturnsVoid Then

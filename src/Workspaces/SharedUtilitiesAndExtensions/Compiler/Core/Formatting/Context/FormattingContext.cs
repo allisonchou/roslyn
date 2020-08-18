@@ -111,8 +111,7 @@ namespace Microsoft.CodeAnalysis.Formatting
                                                 formattingRules,
                                                 this.Options.GetOption(FormattingOptions2.TabSize),
                                                 this.Options.GetOption(FormattingOptions2.IndentationSize),
-                                                _tokenStream,
-                                                _engine.SyntaxFacts);
+                                                _tokenStream);
                 var initialIndentation = baseIndentationFinder.GetIndentationOfCurrentPosition(
                     rootNode,
                     initialOperation,
@@ -201,12 +200,10 @@ namespace Microsoft.CodeAnalysis.Formatting
             // relative indentation case where indentation depends on other token
             if (operation.IsRelativeIndentation)
             {
-                var effectiveBaseToken = operation.Option.IsOn(IndentBlockOption.RelativeToFirstTokenOnBaseTokenLine) ? _tokenStream.FirstTokenOfBaseTokenLine(operation.BaseToken) : operation.BaseToken;
-                var inseparableRegionStartingPosition = effectiveBaseToken.FullSpan.Start;
+                var inseparableRegionStartingPosition = operation.Option.IsOn(IndentBlockOption.RelativeToFirstTokenOnBaseTokenLine) ? _tokenStream.FirstTokenOfBaseTokenLine(operation.BaseToken).FullSpan.Start : operation.BaseToken.FullSpan.Start;
                 var relativeIndentationGetter = new Lazy<int>(() =>
                 {
-                    var baseIndentationDelta = operation.GetAdjustedIndentationDelta(_engine.SyntaxFacts, TreeData.Root, effectiveBaseToken);
-                    var indentationDelta = baseIndentationDelta * this.Options.GetOption(FormattingOptions2.IndentationSize);
+                    var indentationDelta = operation.IndentationDeltaOrPosition * this.Options.GetOption(FormattingOptions2.IndentationSize);
 
                     // baseIndentation is calculated for the adjusted token if option is RelativeToFirstTokenOnBaseTokenLine
                     var baseIndentation = _tokenStream.GetCurrentColumn(operation.Option.IsOn(IndentBlockOption.RelativeToFirstTokenOnBaseTokenLine) ?

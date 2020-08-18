@@ -13,7 +13,6 @@ using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.IntegrationTest.Utilities;
-using Microsoft.VisualStudio.IntegrationTest.Utilities.Common;
 using Microsoft.VisualStudio.IntegrationTest.Utilities.Input;
 using Roslyn.Test.Utilities;
 using Xunit;
@@ -27,12 +26,12 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
     {
         protected override string LanguageName => LanguageNames.CSharp;
 
-        public CSharpCodeActions(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory, nameof(CSharpCodeActions))
+        public CSharpCodeActions(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper, nameof(CSharpCodeActions))
         {
         }
 
-        [WpfFact, Trait(Traits.Feature, Traits.Features.CodeActionsGenerateMethod)]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/26204"), Trait(Traits.Feature, Traits.Features.CodeActionsGenerateMethod)]
         public void GenerateMethodInClosedFile()
         {
             var project = new ProjectUtils.Project(ProjectName);
@@ -131,7 +130,8 @@ class C
         }
     }
 }";
-            MarkupTestFile.GetSpans(markup, out _, out ImmutableArray<TextSpan> _);
+
+            MarkupTestFile.GetSpans(markup, out var text, out ImmutableArray<TextSpan> spans);
 
             SetUpEditor(markup);
             VisualStudio.Editor.InvokeCodeActionList();
@@ -143,7 +143,7 @@ class C
             VisualStudio.Editor.Verify.TextContains("Second?.");
         }
 
-        [WpfFact]
+        [ConditionalWpfFact(typeof(LegacyEditorConfigCondition))]
         [Trait(Traits.Feature, Traits.Features.EditorConfig)]
         [Trait(Traits.Feature, Traits.Features.CodeActionsFixAllOccurrences)]
         [WorkItem(15003, "https://github.com/dotnet/roslyn/issues/15003")]
@@ -185,6 +185,10 @@ class C
     public int Y2 => 5;
 }";
 
+            // CodingConventions only sends notifications if a file is open for all directories in the project
+            VisualStudio.SolutionExplorer.OpenFile(new ProjectUtils.Project(ProjectName), @"Properties\AssemblyInfo.cs");
+
+            // Switch back to the main document we'll be editing
             VisualStudio.SolutionExplorer.OpenFile(new ProjectUtils.Project(ProjectName), "Class1.cs");
 
             /*
@@ -193,8 +197,9 @@ class C
              * applied, and the result is verified against the expected outcome for the .editorconfig style.
              */
 
-            MarkupTestFile.GetSpans(markup, out _, out ImmutableArray<TextSpan> _);
+            MarkupTestFile.GetSpans(markup, out var text, out ImmutableArray<TextSpan> spans);
             SetUpEditor(markup);
+            VisualStudio.WaitForApplicationIdle(CancellationToken.None);
             VisualStudio.Workspace.WaitForAllAsyncOperations(
                 Helper.HangMitigatingTimeout,
                 FeatureAttribute.Workspace,
@@ -209,8 +214,18 @@ class C
 csharp_style_expression_bodied_properties = true:warning
 ";
 
-            VisualStudio.SolutionExplorer.AddFile(new ProjectUtils.Project(ProjectName), ".editorconfig", editorConfig, open: false);
+            VisualStudio.SolutionExplorer.BeginWatchForCodingConventionsChange(new ProjectUtils.Project(ProjectName), "Class1.cs");
+            try
+            {
+                VisualStudio.SolutionExplorer.AddFile(new ProjectUtils.Project(ProjectName), ".editorconfig", editorConfig, open: false);
+            }
+            finally
+            {
+                VisualStudio.SolutionExplorer.EndWaitForCodingConventionsChange(Helper.HangMitigatingTimeout);
+            }
 
+            // Wait for CodingConventions library events to propagate to the workspace
+            VisualStudio.WaitForApplicationIdle(CancellationToken.None);
             VisualStudio.Workspace.WaitForAllAsyncOperations(
                 Helper.HangMitigatingTimeout,
                 FeatureAttribute.Workspace,
@@ -232,8 +247,18 @@ csharp_style_expression_bodied_properties = true:warning
              * outcome for the modified .editorconfig style.
              */
 
-            VisualStudio.SolutionExplorer.SetFileContents(new ProjectUtils.Project(ProjectName), ".editorconfig", editorConfig.Replace("true:warning", "false:warning"));
+            VisualStudio.SolutionExplorer.BeginWatchForCodingConventionsChange(new ProjectUtils.Project(ProjectName), "Class1.cs");
+            try
+            {
+                VisualStudio.SolutionExplorer.SetFileContents(new ProjectUtils.Project(ProjectName), ".editorconfig", editorConfig.Replace("true:warning", "false:warning"));
+            }
+            finally
+            {
+                VisualStudio.SolutionExplorer.EndWaitForCodingConventionsChange(Helper.HangMitigatingTimeout);
+            }
 
+            // Wait for CodingConventions library events to propagate to the workspace
+            VisualStudio.WaitForApplicationIdle(CancellationToken.None);
             VisualStudio.Workspace.WaitForAllAsyncOperations(
                 Helper.HangMitigatingTimeout,
                 FeatureAttribute.Workspace,
@@ -686,64 +711,6 @@ public class Program
             };
 
             VisualStudio.Editor.Verify.CodeActions(expectedItems, ensureExpectedItemsAreOrdered: true);
-        }
-
-        [WpfFact, Trait(Traits.Feature, Traits.Features.CodeActionsConfiguration)]
-        public void ConfigureSeverity()
-        {
-            var markup = @"
-class C
-{
-    public static void Main()
-    {
-        // CS0168: The variable 'x' is declared but never used
-        int $$x;
-    }
-}";
-            SetUpEditor(markup);
-
-            // Verify CS0168 warning in original code.
-            VerifyDiagnosticInErrorList("Warning", VisualStudio);
-
-            // Apply configuration severity fix to change CS0168 to be an error.
-            SetUpEditor(markup);
-            VisualStudio.Editor.InvokeCodeActionList();
-            var expectedItems = new[]
-            {
-                "Remove unused variable",
-                "Suppress or Configure issues",
-                    "Suppress CS0168",
-                        "in Source",
-                    "Configure CS0168 severity",
-                        "None",
-                        "Silent",
-                        "Suggestion",
-                        "Warning",
-                        "Error",
-            };
-            VisualStudio.Editor.Verify.CodeActions(expectedItems, applyFix: "Error", ensureExpectedItemsAreOrdered: true);
-
-            // Verify CS0168 is now reported as an error.
-            VerifyDiagnosticInErrorList("Error", VisualStudio);
-
-            return;
-
-            static void VerifyDiagnosticInErrorList(string expectedSeverity, VisualStudioInstance visualStudio)
-            {
-                visualStudio.ErrorList.ShowErrorList();
-                var expectedContents = new[] {
-                    new ErrorListItem(
-                        severity: expectedSeverity,
-                        description: "The variable 'x' is declared but never used",
-                        project: "TestProj.csproj",
-                        fileName: "Class1.cs",
-                        line: 7,
-                        column: 13)
-                };
-
-                var actualContents = visualStudio.ErrorList.GetErrorListContents();
-                Assert.Equal(expectedContents, actualContents);
-            }
         }
     }
 }

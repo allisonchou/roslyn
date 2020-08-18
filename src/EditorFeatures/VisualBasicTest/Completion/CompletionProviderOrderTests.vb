@@ -17,8 +17,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Completion
         ''' </summary>
         <Fact>
         Public Sub TestCompletionProviderOrder()
-            Dim exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider()
-            Dim completionProviderExports = exportProvider.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
+            Dim completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
             Dim orderedVisualBasicCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(Function(export) export.Metadata.Language = LanguageNames.VisualBasic))
 
             Dim actualOrder = orderedVisualBasicCompletionProviders.Select(Function(x) x.Value.GetType()).ToArray()
@@ -56,8 +55,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Completion
         ''' </summary>
         <Fact>
         Public Sub TestCompletionProviderOrderMetadata()
-            Dim exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider()
-            Dim completionProviderExports = exportProvider.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
+            Dim completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
             Dim orderedVisualBasicCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(Function(export) export.Metadata.Language = LanguageNames.VisualBasic))
 
             For i = 0 To orderedVisualBasicCompletionProviders.Count - 1
@@ -86,8 +84,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Completion
 
         <Fact>
         Public Sub TestCompletionProviderFirstNameMetadata()
-            Dim exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider()
-            Dim completionProviderExports = exportProvider.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
+            Dim completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
             Dim orderedVisualBasicCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(Function(export) export.Metadata.Language = LanguageNames.VisualBasic))
             Dim firstCompletionProvider = orderedVisualBasicCompletionProviders.First()
 
@@ -96,8 +93,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Completion
 
         <Fact>
         Public Sub TestCompletionProviderLastNameMetadata()
-            Dim exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider()
-            Dim completionProviderExports = exportProvider.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
+            Dim completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
             Dim orderedVisualBasicCompletionProviders = ExtensionOrderer.Order(completionProviderExports.Where(Function(export) export.Metadata.Language = LanguageNames.VisualBasic))
             Dim lastCompletionProvider = orderedVisualBasicCompletionProviders.Last()
 
@@ -106,8 +102,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Completion
 
         <Fact>
         Public Sub TestCompletionProviderNameMetadata()
-            Dim exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider()
-            Dim completionProviderExports = exportProvider.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
+            Dim completionProviderExports = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExports(Of CompletionProvider, CompletionProviderMetadata)()
             Dim visualBasicCompletionProviders = completionProviderExports.Where(Function(export) export.Metadata.Language = LanguageNames.VisualBasic)
             For Each export In visualBasicCompletionProviders
                 Assert.Equal(export.Value.GetType().Name, export.Metadata.Name)

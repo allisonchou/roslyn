@@ -12,7 +12,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
     /// </summary>
     internal class DashboardAutomationPeer : UserControlAutomationPeer
     {
-        private readonly string _identifier;
+        private string _identifier;
 
         public DashboardAutomationPeer(UserControl owner, string identifier) : base(owner)
             => _identifier = identifier;

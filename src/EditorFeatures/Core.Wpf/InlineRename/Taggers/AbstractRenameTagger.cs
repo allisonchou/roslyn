@@ -55,7 +55,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
         }
 
-        private void DetachFromSession(InlineRenameSession _)
+        private void DetachFromSession(InlineRenameSession session)
         {
             if (_bufferManager != null)
             {

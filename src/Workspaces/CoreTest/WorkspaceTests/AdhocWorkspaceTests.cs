@@ -2,43 +2,26 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Host;
-using Microsoft.CodeAnalysis.Shared.Utilities;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.UnitTests.Persistence;
 using Roslyn.Test.Utilities;
 using Roslyn.Utilities;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
+using Microsoft.CodeAnalysis.Shared.Utilities;
+using System;
 using CS = Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Host.Mef;
+using System.Collections.Immutable;
 
 namespace Microsoft.CodeAnalysis.UnitTests
 {
     [UseExportProvider]
     public partial class AdhocWorkspaceTests : TestBase
     {
-        private static AdhocWorkspace CreateWorkspace(Type[] additionalParts = null)
-            => new AdhocWorkspace(FeaturesTestCompositions.Features.AddParts(additionalParts).GetHostServices());
-
-        private static AdhocWorkspace CreateWorkspaceWithRecoverableSyntaxTrees()
-        {
-            var workspace = CreateWorkspace(new[]
-            {
-                typeof(TestProjectCacheService),
-                typeof(TestTemporaryStorageService)
-            });
-
-            workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(workspace.Options
-                .WithChangedOption(CacheOptions.RecoverableTreeLengthThreshold, 0)));
-
-            return workspace;
-        }
-
         [Fact, Trait(Traits.Feature, Traits.Features.Workspace)]
         public void TestAddProject_ProjectInfo()
         {
@@ -408,12 +391,20 @@ language: LanguageNames.CSharp);
             Assert.Equal(currentVersion, actualVersion);
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task TestUpdatedDocumentTextIsObservablyConstantAsync(bool recoverable)
+        private static AdhocWorkspace CreateWorkspaceWithRecoverableTrees(HostServices hostServices)
         {
-            var workspace = recoverable ? CreateWorkspaceWithRecoverableSyntaxTrees() : CreateWorkspace();
-            await CheckUpdatedDocumentTextIsObservablyConstantAsync(workspace);
+            var ws = new AdhocWorkspace(hostServices, workspaceKind: "NotKeptAlive");
+            ws.TryApplyChanges(ws.CurrentSolution.WithOptions(ws.CurrentSolution.Options
+                .WithChangedOption(Host.CacheOptions.RecoverableTreeLengthThreshold, 0)));
+            return ws;
+        }
+
+        [Fact]
+        public async Task TestUpdatedDocumentTextIsObservablyConstantAsync()
+        {
+            var hostServices = MefHostServices.Create(TestHost.Assemblies);
+            await CheckUpdatedDocumentTextIsObservablyConstantAsync(new AdhocWorkspace(hostServices));
+            await CheckUpdatedDocumentTextIsObservablyConstantAsync(CreateWorkspaceWithRecoverableTrees(hostServices));
         }
 
         private static async Task CheckUpdatedDocumentTextIsObservablyConstantAsync(AdhocWorkspace ws)

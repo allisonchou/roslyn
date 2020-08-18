@@ -235,17 +235,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </summary>
         internal bool AreNullableAnnotationsEnabled(SyntaxTree syntaxTree, int position)
         {
-            CSharpSyntaxTree csTree = (CSharpSyntaxTree)syntaxTree;
-            Syntax.NullableContextState context = csTree.GetNullableContextState(position);
+            Syntax.NullableContextState context = ((CSharpSyntaxTree)syntaxTree).GetNullableContextState(position);
 
             return context.AnnotationsState switch
             {
                 Syntax.NullableContextState.State.Enabled => true,
                 Syntax.NullableContextState.State.Disabled => false,
                 Syntax.NullableContextState.State.ExplicitlyRestored => GetGlobalAnnotationState(),
-                Syntax.NullableContextState.State.Unknown =>
-                    !csTree.IsGeneratedCode(this.Compilation.Options.SyntaxTreeOptionsProvider)
-                    && AreNullableAnnotationsGloballyEnabled(),
+                Syntax.NullableContextState.State.Unknown => AreNullableAnnotationsGloballyEnabled(),
                 _ => throw ExceptionUtilities.UnexpectedValue(context.AnnotationsState)
             };
         }
@@ -254,12 +251,6 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             RoslynDebug.Assert(token.SyntaxTree is object);
             return AreNullableAnnotationsEnabled(token.SyntaxTree, token.SpanStart);
-        }
-
-        internal bool IsGeneratedCode(SyntaxToken token)
-        {
-            var tree = (CSharpSyntaxTree)token.SyntaxTree!;
-            return tree.IsGeneratedCode(Compilation.Options.SyntaxTreeOptionsProvider);
         }
 
         internal virtual bool AreNullableAnnotationsGloballyEnabled()

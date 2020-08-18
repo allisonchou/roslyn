@@ -36,7 +36,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Options.Style.N
                 notificationService)));
         }
 
-        internal void AddSymbolSpecification(INamingStylesInfoDialogViewModel _)
+        internal void AddSymbolSpecification(INamingStylesInfoDialogViewModel symbolSpecification)
         {
 
         }

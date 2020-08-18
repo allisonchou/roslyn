@@ -316,11 +316,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             return new Conversion(ConversionKind.SwitchExpression, innerConversions);
         }
 
-        internal static Conversion MakeConditionalExpression(ImmutableArray<Conversion> innerConversions)
-        {
-            return new Conversion(ConversionKind.ConditionalExpression, innerConversions);
-        }
-
         internal ConversionKind Kind
         {
             get
@@ -551,17 +546,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             get
             {
                 return Kind == ConversionKind.SwitchExpression;
-            }
-        }
-
-        /// <summary>
-        /// Returns true if the conversion is an implicit conditional expression conversion.
-        /// </summary>
-        public bool IsConditionalExpression
-        {
-            get
-            {
-                return Kind == ConversionKind.ConditionalExpression;
             }
         }
 

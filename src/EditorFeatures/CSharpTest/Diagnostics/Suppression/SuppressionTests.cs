@@ -35,6 +35,9 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Diagnostics.Suppression
 
         protected internal override string GetLanguage() => LanguageNames.CSharp;
 
+        protected override TestWorkspace CreateWorkspaceFromFile(string initialMarkup, TestParameters parameters)
+            => TestWorkspace.CreateCSharp(initialMarkup, parameters.parseOptions, parameters.compilationOptions);
+
         #region "Pragma disable tests"
 
         public abstract partial class CSharpPragmaWarningDisableSuppressionTests : CSharpSuppressionTests
@@ -254,8 +257,7 @@ class Class
                     var analyzerReference = new AnalyzerImageReference(ImmutableArray.Create<DiagnosticAnalyzer>(new CSharpCompilerDiagnosticAnalyzer()));
                     workspace.TryApplyChanges(workspace.CurrentSolution.WithAnalyzerReferences(new[] { analyzerReference }));
 
-                    Assert.IsType<MockDiagnosticUpdateSourceRegistrationService>(workspace.ExportProvider.GetExportedValue<IDiagnosticUpdateSourceRegistrationService>());
-                    var diagnosticService = Assert.IsType<DiagnosticAnalyzerService>(workspace.ExportProvider.GetExportedValue<IDiagnosticAnalyzerService>());
+                    var diagnosticService = new TestDiagnosticAnalyzerService();
                     var incrementalAnalyzer = diagnosticService.CreateIncrementalAnalyzer(workspace);
                     var suppressionProvider = CreateDiagnosticProviderAndFixer(workspace).Item2;
                     var suppressionProviderFactory = new Lazy<IConfigurationFixProvider, CodeChangeProviderMetadata>(() => suppressionProvider,
@@ -273,12 +275,13 @@ class Class
                     var allFixes = (await fixService.GetFixesAsync(document, span, includeConfigurationFixes: true, cancellationToken: CancellationToken.None))
                         .SelectMany(fixCollection => fixCollection.Fixes);
 
-                    var cs0219Fixes = allFixes.Where(fix => fix.PrimaryDiagnostic.Id == "CS0219").ToArray();
+                    var cs0219Fixes = allFixes.Where(fix => fix.PrimaryDiagnostic.Id == "CS0219");
 
-                    // Ensure that there are no duplicate suppression fixes.
-                    Assert.Equal(1, cs0219Fixes.Length);
-                    var cs0219EquivalenceKey = cs0219Fixes[0].Action.EquivalenceKey;
+                    // Ensure that both the fixes have identical equivalence key, and hence get de-duplicated in LB menu.
+                    Assert.Equal(2, cs0219Fixes.Count());
+                    var cs0219EquivalenceKey = cs0219Fixes.First().Action.EquivalenceKey;
                     Assert.NotNull(cs0219EquivalenceKey);
+                    Assert.Equal(cs0219EquivalenceKey, cs0219Fixes.Last().Action.EquivalenceKey);
 
                     // Ensure that there *is* a fix for the other warning and that it has a *different*
                     // equivalence key so that it *doesn't* get de-duplicated

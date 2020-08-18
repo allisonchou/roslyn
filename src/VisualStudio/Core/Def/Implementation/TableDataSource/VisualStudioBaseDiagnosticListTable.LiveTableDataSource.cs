@@ -417,8 +417,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.TableDataSource
                     }
                 }
 
-                public override bool TryNavigateTo(int index, bool previewTab, bool activate)
-                    => TryNavigateToItem(index, previewTab, activate);
+                public override bool TryNavigateTo(int index, bool previewTab)
+                    => TryNavigateToItem(index, previewTab);
 
                 #region IWpfTableEntriesSnapshot
 
@@ -517,9 +517,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.TableDataSource
                     return false;
                 }
 
-#pragma warning disable IDE0060 // Remove unused parameter - TODO: remove this once we moved to new drop 
+                // remove this once we moved to new drop
                 public bool TryCreateStringContent(int index, string columnName, bool singleColumnView, [NotNullWhen(returnValue: true)] out string? content)
-#pragma warning restore IDE0060 // Remove unused parameter
                 {
                     content = null;
                     return false;

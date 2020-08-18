@@ -117,8 +117,7 @@ namespace Microsoft.CodeAnalysis.ImplementAbstractClass
                 new CodeGenerationOptions(
                     contextLocation: classNodeToAddMembersTo.GetLocation(),
                     autoInsertionLocation: groupMembers,
-                    sortMembers: groupMembers,
-                    options: options));
+                    sortMembers: groupMembers));
 
             var root = await _document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var newRoot = root.ReplaceNode(_classNode, updatedClassNode);

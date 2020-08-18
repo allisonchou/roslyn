@@ -18,13 +18,13 @@ namespace Roslyn.VisualStudio.IntegrationTests.VisualBasic
     {
         protected override string LanguageName => LanguageNames.VisualBasic;
 
-        public BasicLineCommit(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory, nameof(BasicLineCommit))
+        public BasicLineCommit(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper, nameof(BasicLineCommit))
         {
         }
 
         [WpfFact, Trait(Traits.Feature, Traits.Features.LineCommit)]
-        private void CaseCorrection()
+        void CaseCorrection()
         {
             VisualStudio.Editor.SetText(@"Module Goo
     Sub M()
@@ -38,7 +38,7 @@ End Module");
         }
 
         [WpfFact, Trait(Traits.Feature, Traits.Features.LineCommit)]
-        private void UndoWithEndConstruct()
+        void UndoWithEndConstruct()
         {
             VisualStudio.Editor.SetText(@"Module Module1
     Sub Main()
@@ -56,7 +56,7 @@ End Module");
         }
 
         [WpfFact, Trait(Traits.Feature, Traits.Features.LineCommit)]
-        private void UndoWithoutEndConstruct()
+        void UndoWithoutEndConstruct()
         {
             VisualStudio.Editor.SetText(@"Module Module1
 
@@ -79,8 +79,8 @@ End Module");
             VisualStudio.Editor.Verify.CaretPosition(16);
         }
 
-        [WpfFact, Trait(Traits.Feature, Traits.Features.LineCommit)]
-        private void CommitOnSave()
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/34637"), Trait(Traits.Feature, Traits.Features.LineCommit)]
+        void CommitOnSave()
         {
             VisualStudio.Editor.SetText(@"Module Module1
     Sub Main()
@@ -98,7 +98,7 @@ End Module
         }
 
         [WpfFact, Trait(Traits.Feature, Traits.Features.LineCommit)]
-        private void CommitOnFocusLost()
+        void CommitOnFocusLost()
         {
             VisualStudio.Editor.SetText(@"Module M
     Sub M()
@@ -118,7 +118,7 @@ End Module");
         }
 
         [WpfFact, Trait(Traits.Feature, Traits.Features.LineCommit)]
-        private void CommitOnFocusLostDoesNotFormatWithPrettyListingOff()
+        void CommitOnFocusLostDoesNotFormatWithPrettyListingOff()
         {
             try
             {

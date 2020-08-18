@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Host.Mef;
 
 namespace Microsoft.CodeAnalysis.Editor.Test
 {
-    [ExportWorkspaceService(typeof(IDocumentTrackingService), ServiceLayer.Test), Shared, PartNotDiscoverable]
+    [ExportWorkspaceService(typeof(IDocumentTrackingService)), Shared]
     internal sealed class TestDocumentTrackingService : IDocumentTrackingService
     {
         private readonly object _gate = new object();

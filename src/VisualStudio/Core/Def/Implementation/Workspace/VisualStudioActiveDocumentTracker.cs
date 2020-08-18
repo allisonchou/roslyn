@@ -29,9 +29,17 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
     /// Can be accessed via the <see cref="IDocumentTrackingService"/> as a workspace service.
     /// </summary>
     [Export]
-    internal class VisualStudioActiveDocumentTracker : ForegroundThreadAffinitizedObject, IVsSelectionEvents
+    internal class VisualStudioActiveDocumentTracker : ForegroundThreadAffinitizedObject, IVsSelectionEvents, IDisposable
     {
         private readonly IVsEditorAdaptersFactoryService _editorAdaptersFactoryService;
+
+        /// <summary>
+        /// Collection of all asynchronous tasks that are started by this service. This should only be tasks that are implicitly
+        /// async as we fetch services from the <see cref="IAsyncServiceProvider"/>, and are used to ensure we wait for them during shutdown.
+        /// These should not be waited for in calls to <see cref="TryGetActiveDocument(Workspace)"/> or <see cref="GetVisibleDocuments(Workspace)"/>
+        /// because those are expected to not be jumping to the UI thread per traditional Roslyn semantics and may deadlock.
+        /// </summary>
+        private readonly JoinableTaskCollection _asyncTasks;
 
         /// <summary>
         /// The list of tracked frames. This can only be written by the UI thread, although can be read (with care) from any thread.
@@ -52,15 +60,12 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
             : base(threadingContext, assertIsForeground: false)
         {
             _editorAdaptersFactoryService = editorAdaptersFactoryService;
-            ThreadingContext.RunWithShutdownBlockAsync(async cancellationToken =>
+            _asyncTasks = new JoinableTaskCollection(threadingContext.JoinableTaskContext);
+            _asyncTasks.Add(ThreadingContext.JoinableTaskFactory.RunAsync(async () =>
             {
-                await ThreadingContext.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+                await ThreadingContext.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                var monitorSelectionService = (IVsMonitorSelection)await asyncServiceProvider.GetServiceAsync(typeof(SVsShellMonitorSelection)).ConfigureAwait(true);
-                Assumes.Present(monitorSelectionService);
-
-                // No need to track windows if we are shutting down
-                cancellationToken.ThrowIfCancellationRequested();
+                var monitorSelectionService = (IVsMonitorSelection)await asyncServiceProvider.GetServiceAsync(typeof(SVsShellMonitorSelection)).ConfigureAwait(false);
 
                 if (ErrorHandler.Succeeded(monitorSelectionService.GetCurrentElementValue((uint)VSConstants.VSSELELEMID.SEID_DocumentFrame, out var value)))
                 {
@@ -71,8 +76,11 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
                 }
 
                 monitorSelectionService.AdviseSelectionEvents(this, out var _);
-            });
+            }));
         }
+
+        public void Dispose()
+            => _asyncTasks.Join();
 
         /// <summary>
         /// Raised when the set of window frames being tracked changes, which means the results from <see cref="TryGetActiveDocument"/> or <see cref="GetVisibleDocuments"/> may change.
@@ -220,7 +228,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
                     {
                         _textBuffer = _documentTracker._editorAdaptersFactoryService.GetDocumentBuffer(bufferAdapter);
 
-                        if (_textBuffer != null && !_textBuffer.ContentType.IsOfType(ContentTypeNames.RoslynContentType))
+                        if (!_textBuffer.ContentType.IsOfType(ContentTypeNames.RoslynContentType))
                         {
                             _textBuffer.Changed += NonRoslynTextBuffer_Changed;
                         }

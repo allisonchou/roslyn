@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Host.Mef;
 
 namespace Microsoft.CodeAnalysis.UnitTests.Persistence
 {
-    [ExportWorkspaceService(typeof(IProjectCacheHostService), ServiceLayer.Test), Shared, PartNotDiscoverable]
+    [ExportWorkspaceService(typeof(IProjectCacheHostService), "NotKeptAlive"), Shared]
     public class TestProjectCacheService : IProjectCacheHostService
     {
         [ImportingConstructor]

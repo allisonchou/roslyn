@@ -12,7 +12,6 @@ using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.CodeAnalysis.CSharp.Scripting.Hosting;
-using Microsoft.CodeAnalysis.Shared.TestHooks;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.Interactive
 {
@@ -25,7 +24,6 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.Interactive
 
         public CSharpInteractiveEvaluator(
             IThreadingContext threadingContext,
-            IAsynchronousOperationListener listener,
             HostServices hostServices,
             IViewClassifierAggregatorService classifierAggregator,
             IInteractiveWindowCommandsFactory commandsFactory,
@@ -34,7 +32,6 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.Interactive
             string initialWorkingDirectory)
             : base(
                 threadingContext,
-                listener,
                 contentTypeRegistry.GetContentType(ContentTypeNames.CSharpContentType),
                 hostServices,
                 classifierAggregator,

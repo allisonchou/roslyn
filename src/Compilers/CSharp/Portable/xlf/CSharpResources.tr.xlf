@@ -78,13 +78,13 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_AwaitForEachMissingMember">
-        <source>Asynchronous foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a suitable public instance or extension definition for '{1}'</source>
-        <target state="needs-review-translation">'{0}', '{1}' için uygun bir genel örnek tanımı içermediğinden zaman uyumsuz foreach deyimi '{0}' türündeki değişkenlerle çalışmaz</target>
+        <source>Asynchronous foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a suitable public instance definition for '{1}'</source>
+        <target state="translated">'{0}', '{1}' için uygun bir genel örnek tanımı içermediğinden zaman uyumsuz foreach deyimi '{0}' türündeki değişkenlerle çalışmaz</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_AwaitForEachMissingMemberWrongAsync">
-        <source>Asynchronous foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a public instance or extension definition for '{1}'. Did you mean 'foreach' rather than 'await foreach'?</source>
-        <target state="needs-review-translation">'{0}', '{1}' için bir genel örnek tanımı içermediğinden zaman uyumsuz foreach deyimi '{0}' türündeki değişkenlerle çalışmaz. 'await foreach' yerine 'foreach' mi kullanmak istediniz?</target>
+        <source>Asynchronous foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a public instance definition for '{1}'. Did you mean 'foreach' rather than 'await foreach'?</source>
+        <target state="translated">'{0}', '{1}' için bir genel örnek tanımı içermediğinden zaman uyumsuz foreach deyimi '{0}' türündeki değişkenlerle çalışmaz. 'await foreach' yerine 'foreach' mi kullanmak istediniz?</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadDynamicAwaitForEach">
@@ -138,8 +138,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadRecordDeclaration">
-        <source>A positional record must have a non-empty parameter list</source>
-        <target state="needs-review-translation">Konumsal bir kaydın hem 'data' değiştiricisi hem de boş olmayan bir parametre listesi olmalıdır</target>
+        <source>A positional record must have both a 'data' modifier and non-empty parameter list</source>
+        <target state="translated">Konumsal bir kaydın hem 'data' değiştiricisi hem de boş olmayan bir parametre listesi olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadRecordMemberForPositionalParameter">
@@ -177,11 +177,6 @@
         <target state="translated">__arglist, 'in' veya 'out' tarafından geçirilen bir bağımsız değişkene sahip olamaz</target>
         <note />
       </trans-unit>
-      <trans-unit id="ERR_CloneDisallowedInRecord">
-        <source>Members named 'Clone' are disallowed in records.</source>
-        <target state="new">Members named 'Clone' are disallowed in records.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ERR_CloseUnimplementedInterfaceMemberWrongInitOnly">
         <source>'{0}' does not implement interface member '{1}'. '{2}' cannot implement '{1}'.</source>
         <target state="translated">'{0}, '{1}' arabirim üyesini uygulamıyor. '{2}', '{1}' üyesini uygulayamaz.</target>
@@ -207,19 +202,9 @@
         <target state="translated">Bir kayıttaki kopya oluşturucu, temel öğenin bir kopya oluşturucusuna veya kaydın nesneden devraldığı durumlarda parametresiz bir nesne oluşturucusuna çağrı yapmalıdır.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ERR_CopyConstructorWrongAccessibility">
-        <source>A copy constructor '{0}' must be public or protected because the record is not sealed.</source>
-        <target state="new">A copy constructor '{0}' must be public or protected because the record is not sealed.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ERR_DeconstructParameterNameMismatch">
         <source>The name '{0}' does not match the corresponding 'Deconstruct' parameter '{1}'.</source>
         <target state="translated">'{0}' adı ilgili '{1}' 'Deconstruct' parametresiyle eşleşmiyor.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_DefaultConstraintOverrideOnly">
-        <source>The 'default' constraint is valid on override and explicit interface implementation methods only.</source>
-        <target state="new">The 'default' constraint is valid on override and explicit interface implementation methods only.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_DefaultInterfaceImplementationInNoPIAType">
@@ -247,19 +232,9 @@
         <target state="translated">Bir switch deyiminde case etiketi olarak atma desenine izin verilmez. Atma deseni için 'case var _:' veya '_' adlı bir sabit için 'case @_:' seçeneğini kullanın.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ERR_DoesNotOverrideBaseEqualityContract">
-        <source>'{0}' does not override expected property from '{1}'.</source>
-        <target state="new">'{0}' does not override expected property from '{1}'.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_DoesNotOverrideBaseEquals">
-        <source>'{0}' does not override expected method from '{1}'.</source>
-        <target state="new">'{0}' does not override expected method from '{1}'.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ERR_DoesNotOverrideMethodFromObject">
-        <source>'{0}' does not override expected method from 'object'.</source>
-        <target state="new">'{0}' does not override expected method from 'object'.</target>
+        <source>'{0}' does not override the method from 'object'.</source>
+        <target state="translated">'{0}', 'nesne' yönteminden geçersiz kılmıyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_DupReturnTypeMod">
@@ -280,6 +255,11 @@
       <trans-unit id="ERR_DuplicatePropertyReadOnlyMods">
         <source>Cannot specify 'readonly' modifiers on both accessors of property or indexer '{0}'. Instead, put a 'readonly' modifier on the property itself.</source>
         <target state="translated">'readonly' değiştiricileri, '{0}' özelliğinin veya dizin oluşturucusunun her iki erişimcisinde de belirtilemez. Bunun yerine özelliğin kendisine bir 'readonly' değiştiricisi koyun.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ERR_DuplicateRecordConstructor">
+        <source>There cannot be a primary constructor and a member constructor with the same parameter types.</source>
+        <target state="translated">Aynı parametre türlerine sahip bir birincil oluşturucu ve üye oluşturucu olamaz.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_ElseCannotStartStatement">
@@ -378,8 +358,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_ForEachMissingMemberWrongAsync">
-        <source>foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a public instance or extension definition for '{1}'. Did you mean 'await foreach' rather than 'foreach'?</source>
-        <target state="needs-review-translation">'{0}', '{1}' için bir genel örnek tanımı içermediğinden foreach deyimi '{0}' türündeki değişkenlerle çalışamaz. 'foreach' yerine 'await foreach' mi kullanmak istediniz?</target>
+        <source>foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a public instance definition for '{1}'. Did you mean 'await foreach' rather than 'foreach'?</source>
+        <target state="translated">'{0}', '{1}' için bir genel örnek tanımı içermediğinden foreach deyimi '{0}' türündeki değişkenlerle çalışamaz. 'foreach' yerine 'await foreach' mi kullanmak istediniz?</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_FuncPtrMethMustBeStatic">
@@ -502,26 +482,6 @@
         <target state="translated">Desen eksik</target>
         <note />
       </trans-unit>
-      <trans-unit id="ERR_ModuleInitializerMethodAndContainingTypesMustNotBeGeneric">
-        <source>Module initializer method '{0}' must not be generic and must not be contained in a generic type</source>
-        <target state="new">Module initializer method '{0}' must not be generic and must not be contained in a generic type</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_ModuleInitializerMethodMustBeAccessibleOutsideTopLevelType">
-        <source>Module initializer method '{0}' must be accessible at the module level</source>
-        <target state="new">Module initializer method '{0}' must be accessible at the module level</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_ModuleInitializerMethodMustBeOrdinary">
-        <source>A module initializer must be an ordinary member method</source>
-        <target state="new">A module initializer must be an ordinary member method</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_ModuleInitializerMethodMustBeStaticParameterlessVoid">
-        <source>Module initializer method '{0}' must be static, must have no parameters, and must return 'void'</source>
-        <target state="new">Module initializer method '{0}' must be static, must have no parameters, and must return 'void'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ERR_MultipleAnalyzerConfigsInSameDir">
         <source>Multiple analyzer config files cannot be in the same directory ('{0}').</source>
         <target state="translated">Birden çok çözümleyici yapılandırma dosyası aynı dizinde ('{0}') olamaz.</target>
@@ -567,26 +527,6 @@
         <target state="translated">'{0}' alıcı türü geçerli bir kayıt türü değil.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ERR_NonPrivateAPIInRecord">
-        <source>Record member '{0}' must be private.</source>
-        <target state="new">Record member '{0}' must be private.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_NonProtectedAPIInRecord">
-        <source>Record member '{0}' must be protected.</source>
-        <target state="new">Record member '{0}' must be protected.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_NonPublicAPIInRecord">
-        <source>Record member '{0}' must be public.</source>
-        <target state="new">Record member '{0}' must be public.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_NotOverridableAPIInRecord">
-        <source>'{0}' must allow overriding because the containing record is not sealed.</source>
-        <target state="new">'{0}' must allow overriding because the containing record is not sealed.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ERR_NullableDirectiveQualifierExpected">
         <source>Expected 'enable', 'disable', or 'restore'</source>
         <target state="translated">'enable', 'disable' veya 'restore' bekleniyor</target>
@@ -603,8 +543,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_NullableUnconstrainedTypeParameter">
-        <source>A nullable type parameter must be known to be a value type or non-nullable reference type unless language version '{0}' or greater is used. Consider changing the language version or adding a 'class', 'struct', or type constraint.</source>
-        <target state="new">A nullable type parameter must be known to be a value type or non-nullable reference type unless language version '{0}' or greater is used. Consider changing the language version or adding a 'class', 'struct', or type constraint.</target>
+        <source>A nullable type parameter must be known to be a value type or non-nullable reference type. Consider adding a 'class', 'struct', or type constraint.</source>
+        <target state="translated">Boş değer atanabilir bir tür parametresi bilinen bir değer türü veya boş değer atanamayan bir başvuru türü olmalıdır. Bir 'class', 'struct' veya tür kısıtlaması eklemeyi düşünün.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_OmittedTypeArgument">
@@ -615,11 +555,6 @@
       <trans-unit id="ERR_OutVariableCannotBeByRef">
         <source>An out variable cannot be declared as a ref local</source>
         <target state="translated">Bir out değişkeni ref yerel değeri olarak bildirilemez</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_OverrideDefaultConstraintNotSatisfied">
-        <source>Method '{0}' specifies a 'default' constraint for type parameter '{1}', but corresponding type parameter '{2}' of overridden or explicitly implemented method '{3}' is constrained to a reference type or a value type.</source>
-        <target state="new">Method '{0}' specifies a 'default' constraint for type parameter '{1}', but corresponding type parameter '{2}' of overridden or explicitly implemented method '{3}' is constrained to a reference type or a value type.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_OverrideRefConstraintNotSatisfied">
@@ -722,29 +657,9 @@
         <target state="translated">İlişkisel desenler, kayan noktalı NaN için kullanılamaz.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ERR_RuntimeDoesNotSupportCovariantPropertiesOfClasses">
-        <source>'{0}': Target runtime doesn't support covariant types in overrides. Type must be '{2}' to match overridden member '{1}'</source>
-        <target state="new">'{0}': Target runtime doesn't support covariant types in overrides. Type must be '{2}' to match overridden member '{1}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_RuntimeDoesNotSupportCovariantReturnsOfClasses">
-        <source>'{0}': Target runtime doesn't support covariant return types in overrides. Return type must be '{2}' to match overridden member '{1}'</source>
-        <target state="new">'{0}': Target runtime doesn't support covariant return types in overrides. Return type must be '{2}' to match overridden member '{1}'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ERR_RuntimeDoesNotSupportProtectedAccessForInterfaceMember">
         <source>Target runtime doesn't support 'protected', 'protected internal', or 'private protected' accessibility for a member of an interface.</source>
         <target state="translated">Hedef çalışma zamanı, bir arabirim üyesi için 'protected', 'protected internal' veya 'private protected' erişilebilirliğini desteklemez.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_SealedGetHashCodeInRecord">
-        <source>'{0}' cannot be sealed because containing record is not sealed.</source>
-        <target state="new">'{0}' cannot be sealed because containing record is not sealed.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_SignatureMismatchInRecord">
-        <source>Record member '{0}' must return '{1}'.</source>
-        <target state="new">Record member '{0}' must return '{1}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_SimpleProgramDisallowsMainType">
@@ -770,21 +685,6 @@
       <trans-unit id="ERR_SingleElementPositionalPatternRequiresDisambiguation">
         <source>A single-element deconstruct pattern requires some other syntax for disambiguation. It is recommended to add a discard designator '_' after the close paren ')'.</source>
         <target state="translated">Tek öğeli bir ayrıştırma deseni, kesinleştirme için başka bir söz dizimi gerektirir. ')' kapanış parantezinden sonra '_' atma belirleyicisinin eklenmesi önerilir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_StaticAPIInRecord">
-        <source>Record member '{0}' may not be static.</source>
-        <target state="new">Record member '{0}' may not be static.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_StaticAnonymousFunctionCannotCaptureThis">
-        <source>A static anonymous function cannot contain a reference to 'this' or 'base'.</source>
-        <target state="new">A static anonymous function cannot contain a reference to 'this' or 'base'.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ERR_StaticAnonymousFunctionCannotCaptureVariable">
-        <source>A static anonymous function cannot contain a reference to '{0}'.</source>
-        <target state="new">A static anonymous function cannot contain a reference to '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_StaticLocalFunctionCannotCaptureThis">
@@ -848,8 +748,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_TypeConstraintsMustBeUniqueAndFirst">
-        <source>The 'class', 'struct', 'unmanaged', 'notnull', and 'default' constraints cannot be combined or duplicated, and must be specified first in the constraints list.</source>
-        <target state="new">The 'class', 'struct', 'unmanaged', 'notnull', and 'default' constraints cannot be combined or duplicated, and must be specified first in the constraints list.</target>
+        <source>The 'class', 'struct', 'unmanaged', and 'notnull' constraints cannot be combined or duplicated, and must be specified first in the constraints list.</source>
+        <target state="translated">'class', 'struct', 'unmanaged' ve 'notnull' kısıtlamaları birleştirilemez veya yinelenemez ve ilk olarak kısıtlamalar listesinde belirtilmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_TypelessNewIllegalTargetType">
@@ -1004,7 +904,7 @@
 -warnaserror[+|-]             Report all warnings as errors
 -warnaserror[+|-]:&lt;warn list&gt; Report specific warnings as errors
                               (use "nullable" for all nullability warnings)
--warn:&lt;n&gt;                     Set warning level (0 or higher) (Short form: -w)
+-warn:&lt;n&gt;                     Set warning level (0-4) (Short form: -w)
 -nowarn:&lt;warn list&gt;           Disable specific warning messages
                               (use "nullable" for all nullability warnings)
 -ruleset:&lt;file&gt;               Specify a ruleset file that disables specific
@@ -1016,7 +916,6 @@
                               both mean SARIF version 2.1.0.
 -reportanalyzer               Report additional analyzer information, such as
                               execution time.
--skipanalyzers[+|-]           Skip execution of diagnostic analyzers.
 
                        - LANGUAGE -
 -checked[+|-]                 Generate overflow checks
@@ -1087,7 +986,7 @@
                               a part of
 -modulename:&lt;string&gt;          Specify the name of the source module
 </source>
-        <target state="needs-review-translation">
+        <target state="translated">
                              Visual C# Derleyici Seçenekleri
 
                        - ÇIKIŞ DOSYALARI -
@@ -1188,7 +1087,7 @@
                               Null atanabilir bağlam seçeneğini enable|disable|warnings|annotations (etkin|devre dışı|uyarılar|ek açıklamalar) olarak belirt.
 
                        - GÜVENLİK -
--delaysign[+|-]               Bütünleştirilmiş kodu, tanımlayıcı ad anahtarının yalnızca genel
+-delaysign[+|-]               Bütünleştirilmiş kodu, tanımlayıcı ad anahtarının yalnızca genel 
                               kısmıyla geç imzala
 -publicsign[+|-]              Bütünleştirilmiş kodu, tanımlayıcı ad anahtarının yalnızca genel
                               kısmıyla genel olarak imzala
@@ -1272,16 +1171,6 @@
         <target state="translated">birleştirme ataması</target>
         <note />
       </trans-unit>
-      <trans-unit id="IDS_FeatureCovariantReturnsForOverrides">
-        <source>covariant returns</source>
-        <target state="new">covariant returns</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="IDS_FeatureDefaultTypeParameterConstraint">
-        <source>default type parameter constraints</source>
-        <target state="new">default type parameter constraints</target>
-        <note />
-      </trans-unit>
       <trans-unit id="IDS_FeatureDelegateGenericTypeConstraint">
         <source>delegate generic type constraints</source>
         <target state="translated">delegate genel tür kısıtlamaları</target>
@@ -1305,16 +1194,6 @@
       <trans-unit id="IDS_FeatureExtensibleFixedStatement">
         <source>extensible fixed statement</source>
         <target state="translated">genişletilebilir fixed deyimi</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="IDS_FeatureExtensionGetAsyncEnumerator">
-        <source>extension GetAsyncEnumerator</source>
-        <target state="new">extension GetAsyncEnumerator</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="IDS_FeatureExtensionGetEnumerator">
-        <source>extension GetEnumerator</source>
-        <target state="new">extension GetEnumerator</target>
         <note />
       </trans-unit>
       <trans-unit id="IDS_FeatureExternLocalFunctions">
@@ -1355,11 +1234,6 @@
       <trans-unit id="IDS_FeatureMemberNotNull">
         <source>MemberNotNull attribute</source>
         <target state="translated">MemberNotNull özniteliği</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="IDS_FeatureModuleInitializers">
-        <source>module initializers</source>
-        <target state="new">module initializers</target>
         <note />
       </trans-unit>
       <trans-unit id="IDS_FeatureNameShadowingInNestedFunctions">
@@ -1467,11 +1341,6 @@
         <target state="translated">stackalloc başlatıcı</target>
         <note />
       </trans-unit>
-      <trans-unit id="IDS_FeatureStaticAnonymousFunction">
-        <source>static anonymous function</source>
-        <target state="new">static anonymous function</target>
-        <note />
-      </trans-unit>
       <trans-unit id="IDS_FeatureStaticLocalFunctions">
         <source>static local functions</source>
         <target state="translated">statik yerel işlevler</target>
@@ -1480,11 +1349,6 @@
       <trans-unit id="IDS_FeatureSwitchExpression">
         <source>&lt;switch expression&gt;</source>
         <target state="translated">&lt;switch expression&gt;</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="IDS_FeatureTargetTypedConditional">
-        <source>target-typed conditional expression</source>
-        <target state="new">target-typed conditional expression</target>
         <note />
       </trans-unit>
       <trans-unit id="IDS_FeatureTargetTypedObjectCreation">
@@ -1930,16 +1794,6 @@
       <trans-unit id="WRN_CaseConstantNamedUnderscore_Title">
         <source>Do not use '_' for a case constant.</source>
         <target state="translated">Bir case sabiti için '_' adını kullanmayın.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_ConstOutOfRangeChecked">
-        <source>Constant value '{0}' may overflow '{1}' at runtime (use 'unchecked' syntax to override)</source>
-        <target state="new">Constant value '{0}' may overflow '{1}' at runtime (use 'unchecked' syntax to override)</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_ConstOutOfRangeChecked_Title">
-        <source>Constant value may overflow at runtime (use 'unchecked' syntax to override)</source>
-        <target state="new">Constant value may overflow at runtime (use 'unchecked' syntax to override)</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_ConvertingNullableToNonNullable">
@@ -2412,16 +2266,6 @@
         <target state="translated">Boş değer atanabilir değer türü null olabilir.</target>
         <note />
       </trans-unit>
-      <trans-unit id="WRN_ParamUnassigned">
-        <source>The out parameter '{0}' must be assigned to before control leaves the current method</source>
-        <target state="new">The out parameter '{0}' must be assigned to before control leaves the current method</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_ParamUnassigned_Title">
-        <source>An out parameter must be assigned to before control leaves the method</source>
-        <target state="new">An out parameter must be assigned to before control leaves the method</target>
-        <note />
-      </trans-unit>
       <trans-unit id="WRN_ParameterConditionallyDisallowsNull">
         <source>Parameter '{0}' must have a non-null value when exiting with '{1}'.</source>
         <target state="translated">'{0}' parametresi '{1}' ile çıkış yaparken null olmayan bir değere sahip olmalıdır.</target>
@@ -2442,26 +2286,6 @@
         <target state="translated">Parametre çıkış yaparken null olmayan bir değere sahip olmalıdır.</target>
         <note />
       </trans-unit>
-      <trans-unit id="WRN_PrecedenceInversion">
-        <source>Operator '{0}' cannot be used here due to precedence. Use parentheses to disambiguate.</source>
-        <target state="new">Operator '{0}' cannot be used here due to precedence. Use parentheses to disambiguate.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_PrecedenceInversion_Title">
-        <source>Operator cannot be used here due to precedence.</source>
-        <target state="new">Operator cannot be used here due to precedence.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_PatternNotPublicOrNotInstance">
-        <source>'{0}' does not implement the '{1}' pattern. '{2}' is not a public instance or extension method.</source>
-        <target state="new">'{0}' does not implement the '{1}' pattern. '{2}' is not a public instance or extension method.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_PatternNotPublicOrNotInstance_Title">
-        <source>Type does not implement the collection pattern; member is is not a public instance or extension method.</source>
-        <target state="new">Type does not implement the collection pattern; member is is not a public instance or extension method.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="WRN_ShouldNotReturn">
         <source>A method marked [DoesNotReturn] should not return.</source>
         <target state="translated">[DoesNotReturn] olarak işaretlenen bir metot, değer döndürmemelidir.</target>
@@ -2470,16 +2294,6 @@
       <trans-unit id="WRN_ShouldNotReturn_Title">
         <source>A method marked [DoesNotReturn] should not return.</source>
         <target state="translated">[DoesNotReturn] olarak işaretlenen bir metot, değer döndürmemelidir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_StaticInAsOrIs">
-        <source>The second operand of an 'is' or 'as' operator may not be static type '{0}'</source>
-        <target state="new">The second operand of an 'is' or 'as' operator may not be static type '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_StaticInAsOrIs_Title">
-        <source>The second operand of an 'is' or 'as' operator may not be a static type</source>
-        <target state="new">The second operand of an 'is' or 'as' operator may not be a static type</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_SwitchExpressionNotExhaustive">
@@ -2492,29 +2306,9 @@
         <target state="translated">Switch ifadesi bazı null girişleri işlemiyor (tam kapsamlı değil). Örneğin, '{0}' deseni kapsanmıyor.</target>
         <note />
       </trans-unit>
-      <trans-unit id="WRN_SwitchExpressionNotExhaustiveForNullWithWhen">
-        <source>The switch expression does not handle some null inputs (it is not exhaustive). For example, the pattern '{0}' is not covered. However, a pattern with a 'when' clause might successfully match this value.</source>
-        <target state="new">The switch expression does not handle some null inputs (it is not exhaustive). For example, the pattern '{0}' is not covered. However, a pattern with a 'when' clause might successfully match this value.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_SwitchExpressionNotExhaustiveForNullWithWhen_Title">
-        <source>The switch expression does not handle some null inputs.</source>
-        <target state="new">The switch expression does not handle some null inputs.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="WRN_SwitchExpressionNotExhaustiveForNull_Title">
         <source>The switch expression does not handle some null inputs.</source>
         <target state="translated">Switch ifadesi bazı null girişleri işlemiyor.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_SwitchExpressionNotExhaustiveWithWhen">
-        <source>The switch expression does not handle all possible values of its input type (it is not exhaustive). For example, the pattern '{0}' is not covered. However, a pattern with a 'when' clause might successfully match this value.</source>
-        <target state="new">The switch expression does not handle all possible values of its input type (it is not exhaustive). For example, the pattern '{0}' is not covered. However, a pattern with a 'when' clause might successfully match this value.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_SwitchExpressionNotExhaustiveWithWhen_Title">
-        <source>The switch expression does not handle all possible values of its input type (it is not exhaustive).</source>
-        <target state="new">The switch expression does not handle all possible values of its input type (it is not exhaustive).</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_SwitchExpressionNotExhaustive_Title">
@@ -2612,26 +2406,6 @@
         <target state="translated">Tür parametresi dış metottaki tür parametresi ile aynı türe sahip</target>
         <note />
       </trans-unit>
-      <trans-unit id="WRN_UnassignedThis">
-        <source>Field '{0}' must be fully assigned before control is returned to the caller</source>
-        <target state="new">Field '{0}' must be fully assigned before control is returned to the caller</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UnassignedThisAutoProperty">
-        <source>Auto-implemented property '{0}' must be fully assigned before control is returned to the caller.</source>
-        <target state="new">Auto-implemented property '{0}' must be fully assigned before control is returned to the caller.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UnassignedThisAutoProperty_Title">
-        <source>An auto-implemented property must be fully assigned before control is returned to the caller.</source>
-        <target state="new">An auto-implemented property must be fully assigned before control is returned to the caller.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UnassignedThis_Title">
-        <source>Fields of a struct must be fully assigned in a constructor before control is returned to the caller</source>
-        <target state="new">Fields of a struct must be fully assigned in a constructor before control is returned to the caller</target>
-        <note />
-      </trans-unit>
       <trans-unit id="WRN_UnboxPossibleNull">
         <source>Unboxing a possibly null value.</source>
         <target state="translated">Olası bir null değeri kutudan çıkarma.</target>
@@ -2670,56 +2444,6 @@
       <trans-unit id="WRN_UninitializedNonNullableField_Title">
         <source>Non-nullable field is uninitialized. Consider declaring as nullable.</source>
         <target state="translated">Null değer atanamayan alan başlatılmadı. Bunu null değer atanabilir olarak tanımlamayı deneyin.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolation">
-        <source>Use of unassigned local variable '{0}'</source>
-        <target state="new">Use of unassigned local variable '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationField">
-        <source>Use of possibly unassigned field '{0}'</source>
-        <target state="new">Use of possibly unassigned field '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationField_Title">
-        <source>Use of possibly unassigned field</source>
-        <target state="new">Use of possibly unassigned field</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationOut">
-        <source>Use of unassigned out parameter '{0}'</source>
-        <target state="new">Use of unassigned out parameter '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationOut_Title">
-        <source>Use of unassigned out parameter</source>
-        <target state="new">Use of unassigned out parameter</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationProperty">
-        <source>Use of possibly unassigned auto-implemented property '{0}'</source>
-        <target state="new">Use of possibly unassigned auto-implemented property '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationProperty_Title">
-        <source>Use of possibly unassigned auto-implemented property</source>
-        <target state="new">Use of possibly unassigned auto-implemented property</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationThis">
-        <source>The 'this' object cannot be used before all of its fields have been assigned</source>
-        <target state="new">The 'this' object cannot be used before all of its fields have been assigned</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolationThis_Title">
-        <source>The 'this' object cannot be used in a constructor before all of its fields have been assigned</source>
-        <target state="new">The 'this' object cannot be used in a constructor before all of its fields have been assigned</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WRN_UseDefViolation_Title">
-        <source>Use of unassigned local variable</source>
-        <target state="new">Use of unassigned local variable</target>
         <note />
       </trans-unit>
       <trans-unit id="XML_InvalidToken">
@@ -3163,8 +2887,8 @@
         <note />
       </trans-unit>
       <trans-unit id="WRN_NewRequired_Description">
-        <source>A variable was declared with the same name as a variable in a base type. However, the new keyword was not used. This warning informs you that you should use new; the variable is declared as if new had been used in the declaration.</source>
-        <target state="needs-review-translation">Temel sınıftaki değişken ile aynı adlı bir değişken bildirildi. Ancak, yeni anahtar sözcük kullanılmadı. Bu uyarı yeniyi kullanmanız gerektiğini bildirir; değişken bildirimde yeni kullanılmış gibi bildirildi.</target>
+        <source>A variable was declared with the same name as a variable in a base class. However, the new keyword was not used. This warning informs you that you should use new; the variable is declared as if new had been used in the declaration.</source>
+        <target state="translated">Temel sınıftaki değişken ile aynı adlı bir değişken bildirildi. Ancak, yeni anahtar sözcük kullanılmadı. Bu uyarı yeniyi kullanmanız gerektiğini bildirir; değişken bildirimde yeni kullanılmış gibi bildirildi.</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_NewNotRequired">
@@ -3323,8 +3047,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_NoNewAbstract">
-        <source>Cannot create an instance of the abstract type or interface '{0}'</source>
-        <target state="needs-review-translation">Soyut sınıfın veya '{0}' arabiriminin bir örneği oluşturulamıyor</target>
+        <source>Cannot create an instance of the abstract class or interface '{0}'</source>
+        <target state="translated">Soyut sınıfın veya '{0}' arabiriminin bir örneği oluşturulamıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_ConstValueRequired">
@@ -3333,8 +3057,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_CircularBase">
-        <source>Circular base type dependency involving '{0}' and '{1}'</source>
-        <target state="needs-review-translation">{0}' ve '{1}' ile ilişkili döngüsel temel sınıf bağımlılığı</target>
+        <source>Circular base class dependency involving '{0}' and '{1}'</source>
+        <target state="translated">{0}' ve '{1}' ile ilişkili döngüsel temel sınıf bağımlılığı</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadDelegateConstructor">
@@ -3588,8 +3312,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_UseDefViolationThis">
-        <source>The 'this' object cannot be used before all of its fields have been assigned</source>
-        <target state="needs-review-translation">this' nesnesi, alanlarının tümüne atama yapılmadan kullanılamaz</target>
+        <source>The 'this' object cannot be used before all of its fields are assigned to</source>
+        <target state="translated">this' nesnesi, alanlarının tümüne atama yapılmadan kullanılamaz</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_ArgsInvalid">
@@ -3833,8 +3557,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_CallingBaseFinalizeDeprecated">
-        <source>Do not directly call your base type Finalize method. It is called automatically from your destructor.</source>
-        <target state="needs-review-translation">Temel sınıf Finalize yönteminizi doğrudan çağırmayın. Yıkıcınızdan otomatik olarak çağrılır.</target>
+        <source>Do not directly call your base class Finalize method. It is called automatically from your destructor.</source>
+        <target state="translated">Temel sınıf Finalize yönteminizi doğrudan çağırmayın. Yıkıcınızdan otomatik olarak çağrılır.</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_NegativeArrayIndex">
@@ -3918,13 +3642,13 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_PartialMisplaced">
-        <source>The 'partial' modifier can only appear immediately before 'class', 'record', 'struct', 'interface', or 'void'</source>
-        <target state="needs-review-translation">partial' değiştiricisi yalnızca 'class', 'struct', 'interface' veya 'void' sözcüklerinden hemen önce gelebilir</target>
+        <source>The 'partial' modifier can only appear immediately before 'class', 'struct', 'interface', or 'void'</source>
+        <target state="translated">partial' değiştiricisi yalnızca 'class', 'struct', 'interface' veya 'void' sözcüklerinden hemen önce gelebilir</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_ImportedCircularBase">
-        <source>Imported type '{0}' is invalid. It contains a circular base type dependency.</source>
-        <target state="needs-review-translation">İçeri aktarılan '{0}' türü geçersiz. Döngüsel temel sınıf bağımlılığı içeriyor.</target>
+        <source>Imported type '{0}' is invalid. It contains a circular base class dependency.</source>
+        <target state="translated">İçeri aktarılan '{0}' türü geçersiz. Döngüsel temel sınıf bağımlılığı içeriyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_UseDefViolationOut">
@@ -3975,6 +3699,16 @@
       <trans-unit id="WRN_PatternIsAmbiguous_Title">
         <source>Type does not implement the collection pattern; members are ambiguous</source>
         <target state="translated">Tür koleksiyon desenini uygulamaz; üyeler belirsiz</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WRN_PatternStaticOrInaccessible">
+        <source>'{0}' does not implement the '{1}' pattern. '{2}' is either static or not public.</source>
+        <target state="translated">'{0}', '{1}' kalıbını uygulamaz. '{2}' statik veya ortak değil.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WRN_PatternStaticOrInaccessible_Title">
+        <source>Type does not implement the collection pattern; member is either static or not public</source>
+        <target state="translated">Tür koleksiyon desenini uygulamaz, üye statik veya genel değil</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_PatternBadSignature">
@@ -4168,8 +3902,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_AbstractSealedStatic">
-        <source>'{0}': an abstract type cannot be sealed or static</source>
-        <target state="needs-review-translation">'{0}': bir soyut sınıfı korumalı veya statik olamaz</target>
+        <source>'{0}': an abstract class cannot be sealed or static</source>
+        <target state="translated">'{0}': bir soyut sınıfı korumalı veya statik olamaz</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_AmbiguousXMLReference">
@@ -4303,8 +4037,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ERR_SealedStaticClass">
-        <source>'{0}': a type cannot be both static and sealed</source>
-        <target state="needs-review-translation">'{0}': bir sınıf hem statik hem korumalı olamaz</target>
+        <source>'{0}': a class cannot be both static and sealed</source>
+        <target state="translated">'{0}': bir sınıf hem statik hem korumalı olamaz</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_PrivateAbstractAccessor">
@@ -4542,8 +4276,8 @@ Bu sınıf temel sınıf olarak kullanılırsa ve türetilen sınıf bir yıkıc
         <note />
       </trans-unit>
       <trans-unit id="ERR_AbstractInConcreteClass">
-        <source>'{0}' is abstract but it is contained in non-abstract type '{1}'</source>
-        <target state="needs-review-translation">'{0}' soyut ancak soyut olmayan '{1}' sınıfında bulunuyor</target>
+        <source>'{0}' is abstract but it is contained in non-abstract class '{1}'</source>
+        <target state="translated">'{0}' soyut ancak soyut olmayan '{1}' sınıfında bulunuyor</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_StaticConstructorWithExplicitConstructorCall">
@@ -4662,8 +4396,8 @@ Bu sınıf temel sınıf olarak kullanılırsa ve türetilen sınıf bir yıkıc
         <note />
       </trans-unit>
       <trans-unit id="ERR_ExplicitInterfaceImplementationInNonClassOrStruct">
-        <source>'{0}': explicit interface declaration can only be declared in a class, record, struct or interface</source>
-        <target state="needs-review-translation">'{0}': açık arabirim bildirimi yalnızca bir sınıf, yapı birimi veya arabirim içinde bildirilebilir</target>
+        <source>'{0}': explicit interface declaration can only be declared in a class, struct or interface</source>
+        <target state="translated">'{0}': açık arabirim bildirimi yalnızca bir sınıf, yapı birimi veya arabirim içinde bildirilebilir</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_MemberNameSameAsType">
@@ -4702,8 +4436,8 @@ Bu sınıf temel sınıf olarak kullanılırsa ve türetilen sınıf bir yıkıc
         <note />
       </trans-unit>
       <trans-unit id="ERR_NewVirtualInSealed">
-        <source>'{0}' is a new virtual member in sealed type '{1}'</source>
-        <target state="needs-review-translation">'{0}', '{1}' korumalı sınıfındaki yeni sanal üyedir</target>
+        <source>'{0}' is a new virtual member in sealed class '{1}'</source>
+        <target state="translated">'{0}', '{1}' korumalı sınıfındaki yeni sanal üyedir</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_ExplicitPropertyAddingAccessor">
@@ -4722,13 +4456,13 @@ Bu sınıf temel sınıf olarak kullanılırsa ve türetilen sınıf bir yıkıc
         <note />
       </trans-unit>
       <trans-unit id="ERR_ConversionWithBase">
-        <source>'{0}': user-defined conversions to or from a base type are not allowed</source>
-        <target state="needs-review-translation">'{0}': temel sınıfa veya temel sınıftan kullanıcı tanımlı dönüştürmelere izin verilmiyor</target>
+        <source>'{0}': user-defined conversions to or from a base class are not allowed</source>
+        <target state="translated">'{0}': temel sınıfa veya temel sınıftan kullanıcı tanımlı dönüştürmelere izin verilmiyor</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_ConversionWithDerived">
-        <source>'{0}': user-defined conversions to or from a derived type are not allowed</source>
-        <target state="needs-review-translation">'{0}': türetilmiş sınıfa veya türetilmiş sınıftan kullanıcı tanımlı dönüştürmelere izin verilmiyor</target>
+        <source>'{0}': user-defined conversions to or from a derived class are not allowed</source>
+        <target state="translated">'{0}': türetilmiş sınıfa veya türetilmiş sınıftan kullanıcı tanımlı dönüştürmelere izin verilmiyor</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_IdentityConversion">
@@ -4807,8 +4541,8 @@ Bu sınıf temel sınıf olarak kullanılırsa ve türetilen sınıf bir yıkıc
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadDestructorName">
-        <source>Name of destructor must match name of type</source>
-        <target state="needs-review-translation">Yıkıcının adı sınıfın adıyla eşleşmelidir</target>
+        <source>Name of destructor must match name of class</source>
+        <target state="translated">Yıkıcının adı sınıfın adıyla eşleşmelidir</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_OnlyClassesCanContainDestructors">
@@ -5012,13 +4746,13 @@ Bu sınıf temel sınıf olarak kullanılırsa ve türetilen sınıf bir yıkıc
         <note />
       </trans-unit>
       <trans-unit id="WRN_ProtectedInSealed">
-        <source>'{0}': new protected member declared in sealed type</source>
-        <target state="needs-review-translation">'{0}': yeni korunan üye korumalı sınıfta belirtildi</target>
+        <source>'{0}': new protected member declared in sealed class</source>
+        <target state="translated">'{0}': yeni korunan üye korumalı sınıfta belirtildi</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_ProtectedInSealed_Title">
-        <source>New protected member declared in sealed type</source>
-        <target state="needs-review-translation">Korumalı sınıfta bildirilen yeni korunan üye </target>
+        <source>New protected member declared in sealed class</source>
+        <target state="translated">Korumalı sınıfta bildirilen yeni korunan üye </target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_InterfaceImplementedByConditional">
@@ -5562,8 +5296,8 @@ Bu sınıf temel sınıf olarak kullanılırsa ve türetilen sınıf bir yıkıc
         <note />
       </trans-unit>
       <trans-unit id="ERR_PartialMethodOnlyInPartialClass">
-        <source>A partial method must be declared within a partial type</source>
-        <target state="needs-review-translation">Kısmi bir yöntemin kısmi bir sınıf, kısmi bir yapı veya kısmi bir arabirim içinde bildirilmesi gerekir</target>
+        <source>A partial method must be declared within a partial class, partial struct, or partial interface</source>
+        <target state="translated">Kısmi bir yöntemin kısmi bir sınıf, kısmi bir yapı veya kısmi bir arabirim içinde bildirilmesi gerekir</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_PartialMethodNotExplicit">
@@ -6186,8 +5920,8 @@ RuntimeCompatibilityAttribute AssemblyInfo.cs dosyasında false olarak ayarlanm�
         <note />
       </trans-unit>
       <trans-unit id="ERR_InvalidMemberDecl">
-        <source>Invalid token '{0}' in class, record, struct, or interface member declaration</source>
-        <target state="needs-review-translation">Sınıf, yapı veya arabirim üye bildiriminde geçersiz belirteç '{0}'</target>
+        <source>Invalid token '{0}' in class, struct, or interface member declaration</source>
+        <target state="translated">Sınıf, yapı veya arabirim üye bildiriminde geçersiz belirteç '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_MemberNeedsType">
@@ -6306,8 +6040,8 @@ RuntimeCompatibilityAttribute AssemblyInfo.cs dosyasında false olarak ayarlanm�
         <note />
       </trans-unit>
       <trans-unit id="ERR_MainClassNotClass">
-        <source>'{0}' specified for Main method must be a non-generic class, record, struct, or interface</source>
-        <target state="needs-review-translation">Main yöntemi için belirtilen '{0}' genel olmayan sınıf, yapı veya arabirim olmalıdır</target>
+        <source>'{0}' specified for Main method must be a non-generic class, struct, or interface</source>
+        <target state="translated">Main yöntemi için belirtilen '{0}' genel olmayan sınıf, yapı veya arabirim olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_NoMainInClass">
@@ -6431,8 +6165,8 @@ RuntimeCompatibilityAttribute AssemblyInfo.cs dosyasında false olarak ayarlanm�
         <note />
       </trans-unit>
       <trans-unit id="ERR_ForEachMissingMember">
-        <source>foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a public instance or extension definition for '{1}'</source>
-        <target state="needs-review-translation">{0}' bir '{1}' ortak örnek tanımı içermediğinden veya erişilemez olduğundan foreach deyimi '{0}' türündeki değişkenlerde çalışamaz</target>
+        <source>foreach statement cannot operate on variables of type '{0}' because '{0}' does not contain a public instance definition for '{1}'</source>
+        <target state="translated">{0}' bir '{1}' ortak örnek tanımı içermediğinden veya erişilemez olduğundan foreach deyimi '{0}' türündeki değişkenlerde çalışamaz</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_BadXMLRefParamType">
@@ -6786,8 +6520,8 @@ RuntimeCompatibilityAttribute AssemblyInfo.cs dosyasında false olarak ayarlanm�
         <note />
       </trans-unit>
       <trans-unit id="ERR_AssgReadonly">
-        <source>A readonly field cannot be assigned to (except in a constructor or init-only setter of the type in which the field is defined or a variable initializer)</source>
-        <target state="needs-review-translation">Salt okunur bir alana atama yapılamaz (alanın tanımlandığı veya değişken başlatıcısı olduğu sınıfın oluşturucusunda veya yalnızca init ayarlayıcısında bulunması dışında)</target>
+        <source>A readonly field cannot be assigned to (except in a constructor or init-only setter of the class in which the field is defined or a variable initializer))</source>
+        <target state="translated">Salt okunur bir alana atama yapılamaz (alanın tanımlandığı veya değişken başlatıcısı olduğu sınıfın oluşturucusunda veya yalnızca init ayarlayıcısında bulunması dışında)</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_AssgReadonly2">
@@ -7331,8 +7065,8 @@ RuntimeCompatibilityAttribute AssemblyInfo.cs dosyasında false olarak ayarlanm�
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadWarningLevel">
-        <source>Warning level must be zero or greater</source>
-        <target state="needs-review-translation">Uyarı düzeyi 0-4 aralığında olmalıdır</target>
+        <source>Warning level must be in the range 0-4</source>
+        <target state="translated">Uyarı düzeyi 0-4 aralığında olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadDebugType">
@@ -7441,8 +7175,8 @@ RuntimeCompatibilityAttribute AssemblyInfo.cs dosyasında false olarak ayarlanm�
         <note />
       </trans-unit>
       <trans-unit id="ERR_QueryNoProviderStandard">
-        <source>Could not find an implementation of the query pattern for source type '{0}'.  '{1}' not found.  Are you missing required assembly references or a using directive for 'System.Linq'?</source>
-        <target state="needs-review-translation">{0}' sorgu türü için sorgu deseninin bir uygulaması bulunamadı.  '{1}' bulunamadı. Bir 'System.Core.dll' başvurusunu mu unuttunuz veya bir 'System.Linq' yönergesi mi kullanıyorsunuz?</target>
+        <source>Could not find an implementation of the query pattern for source type '{0}'.  '{1}' not found.  Are you missing a reference to 'System.Core.dll' or a using directive for 'System.Linq'?</source>
+        <target state="translated">{0}' sorgu türü için sorgu deseninin bir uygulaması bulunamadı.  '{1}' bulunamadı. Bir 'System.Core.dll' başvurusunu mu unuttunuz veya bir 'System.Linq' yönergesi mi kullanıyorsunuz?</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_QueryNoProvider">
@@ -7569,8 +7303,8 @@ Derleyiciye yöntemleri ayrıştırma yolu verin. Örneğin, bunlara farklı adl
         <note />
       </trans-unit>
       <trans-unit id="WRN_MultipleRuntimeOverrideMatches">
-        <source>Member '{1}' overrides '{0}'. There are multiple override candidates at run-time. It is implementation dependent which method will be called. Please use a newer runtime.</source>
-        <target state="needs-review-translation">{1}' üyesi '{0}' öğesini geçersiz kılıyor. Çalışma zamanında birden fazla geçersiz kılma adayı var. Hangi yöntemin çağrılacağı uygulamaya bağımlıdır.</target>
+        <source>Member '{1}' overrides '{0}'. There are multiple override candidates at run-time. It is implementation dependent which method will be called.</source>
+        <target state="translated">{1}' üyesi '{0}' öğesini geçersiz kılıyor. Çalışma zamanında birden fazla geçersiz kılma adayı var. Hangi yöntemin çağrılacağı uygulamaya bağımlıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="WRN_MultipleRuntimeOverrideMatches_Title">
@@ -8433,6 +8167,11 @@ Yalnızca asenkron çağrının tamamlanmasını beklemek istemediğinizden ve �
       <trans-unit id="WRN_MainIgnored_Title">
         <source>The entry point of the program is global code; ignoring entry point</source>
         <target state="translated">Programın giriş noktası genel koddur, giriş noktası yoksayılıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ERR_StaticInAsOrIs">
+        <source>The second operand of an 'is' or 'as' operator may not be static type '{0}'</source>
+        <target state="translated">Bir 'is' veya 'as' işlecinin ikinci işleneni '{0}' statik türü olmayabilir</target>
         <note />
       </trans-unit>
       <trans-unit id="ERR_BadVisEventType">

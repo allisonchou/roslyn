@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
         /// <param name="action">Action delegate to exectute.</param>
         private void WaitForRaiseDebuggerDteCommand(Action action)
         {
-            var actionSucceeded = false;
+            bool actionSucceeded = false;
 
             Func<bool> predicate = delegate
             {
@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
                 {
                     if ((uint)ex.ErrorCode != OperationNotSupportedHResult)
                     {
-                        var message = string.Format(
+                        string message = string.Format(
                             CultureInfo.InvariantCulture,
                             "Failed to raise debugger command, an unexpected '{0}' was thrown with the HResult of '{1}'.",
                             typeof(COMException),
@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
             // Repeat the command if "Operation Not Supported" is thrown.
             if (!TryWaitFor(DebuggerCommandRetryTimeout, predicate))
             {
-                var message = string.Format(
+                string message = string.Format(
                     CultureInfo.InvariantCulture,
                     "Failed to raise debugger command within '{0}' seconds.",
                     DebuggerCommandRetryTimeout.TotalSeconds);
@@ -122,8 +122,8 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
         /// </returns>
         private static bool TryWaitFor(TimeSpan timeout, TimeSpan interval, Func<bool> predicate)
         {
-            var endTime = DateTime.UtcNow + timeout;
-            var validationDelegateSuccess = false;
+            DateTime endTime = DateTime.UtcNow + timeout;
+            bool validationDelegateSuccess = false;
 
             while (DateTime.UtcNow < endTime)
             {

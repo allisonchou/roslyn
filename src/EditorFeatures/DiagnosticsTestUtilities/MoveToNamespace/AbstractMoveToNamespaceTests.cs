@@ -27,7 +27,9 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.MoveToNamespace
             TestParameters? testParameters = null,
             string targetNamespace = null,
             bool optionCancelled = false,
-            IReadOnlyDictionary<string, string> expectedSymbolChanges = null)
+            bool testAnalysis = false,
+            IReadOnlyDictionary<string, string> expectedSymbolChanges = null
+            )
         {
             testParameters ??= new TestParameters();
 
@@ -35,7 +37,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.MoveToNamespace
                 ? MoveToNamespaceOptionsResult.Cancelled
                 : new MoveToNamespaceOptionsResult(targetNamespace);
 
-            var workspace = CreateWorkspaceFromOptions(markup, testParameters.Value);
+            var workspace = CreateWorkspaceFromFile(markup, testParameters.Value);
             using var testState = new TestState(workspace);
 
             testState.TestMoveToNamespaceOptionsService.SetOptions(moveToNamespaceOptions);
@@ -98,7 +100,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.MoveToNamespace
 
         public async Task TestMoveToNamespaceAnalysisAsync(string markup, string expectedNamespaceName)
         {
-            var workspace = CreateWorkspaceFromOptions(markup, new TestParameters());
+            var workspace = CreateWorkspaceFromFile(markup, new TestParameters());
             using var testState = new TestState(workspace);
 
             var analysis = await testState.MoveToNamespaceService.AnalyzeTypeAtPositionAsync(

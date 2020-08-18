@@ -24,16 +24,16 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.CommentSelection
 {
     public abstract class AbstractToggleCommentTestBase
     {
-        internal abstract AbstractCommentSelectionBase<ValueTuple> GetToggleCommentCommandHandler(TestWorkspace workspace);
+        abstract internal AbstractCommentSelectionBase<ValueTuple> GetToggleCommentCommandHandler(TestWorkspace workspace);
 
-        internal abstract TestWorkspace GetWorkspace(string markup, TestComposition composition);
+        abstract internal TestWorkspace GetWorkspace(string markup, ExportProvider exportProvider);
 
         protected void ToggleComment(string markup, string expected)
             => ToggleCommentMultiple(markup, new string[] { expected });
 
         protected void ToggleCommentMultiple(string markup, string[] expectedText)
         {
-            using (var workspace = GetWorkspace(markup, composition: EditorTestCompositions.EditorFeatures))
+            using (var workspace = GetWorkspace(markup, GetExportProvider()))
             {
                 var doc = workspace.Documents.First();
                 SetupSelection(doc.GetTextView(), doc.SelectedSpans.Select(s => Span.FromBounds(s.Start, s.End)));
@@ -52,7 +52,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.CommentSelection
 
         protected void ToggleCommentWithProjectionBuffer(string surfaceBufferMarkup, string subjectBufferMarkup, string entireExpectedMarkup)
         {
-            using (var workspace = GetWorkspace(subjectBufferMarkup, composition: EditorTestCompositions.EditorFeatures))
+            using (var workspace = GetWorkspace(subjectBufferMarkup, GetExportProvider()))
             {
                 var document = workspace.CreateProjectionBufferDocument(surfaceBufferMarkup, workspace.Documents);
                 SetupSelection(document.GetTextView(), document.SelectedSpans.Select(s => Span.FromBounds(s.Start, s.End)));
@@ -65,6 +65,9 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.CommentSelection
                 AssertCommentResult(textView.TextBuffer, textView, entireExpectedMarkup);
             }
         }
+
+        private static ExportProvider GetExportProvider()
+            => TestExportProvider.ExportProviderWithCSharpAndVisualBasic;
 
         private static ITextBuffer GetBufferForContentType(string contentTypeName, ITextView textView)
             => textView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(contentTypeName)).Single();

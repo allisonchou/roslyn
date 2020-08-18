@@ -5,26 +5,29 @@
 #nullable enable
 
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    /// <summary>
-    /// The record type includes a synthesized override of object.Equals(object? obj).
-    /// It is an error if the override is declared explicitly. The synthesized override
-    /// returns Equals(other as R) where R is the record type.
-    /// </summary>
     internal sealed class SynthesizedRecordObjEquals : SynthesizedRecordObjectMethod
     {
         private readonly MethodSymbol _typedRecordEquals;
 
         public SynthesizedRecordObjEquals(SourceMemberContainerTypeSymbol containingType, MethodSymbol typedRecordEquals, int memberOffset, DiagnosticBag diagnostics)
-            : base(containingType, WellKnownMemberNames.ObjectEquals, memberOffset, diagnostics)
+            : base(containingType, "Equals", memberOffset, diagnostics)
         {
             _typedRecordEquals = typedRecordEquals;
         }
 
-        protected override (TypeWithAnnotations ReturnType, ImmutableArray<ParameterSymbol> Parameters, bool IsVararg, ImmutableArray<TypeParameterConstraintClause> DeclaredConstraintsForOverrideOrImplementation) MakeParametersAndBindReturnType(DiagnosticBag diagnostics)
+        protected override DeclarationModifiers MakeDeclarationModifiers(DeclarationModifiers allowedModifiers, DiagnosticBag diagnostics)
+        {
+            const DeclarationModifiers result = DeclarationModifiers.Public | DeclarationModifiers.Override;
+            Debug.Assert((result & ~allowedModifiers) == 0);
+            return result;
+        }
+
+        protected override (TypeWithAnnotations ReturnType, ImmutableArray<ParameterSymbol> Parameters, bool IsVararg, ImmutableArray<TypeParameterConstraintClause> DeclaredConstraintsForOverrideOrImplement) MakeParametersAndBindReturnType(DiagnosticBag diagnostics)
         {
             var compilation = DeclaringCompilation;
             var location = ReturnTypeLocation;
@@ -34,45 +37,30 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                                                                     TypeWithAnnotations.Create(Binder.GetSpecialType(compilation, SpecialType.System_Object, location, diagnostics), NullableAnnotation.Annotated),
                                                                     ordinal: 0, RefKind.None, "obj", isDiscard: false, Locations)),
                     IsVararg: false,
-                    DeclaredConstraintsForOverrideOrImplementation: ImmutableArray<TypeParameterConstraintClause>.Empty);
+                    DeclaredConstraintsForOverrideOrImplement: ImmutableArray<TypeParameterConstraintClause>.Empty);
         }
 
         protected override int GetParameterCountFromSyntax() => 1;
 
         internal override void GenerateMethodBody(TypeCompilationState compilationState, DiagnosticBag diagnostics)
         {
-            var F = new SyntheticBoundNodeFactory(this, this.SyntaxNode, compilationState, diagnostics);
+            var F = new SyntheticBoundNodeFactory(this, ContainingType.GetNonNullSyntaxNode(), compilationState, diagnostics);
 
-            try
+            var paramAccess = F.Parameter(Parameters[0]);
+
+            BoundExpression expression;
+            if (ContainingType.IsStructType())
             {
-                var paramAccess = F.Parameter(Parameters[0]);
-
-                BoundExpression expression;
-                if (ContainingType.IsStructType())
-                {
-                    throw ExceptionUtilities.Unreachable;
-                }
-                else
-                {
-                    if (_typedRecordEquals.ReturnType.SpecialType != SpecialType.System_Boolean)
-                    {
-                        // There is a signature mismatch, an error was reported elsewhere
-                        F.CloseMethod(F.ThrowNull());
-                        return;
-                    }
-
-                    // For classes:
-                    //      return this.Equals(param as ContainingType);
-                    expression = F.Call(F.This(), _typedRecordEquals, F.As(paramAccess, ContainingType));
-                }
-
-                F.CloseMethod(F.Block(ImmutableArray.Create<BoundStatement>(F.Return(expression))));
+                throw ExceptionUtilities.Unreachable;
             }
-            catch (SyntheticBoundNodeFactory.MissingPredefinedMember ex)
+            else
             {
-                diagnostics.Add(ex.Diagnostic);
-                F.CloseMethod(F.ThrowNull());
+                // For classes:
+                //      return this.Equals(param as ContainingType);
+                expression = F.Call(F.This(), _typedRecordEquals, F.As(paramAccess, ContainingType));
             }
+
+            F.CloseMethod(F.Block(ImmutableArray.Create<BoundStatement>(F.Return(expression))));
         }
     }
 }

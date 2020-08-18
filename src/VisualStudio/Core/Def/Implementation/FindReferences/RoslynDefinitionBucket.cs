@@ -54,7 +54,8 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
 
             public bool TryNavigateTo(bool isPreview)
                 => DefinitionItem.TryNavigateTo(
-                    _presenter._workspace, showInPreviewTab: isPreview, activateTab: !isPreview); // Only activate the tab if not opening in preview
+                    _presenter._workspace,
+                    isPreview ? NavigationBehavior.PreviewWithoutFocus : NavigationBehavior.Normal);
 
             public override bool TryGetValue(string key, out object content)
             {

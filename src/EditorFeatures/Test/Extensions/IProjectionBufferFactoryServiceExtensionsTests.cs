@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Text.Shared.Extensions;
-using Microsoft.VisualStudio.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Projection;
@@ -23,7 +22,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Extensions
         [Fact]
         public void TestCreateElisionBufferWithoutIndentation()
         {
-            var exportProvider = EditorTestCompositions.Editor.ExportProviderFactory.CreateExportProvider();
+            var exportProvider = TestExportProvider.ExportProviderWithCSharpAndVisualBasic;
             var contentTypeRegistryService = exportProvider.GetExportedValue<IContentTypeRegistryService>();
             var textBuffer = exportProvider.GetExportedValue<ITextBufferFactoryService>().CreateTextBuffer(
 @"  line 1
@@ -48,8 +47,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Extensions
         [Fact]
         public void TestCreateProjectionBuffer()
         {
-            var composition = EditorTestCompositions.EditorFeatures;
-            var exportProvider = composition.ExportProviderFactory.CreateExportProvider();
+            var exportProvider = TestExportProvider.ExportProviderWithCSharpAndVisualBasic;
             var contentTypeRegistryService = exportProvider.GetExportedValue<IContentTypeRegistryService>();
             var textBuffer = exportProvider.GetExportedValue<ITextBufferFactoryService>().CreateTextBuffer(
 @"  line 1
@@ -78,8 +76,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Extensions
         [Fact]
         public void TestCreateProjectionBufferWithoutIndentation()
         {
-            var composition = EditorTestCompositions.EditorFeatures;
-            var exportProvider = composition.ExportProviderFactory.CreateExportProvider();
+            var exportProvider = TestExportProvider.ExportProviderWithCSharpAndVisualBasic;
             var contentTypeRegistryService = exportProvider.GetExportedValue<IContentTypeRegistryService>();
             var textBuffer = exportProvider.GetExportedValue<ITextBufferFactoryService>().CreateTextBuffer(
 @"  line 1

@@ -77,10 +77,10 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
                 ImmutableArray.Create(_diagnostic)));
         }
 
-        private static DocumentId GetDocumentId(Workspace workspace)
+        private DocumentId GetDocumentId(Workspace workspace)
             => workspace.CurrentSolution.Projects.Single().Documents.Single().Id;
 
-        private static ProjectId GetProjectId(Workspace workspace)
+        private ProjectId GetProjectId(Workspace workspace)
             => workspace.CurrentSolution.Projects.Single().Id;
     }
 }

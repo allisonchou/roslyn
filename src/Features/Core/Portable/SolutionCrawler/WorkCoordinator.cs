@@ -20,7 +20,7 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
 {
     internal partial class SolutionCrawlerRegistrationService
     {
-        internal sealed partial class WorkCoordinator
+        private partial class WorkCoordinator
         {
             private readonly Registration _registration;
             private readonly object _gate;
@@ -134,14 +134,7 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
                         _documentAndProjectWorkerProcessor.AsyncProcessorTask,
                         _semanticChangeProcessor.AsyncProcessorTask);
 
-                    try
-                    {
-                        shutdownTask.Wait(TimeSpan.FromSeconds(5));
-                    }
-                    catch (AggregateException ex)
-                    {
-                        ex.Handle(e => e is OperationCanceledException);
-                    }
+                    shutdownTask.Wait(TimeSpan.FromSeconds(5));
 
                     if (!shutdownTask.IsCompleted)
                     {
@@ -669,42 +662,27 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
                 await EnqueueWorkItemAsync(oldProject.GetRequiredDocument(documentId), newProject.GetRequiredDocument(documentId)).ConfigureAwait(continueOnCapturedContext: false);
             }
 
-            internal TestAccessor GetTestAccessor()
+            internal void WaitUntilCompletion_ForTestingPurposesOnly(ImmutableArray<IIncrementalAnalyzer> workers)
             {
-                return new TestAccessor(this);
-            }
+                var solution = _registration.CurrentSolution;
+                var list = new List<WorkItem>();
 
-            internal readonly struct TestAccessor
-            {
-                private readonly WorkCoordinator _workCoordinator;
-
-                internal TestAccessor(WorkCoordinator workCoordinator)
+                foreach (var project in solution.Projects)
                 {
-                    _workCoordinator = workCoordinator;
-                }
-
-                internal void WaitUntilCompletion(ImmutableArray<IIncrementalAnalyzer> workers)
-                {
-                    var solution = _workCoordinator._registration.CurrentSolution;
-                    var list = new List<WorkItem>();
-
-                    foreach (var project in solution.Projects)
+                    foreach (var document in project.Documents)
                     {
-                        foreach (var document in project.Documents)
-                        {
-                            list.Add(new WorkItem(document.Id, document.Project.Language, InvocationReasons.DocumentAdded, isLowPriority: false, activeMember: null, EmptyAsyncToken.Instance));
-                        }
+                        list.Add(new WorkItem(document.Id, document.Project.Language, InvocationReasons.DocumentAdded, isLowPriority: false, activeMember: null, EmptyAsyncToken.Instance));
                     }
-
-                    _workCoordinator._documentAndProjectWorkerProcessor.GetTestAccessor().WaitUntilCompletion(workers, list);
                 }
 
-                internal void WaitUntilCompletion()
-                    => _workCoordinator._documentAndProjectWorkerProcessor.GetTestAccessor().WaitUntilCompletion();
+                _documentAndProjectWorkerProcessor.WaitUntilCompletion_ForTestingPurposesOnly(workers, list);
             }
+
+            internal void WaitUntilCompletion_ForTestingPurposesOnly()
+                => _documentAndProjectWorkerProcessor.WaitUntilCompletion_ForTestingPurposesOnly();
         }
 
-        internal readonly struct ReanalyzeScope
+        private readonly struct ReanalyzeScope
         {
             private readonly SolutionId? _solutionId;
             private readonly ISet<object>? _projectOrDocumentIds;

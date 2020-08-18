@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Venus
         // disconnects the subject buffer from the view temporarily (which they do frequently).  Otherwise, we have to
         // re-compute all of the tag data when they re-connect it, and this causes issues like classification
         // flickering.
-        private readonly ITagAggregator<ITag> _bufferTagAggregator;
+        private ITagAggregator<ITag> _bufferTagAggregator;
 
         [Obsolete("This is a compatibility shim for TypeScript; please do not use it.")]
         internal ContainedLanguage(
@@ -92,7 +92,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Venus
 
         public static string GetFilePathFromHierarchyAndItemId(IVsHierarchy hierarchy, uint itemid)
         {
-            if (!ErrorHandler.Succeeded(((IVsProject)hierarchy).GetMkDocument(itemid, out var filePath)))
+            if (!ErrorHandler.Succeeded(((IVsProject)hierarchy).GetMkDocument(itemid, out string filePath)))
             {
                 // we couldn't look up the document moniker from an hierarchy for an itemid.
                 // Since we only use this moniker as a key, we could fall back to something else, like the document name.

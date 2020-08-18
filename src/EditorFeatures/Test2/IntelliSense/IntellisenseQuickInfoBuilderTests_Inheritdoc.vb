@@ -13,7 +13,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
         Inherits AbstractIntellisenseQuickInfoBuilderTests
 
         <WpfFact, Trait(Traits.Feature, Traits.Features.QuickInfo)>
-        Public Async Function NoImplicitInheritedQuickInfoForType() As Task
+        Public Async Sub NoImplicitInheritedQuickInfoForType()
             Dim workspace =
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -49,10 +49,10 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
                         New ClassifiedTextRun(ClassificationTypeNames.ClassName, "MyClass", navigationAction:=Sub() Return, "MyClass"))))
 
             ToolTipAssert.EqualContent(expected, container)
-        End Function
+        End Sub
 
         <WpfFact, Trait(Traits.Feature, Traits.Features.QuickInfo)>
-        Public Async Function ExplicitInheritedQuickInfoForType() As Task
+        Public Async Sub ExplicitInheritedQuickInfoForType()
             Dim workspace =
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -93,10 +93,10 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
                         New ClassifiedTextRun(ClassificationTypeNames.Text, "This is the base class."))))
 
             ToolTipAssert.EqualContent(expected, container)
-        End Function
+        End Sub
 
         <WpfFact, Trait(Traits.Feature, Traits.Features.QuickInfo)>
-        Public Async Function ExplicitInheritedQuickInfoForSummary1() As Task
+        Public Async Sub ExplicitInheritedQuickInfoForSummary1()
             Dim workspace =
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -139,10 +139,10 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
                         New ClassifiedTextRun(ClassificationTypeNames.Text, "This is the base class."))))
 
             ToolTipAssert.EqualContent(expected, container)
-        End Function
+        End Sub
 
         <WpfFact, Trait(Traits.Feature, Traits.Features.QuickInfo)>
-        Public Async Function ExplicitInheritedQuickInfoForSummary2() As Task
+        Public Async Sub ExplicitInheritedQuickInfoForSummary2()
             Dim workspace =
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -193,10 +193,10 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
                         New ClassifiedTextRun(ClassificationTypeNames.Text, "This is the base class. This is not the base class."))))
 
             ToolTipAssert.EqualContent(expected, container)
-        End Function
+        End Sub
 
         <WpfFact, Trait(Traits.Feature, Traits.Features.QuickInfo)>
-        Public Async Function InheritedQuickInfoForParameterButNotSummary1() As Task
+        Public Async Sub InheritedQuickInfoForParameterButNotSummary1()
             Dim workspace =
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -251,10 +251,10 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
                         New ClassifiedTextRun(ClassificationTypeNames.Text, "Override summary."))))
 
             ToolTipAssert.EqualContent(expected, container)
-        End Function
+        End Sub
 
         <WpfFact, Trait(Traits.Feature, Traits.Features.QuickInfo)>
-        Public Async Function InheritedQuickInfoForParameterButNotSummary2() As Task
+        Public Async Sub InheritedQuickInfoForParameterButNotSummary2()
             Dim workspace =
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -306,6 +306,6 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
                         New ClassifiedTextRun(ClassificationTypeNames.Text, "A parameter."))))
 
             ToolTipAssert.EqualContent(expected, container)
-        End Function
+        End Sub
     End Class
 End Namespace

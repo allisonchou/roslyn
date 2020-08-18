@@ -163,6 +163,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.RenameTracking
                 UpdateWorkspaceForGlobalIdentifierRename(
                     workspace,
                     finalSolution,
+                    workspace.CurrentSolution,
                     _displayText,
                     changedDocuments,
                     renameTrackingSolutionSet.Symbol,
@@ -240,6 +241,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.RenameTracking
             private void UpdateWorkspaceForGlobalIdentifierRename(
                 Workspace workspace,
                 Solution newSolution,
+                Solution oldSolution,
                 string undoName,
                 IEnumerable<DocumentId> changedDocuments,
                 ISymbol symbol,

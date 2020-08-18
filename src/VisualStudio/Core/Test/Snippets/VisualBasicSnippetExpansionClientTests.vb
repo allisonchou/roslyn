@@ -424,7 +424,7 @@ End Class</Test>
                     subjectBufferDocument.GetTextBuffer(),
                     Nothing)
 
-                SnippetExpansionClientTestsHelper.TestProjectionBuffer(snippetExpansionClient, surfaceBufferDocument, expectedSurfaceBuffer)
+                SnippetExpansionClientTestsHelper.TestProjectionBuffer(snippetExpansionClient, subjectBufferDocument, surfaceBufferDocument, expectedSurfaceBuffer)
             End Using
         End Sub
     End Class

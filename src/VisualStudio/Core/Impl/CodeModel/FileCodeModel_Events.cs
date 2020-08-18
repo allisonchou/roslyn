@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
                 return needMoreTime;
             }
 
-            if (!projectCodeModel.TryGetCachedFileCodeModel(this.Workspace.GetFilePath(GetDocumentId()), out _))
+            if (!projectCodeModel.TryGetCachedFileCodeModel(this.Workspace.GetFilePath(GetDocumentId()), out var fileCodeModelHandle))
             {
                 return needMoreTime;
             }

@@ -22,26 +22,23 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <param name="nodes">The set of nodes in topological order.</param>
         /// <param name="node">The node of interest.</param>
         /// <param name="nullPaths">Whether to permit following paths that test for null.</param>
-        /// <param name="requiresFalseWhenClause">set to true if the returned path requires some when clause to evaluate to 'false'</param>
         /// <returns>The shortest path, excluding the node of interest.</returns>
         private static ImmutableArray<BoundDecisionDagNode> ShortestPathToNode(
             ImmutableArray<BoundDecisionDagNode> nodes,
             BoundDecisionDagNode node,
-            bool nullPaths,
-            out bool requiresFalseWhenClause)
+            bool nullPaths)
         {
             // compute the distance from each node to the endpoint.
             var dist = PooledDictionary<BoundDecisionDagNode, (int distance, BoundDecisionDagNode next)>.GetInstance();
             int nodeCount = nodes.Length;
-            int infinity = 2 * nodeCount + 2;
             int distance(BoundDecisionDagNode x)
             {
                 if (x == null)
-                    return infinity;
+                    return nodeCount + 2;
                 if (dist.TryGetValue(x, out var v))
                     return v.distance;
                 Debug.Assert(!nodes.Contains(x));
-                return infinity;
+                return nodeCount + 2;
             }
 
             for (int i = nodeCount - 1; i >= 0; i--)
@@ -55,17 +52,15 @@ namespace Microsoft.CodeAnalysis.CSharp
                     BoundTestDecisionDagNode t when distance(t.WhenTrue) is var trueDist && distance(t.WhenFalse) is var falseDist =>
                         (trueDist <= falseDist) ? (1 + trueDist, t.WhenTrue) : (1 + falseDist, t.WhenFalse),
                     BoundWhenDecisionDagNode w when distance(w.WhenTrue) is var trueDist && distance(w.WhenFalse) is var falseDist =>
-                        (trueDist <= falseDist) ? (1 + trueDist, w.WhenTrue) : (1 + falseDist + nodeCount, w.WhenFalse),
+                        (trueDist <= falseDist) ? (1 + trueDist, w.WhenTrue) : (1 + falseDist, w.WhenFalse),
                     // treat the endpoint as distance 1.
                     // treat other nodes as not on the path to the endpoint
-                    _ => ((n == node) ? 1 : infinity, null),
+                    _ => ((n == node) ? 1 : nodeCount + 2, null),
                 });
             }
 
             // trace a path from the root node to the node of interest
-            var distanceToNode = dist[nodes[0]].distance;
-            requiresFalseWhenClause = distanceToNode > nodeCount;
-            var result = ArrayBuilder<BoundDecisionDagNode>.GetInstance(capacity: distanceToNode);
+            var result = ArrayBuilder<BoundDecisionDagNode>.GetInstance(capacity: dist[nodes[0]].distance);
             for (BoundDecisionDagNode n = nodes[0]; n != node;)
             {
                 result.Add(n);
@@ -104,11 +99,10 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundDagTemp rootIdentifier,
             ImmutableArray<BoundDecisionDagNode> nodes,
             BoundDecisionDagNode targetNode,
-            bool nullPaths,
-            out bool requiresFalseWhenClause)
+            bool nullPaths)
         {
             // Compute the path to the node, excluding the node itself.
-            var pathToNode = ShortestPathToNode(nodes, targetNode, nullPaths, out requiresFalseWhenClause);
+            var pathToNode = ShortestPathToNode(nodes, targetNode, nullPaths);
 
             var constraints = new Dictionary<BoundDagTemp, ArrayBuilder<(BoundDagTest, bool)>>();
             var evaluations = new Dictionary<BoundDagTemp, ArrayBuilder<BoundDagEvaluation>>();

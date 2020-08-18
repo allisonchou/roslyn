@@ -7,13 +7,14 @@ using Microsoft.VisualStudio.IntegrationTest.Utilities;
 using Microsoft.VisualStudio.IntegrationTest.Utilities.Common;
 using Microsoft.VisualStudio.IntegrationTest.Utilities.Input;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Roslyn.VisualStudio.IntegrationTests.VisualBasic
 {
     public class BasicErrorListCommon : AbstractEditorTest
     {
-        public BasicErrorListCommon(VisualStudioInstanceFactory instanceFactory, string templateName)
-            : base(instanceFactory, nameof(BasicErrorListCommon), templateName)
+        public BasicErrorListCommon(VisualStudioInstanceFactory instanceFactor, ITestOutputHelper testOutputHelper, string templateName)
+            : base(instanceFactor, testOutputHelper, nameof(BasicErrorListCommon), templateName)
         {
         }
 
@@ -55,7 +56,7 @@ End Module
             Assert.Equal(expectedContents, actualContents);
             VisualStudio.ErrorList.NavigateToErrorListItem(0);
             VisualStudio.Editor.Verify.CaretPosition(43);
-            VisualStudio.SolutionExplorer.BuildSolution();
+            VisualStudio.SolutionExplorer.BuildSolution(waitForBuildToFinish: true);
             VisualStudio.ErrorList.ShowErrorList();
             actualContents = VisualStudio.ErrorList.GetErrorListContents();
             Assert.Equal(expectedContents, actualContents);

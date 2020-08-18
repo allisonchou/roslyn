@@ -24,9 +24,9 @@ namespace Microsoft.CodeAnalysis
         internal const string CompilerDiagnosticCategory = "Compiler";
 
         /// <summary>
-        /// The default warning level, which is also used for non-error diagnostics.
+        /// Highest valid warning level for non-error diagnostics.
         /// </summary>
-        internal const int DefaultWarningLevel = 4;
+        internal const int HighestValidWarningLevel = 4;
 
         /// <summary>
         /// Creates a <see cref="Diagnostic"/> instance.
@@ -323,7 +323,7 @@ namespace Microsoft.CodeAnalysis
 
         /// <summary>
         /// Gets the warning level. This is 0 for diagnostics with severity <see cref="DiagnosticSeverity.Error"/>,
-        /// otherwise an integer greater than zero.
+        /// otherwise an integer between 1 and 4.
         /// </summary>
         public abstract int WarningLevel { get; }
 

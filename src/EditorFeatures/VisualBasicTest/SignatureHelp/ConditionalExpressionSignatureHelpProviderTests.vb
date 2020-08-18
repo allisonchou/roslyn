@@ -4,6 +4,7 @@
 
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.SignatureHelp
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
+Imports Microsoft.CodeAnalysis.SignatureHelp
 Imports Microsoft.CodeAnalysis.VisualBasic.SignatureHelp
 
 Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.SignatureHelp
@@ -14,8 +15,8 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.SignatureHelp
             MyBase.New(workspaceFixture)
         End Sub
 
-        Friend Overrides Function GetSignatureHelpProviderType() As Type
-            Return GetType(BinaryConditionalExpressionSignatureHelpProvider)
+        Friend Overrides Function CreateSignatureHelpProvider() As ISignatureHelpProvider
+            Return New BinaryConditionalExpressionSignatureHelpProvider
         End Function
 
         <Fact, Trait(Traits.Feature, Traits.Features.SignatureHelp)>

@@ -88,7 +88,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Completion.Providers
                 var typeInferenceService = document.GetLanguageService<ITypeInferenceService>();
                 Contract.ThrowIfNull(typeInferenceService, nameof(typeInferenceService));
 
-                var semanticModel = await document.ReuseExistingSpeculativeModelAsync(position, cancellationToken).ConfigureAwait(false);
+                var span = new TextSpan(position, 0);
+                var semanticModel = await document.GetSemanticModelForSpanAsync(span, cancellationToken).ConfigureAwait(false);
                 var types = typeInferenceService.InferTypes(semanticModel, position,
                     cancellationToken: cancellationToken);
 

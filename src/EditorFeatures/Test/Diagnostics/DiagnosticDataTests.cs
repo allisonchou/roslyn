@@ -102,7 +102,7 @@ namespace B
 
         private static async Task VerifyTextSpanAsync(string code, int startLine, int startColumn, int endLine, int endColumn, TextSpan span)
         {
-            using var workspace = new TestWorkspace(composition: EditorTestCompositions.EditorFeatures);
+            using var workspace = new TestWorkspace(TestExportProvider.ExportProviderWithCSharpAndVisualBasic);
             var document = workspace.CurrentSolution.AddProject("TestProject", "TestProject", LanguageNames.CSharp).AddDocument("TestDocument", code);
 
             var data = new DiagnosticData(

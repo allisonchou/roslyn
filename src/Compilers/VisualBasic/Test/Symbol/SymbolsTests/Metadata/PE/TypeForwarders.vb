@@ -21,7 +21,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.UnitTests.Symbols.Metadata.PE
                                     {TestResources.SymbolsTests.TypeForwarders.TypeForwarder,
                                      TestResources.SymbolsTests.TypeForwarders.TypeForwarderLib,
                                      TestResources.SymbolsTests.TypeForwarders.TypeForwarderBase,
-                                     TestMetadata.ResourcesNet40.mscorlib})
+                                     TestResources.NetFX.v4_0_21006.mscorlib})
 
             TestTypeForwarderHelper(assemblies)
         End Sub

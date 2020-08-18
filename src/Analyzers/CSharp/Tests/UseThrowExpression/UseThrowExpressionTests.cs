@@ -560,7 +560,7 @@ string s = null;
 string x = null;
 
 x = s ?? throw new ArgumentNullException();
-", TestOptions.Regular.WithLanguageVersion(LanguageVersion.CSharp9));
+", TestOptions.Regular.WithLanguageVersion(LanguageVersionExtensions.CSharp9));
         }
     }
 }

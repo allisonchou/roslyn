@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
@@ -10,6 +11,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
@@ -209,29 +211,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 for (int i = 0; i < declaredConstraints.Length; i++)
                 {
-                    var typeParameter = _typeParameters[i];
                     ErrorCode report;
 
-                    switch (declaredConstraints[i].Constraints & (TypeParameterConstraintKind.ReferenceType | TypeParameterConstraintKind.ValueType | TypeParameterConstraintKind.Default))
+                    switch (declaredConstraints[i].Constraints & (TypeParameterConstraintKind.ReferenceType | TypeParameterConstraintKind.ValueType))
                     {
                         case TypeParameterConstraintKind.ReferenceType:
-                            if (!typeParameter.IsReferenceType)
+                            if (!_typeParameters[i].IsReferenceType)
                             {
                                 report = ErrorCode.ERR_OverrideRefConstraintNotSatisfied;
                                 break;
                             }
                             continue;
                         case TypeParameterConstraintKind.ValueType:
-                            if (!typeParameter.IsNonNullableValueType())
+                            if (!_typeParameters[i].IsNonNullableValueType())
                             {
                                 report = ErrorCode.ERR_OverrideValConstraintNotSatisfied;
-                                break;
-                            }
-                            continue;
-                        case TypeParameterConstraintKind.Default:
-                            if (typeParameter.IsReferenceType || typeParameter.IsValueType)
-                            {
-                                report = ErrorCode.ERR_OverrideDefaultConstraintNotSatisfied;
                                 break;
                             }
                             continue;
@@ -239,15 +233,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             continue;
                     }
 
-                    diagnostics.Add(report, typeParameter.Locations[0], this, typeParameter,
+                    diagnostics.Add(report, _typeParameters[i].Locations[0], this, _typeParameters[i],
                                     overriddenOrExplicitlyImplementedMethod.TypeParameters[i], overriddenOrExplicitlyImplementedMethod);
                 }
             }
 
             CheckModifiers(MethodKind == MethodKind.ExplicitInterfaceImplementation, isVararg, HasAnyBody, location, diagnostics);
+
+            return;
         }
 
-        protected abstract (TypeWithAnnotations ReturnType, ImmutableArray<ParameterSymbol> Parameters, bool IsVararg, ImmutableArray<TypeParameterConstraintClause> DeclaredConstraintsForOverrideOrImplementation) MakeParametersAndBindReturnType(DiagnosticBag diagnostics);
+        protected abstract (TypeWithAnnotations ReturnType, ImmutableArray<ParameterSymbol> Parameters, bool IsVararg, ImmutableArray<TypeParameterConstraintClause> DeclaredConstraintsForOverrideOrImplement) MakeParametersAndBindReturnType(DiagnosticBag diagnostics);
 
         protected abstract void ExtensionMethodChecks(DiagnosticBag diagnostics);
 
@@ -311,7 +307,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal sealed override int ParameterCount
+        internal override int ParameterCount
         {
             get
             {
@@ -574,12 +570,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
             else if (IsAbstract && !ContainingType.IsAbstract && (ContainingType.TypeKind == TypeKind.Class || ContainingType.TypeKind == TypeKind.Submission))
             {
-                // '{0}' is abstract but it is contained in non-abstract type '{1}'
+                // '{0}' is abstract but it is contained in non-abstract class '{1}'
                 diagnostics.Add(ErrorCode.ERR_AbstractInConcreteClass, location, this, ContainingType);
             }
             else if (IsVirtual && ContainingType.IsSealed)
             {
-                // '{0}' is a new virtual member in sealed type '{1}'
+                // '{0}' is a new virtual member in sealed class '{1}'
                 diagnostics.Add(ErrorCode.ERR_NewVirtualInSealed, location, this, ContainingType);
             }
             else if (!hasBody && IsAsync)

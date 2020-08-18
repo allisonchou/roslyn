@@ -18,12 +18,5 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
             => body is BlockSyntax block
                 ? WithBlock(block).WithExpressionBody(null)
                 : WithExpressionBody((ExpressionSyntax)body).WithBlock(null);
-
-        public abstract SyntaxToken AsyncKeyword { get; }
-
-        public AnonymousFunctionExpressionSyntax WithAsyncKeyword(SyntaxToken asyncKeyword)
-            => WithAsyncKeywordCore(asyncKeyword);
-
-        internal abstract AnonymousFunctionExpressionSyntax WithAsyncKeywordCore(SyntaxToken asyncKeyword);
     }
 }

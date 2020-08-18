@@ -14,8 +14,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Formatting.Indenta
         <WpfFact>
         <Trait(Traits.Feature, Traits.Features.SmartIndent)>
         Public Sub GetSmartIndent1()
-            Dim exportProvider = EditorTestCompositions.EditorFeatures.ExportProviderFactory.CreateExportProvider()
-            Dim provider = exportProvider.GetExportedValue(Of ISmartIndentProvider)()
+            Dim provider = TestExportProvider.ExportProviderWithCSharpAndVisualBasic.GetExportedValues(Of ISmartIndentProvider)().OfType(Of SmartIndentProvider)().Single()
 
             Assert.ThrowsAny(Of ArgumentException)(
                 Function() provider.CreateSmartIndent(Nothing))

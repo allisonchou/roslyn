@@ -4,7 +4,6 @@
 
 #nullable enable
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -205,9 +204,6 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     case DeclarationPattern:
                         return ((DeclarationPatternSyntax)parent).Type == node;
-
-                    case RecursivePattern:
-                        return ((RecursivePatternSyntax)parent).Type == node;
 
                     case TupleElement:
                         return ((TupleElementSyntax)parent).Type == node;
@@ -551,11 +547,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             // Do not descend into functions and expressions
             return node is object &&
-                   node.DescendantNodesAndSelf(child =>
-                   {
-                       Debug.Assert(ReferenceEquals(node, child) || child is not (MemberDeclarationSyntax or TypeDeclarationSyntax));
-                       return !IsNestedFunction(child) && !(node is ExpressionSyntax);
-                   }).Any(n => n is YieldStatementSyntax);
+                   node.DescendantNodesAndSelf(child => !IsNestedFunction(child) && !(node is ExpressionSyntax)).Any(n => n is YieldStatementSyntax);
         }
 
         internal static bool HasReturnWithExpression(SyntaxNode? node)

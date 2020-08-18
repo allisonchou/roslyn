@@ -2847,14 +2847,14 @@ class C
         [Fact]
         public void MethodUpdate_UpdateParameterToNullable()
         {
-            var src1 = @"
+            string src1 = @"
 class C
 {
     static void M(string s)
     {
     }
 }";
-            var src2 = @"
+            string src2 = @"
 class C
 {
     static void M(string? s)
@@ -2873,7 +2873,7 @@ class C
         [Fact]
         public void MethodUpdate_UpdateParameterToNonNullable()
         {
-            var src1 = @"
+            string src1 = @"
 class C
 {
     static void M(string? s)
@@ -2881,7 +2881,7 @@ class C
         
     }
 }";
-            var src2 = @"
+            string src2 = @"
 class C
 {
     static void M(string s)
@@ -5174,7 +5174,7 @@ partial class C
 }
 ";
             var edits = GetTopEdits(src1, src2);
-            _ = GetSyntaxMap(src1, src2);
+            var syntaxMap = GetSyntaxMap(src1, src2);
 
             edits.VerifySemanticDiagnostics(
                 Diagnostic(RudeEditKind.InsertConstructorToTypeWithInitializersWithLambdas, "public C(int x)"));
@@ -7286,7 +7286,7 @@ class C
 }
 ";
             var edits = GetTopEdits(src1, src2);
-            _ = GetSyntaxMap(src1, src2);
+            var syntaxMap = GetSyntaxMap(src1, src2);
 
             edits.VerifySemanticDiagnostics(
                 Diagnostic(RudeEditKind.InsertConstructorToTypeWithInitializersWithLambdas, "public C(int x)"));

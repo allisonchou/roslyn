@@ -34,7 +34,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.SignatureHel
         ISignatureHelpPresenterSession IIntelliSensePresenter<ISignatureHelpPresenterSession, ISignatureHelpSession>.CreateSession(ITextView textView, ITextBuffer subjectBuffer, ISignatureHelpSession sessionOpt)
         {
             AssertIsForeground();
-            return new SignatureHelpPresenterSession(ThreadingContext, _sigHelpBroker, textView);
+            return new SignatureHelpPresenterSession(ThreadingContext, _sigHelpBroker, textView, subjectBuffer);
         }
 
         ISignatureHelpSource ISignatureHelpSourceProvider.TryCreateSignatureHelpSource(ITextBuffer textBuffer)

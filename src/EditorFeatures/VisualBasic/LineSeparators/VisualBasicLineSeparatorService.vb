@@ -19,7 +19,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.LineSeparators
         End Sub
 
         ''' <summary>Node types that are interesting for line separation.</summary>
-        Private Shared Function IsSeparableBlock(nodeOrToken As SyntaxNodeOrToken) As Boolean
+        Private Function IsSeparableBlock(nodeOrToken As SyntaxNodeOrToken) As Boolean
             If nodeOrToken.IsToken Then
                 Return False
             End If
@@ -64,26 +64,26 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.LineSeparators
 
                 Dim typeBlock = TryCast(block, TypeBlockSyntax)
                 If typeBlock IsNot Nothing Then
-                    ProcessNodeList(typeBlock.Members, spans, cancellationToken)
+                    ProcessNodeList(syntaxTree, typeBlock.Members, spans, cancellationToken)
                     Continue For
                 End If
 
                 Dim enumBlock = TryCast(block, EnumBlockSyntax)
                 If enumBlock IsNot Nothing Then
-                    ProcessNodeList(enumBlock.Members, spans, cancellationToken)
+                    ProcessNodeList(syntaxTree, enumBlock.Members, spans, cancellationToken)
                     Continue For
                 End If
 
                 Dim nsBlock = TryCast(block, NamespaceBlockSyntax)
                 If nsBlock IsNot Nothing Then
-                    ProcessNodeList(nsBlock.Members, spans, cancellationToken)
+                    ProcessNodeList(syntaxTree, nsBlock.Members, spans, cancellationToken)
                     Continue For
                 End If
 
                 Dim progBlock = TryCast(block, CompilationUnitSyntax)
                 If progBlock IsNot Nothing Then
-                    ProcessImports(progBlock.Imports, spans)
-                    ProcessNodeList(progBlock.Members, spans, cancellationToken)
+                    ProcessImports(syntaxTree, progBlock.Imports, spans, cancellationToken)
+                    ProcessNodeList(syntaxTree, progBlock.Members, spans, cancellationToken)
                 End If
             Next
 
@@ -95,7 +95,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.LineSeparators
         ''' If node is separable and not the first in its container => ensure separator before the node
         ''' last separable node in Program needs separator after it.
         ''' </summary>
-        Private Shared Sub ProcessNodeList(Of T As SyntaxNode)(children As SyntaxList(Of T), spans As List(Of TextSpan), token As CancellationToken)
+        Private Sub ProcessNodeList(Of T As SyntaxNode)(syntaxTree As SyntaxTree, children As SyntaxList(Of T), spans As List(Of TextSpan), token As CancellationToken)
             Contract.ThrowIfNull(spans)
 
             If children.Count = 0 Then
@@ -112,9 +112,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.LineSeparators
                 Else
                     If Not seenSeparator Then
                         Dim prev = children(i - 1)
-                        spans.Add(GetLineSeparatorSpanForNode(prev))
+                        spans.Add(GetLineSeparatorSpanForNode(syntaxTree, prev))
                     End If
-                    spans.Add(GetLineSeparatorSpanForNode(cur))
+                    spans.Add(GetLineSeparatorSpanForNode(syntaxTree, cur))
 
                     seenSeparator = True
                 End If
@@ -126,22 +126,22 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.LineSeparators
             If IsSeparableBlock(lastChild) Then
                 If Not seenSeparator Then
                     Dim nextToLast = children(children.Count - 2)
-                    spans.Add(GetLineSeparatorSpanForNode(nextToLast))
+                    spans.Add(GetLineSeparatorSpanForNode(syntaxTree, nextToLast))
                 End If
                 If lastChild.Parent.Kind = SyntaxKind.CompilationUnit Then
-                    spans.Add(GetLineSeparatorSpanForNode(lastChild))
+                    spans.Add(GetLineSeparatorSpanForNode(syntaxTree, lastChild))
                 End If
             End If
 
         End Sub
 
-        Private Shared Sub ProcessImports(importsList As SyntaxList(Of ImportsStatementSyntax), spans As List(Of TextSpan))
+        Private Sub ProcessImports(syntaxTree As SyntaxTree, importsList As SyntaxList(Of ImportsStatementSyntax), spans As List(Of TextSpan), token As CancellationToken)
             If importsList.Any() Then
-                spans.Add(GetLineSeparatorSpanForNode(importsList.Last()))
+                spans.Add(GetLineSeparatorSpanForNode(syntaxTree, importsList.Last()))
             End If
         End Sub
 
-        Private Shared Function GetLineSeparatorSpanForNode(node As SyntaxNode) As TextSpan
+        Private Function GetLineSeparatorSpanForNode(syntaxTree As SyntaxTree, node As SyntaxNode) As TextSpan
             Contract.ThrowIfNull(node)
 
             ' PERF: Reverse the list to only realize the last child

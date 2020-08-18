@@ -14,7 +14,7 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
 {
     internal partial class SolutionCrawlerRegistrationService
     {
-        internal partial class WorkCoordinator
+        private partial class WorkCoordinator
         {
             private class AsyncDocumentWorkItemQueue : AsyncWorkItemQueue<DocumentId>
             {

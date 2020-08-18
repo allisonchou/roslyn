@@ -11,15 +11,12 @@ namespace Microsoft.CodeAnalysis.CodeCleanup
     /// </summary>
     internal sealed class EnabledDiagnosticOptions
     {
-        public bool FormatDocument { get; }
-
         public ImmutableArray<DiagnosticSet> Diagnostics { get; }
 
         public OrganizeUsingsSet OrganizeUsings { get; }
 
-        public EnabledDiagnosticOptions(bool formatDocument, ImmutableArray<DiagnosticSet> diagnostics, OrganizeUsingsSet organizeUsings)
+        public EnabledDiagnosticOptions(ImmutableArray<DiagnosticSet> diagnostics, OrganizeUsingsSet organizeUsings)
         {
-            FormatDocument = formatDocument;
             Diagnostics = diagnostics;
             OrganizeUsings = organizeUsings;
         }

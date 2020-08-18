@@ -120,7 +120,7 @@ namespace Microsoft.CodeAnalysis.Editor.ReferenceHighlighting
             return ProduceTagsAsync(context, caretPosition, document);
         }
 
-        internal static async Task ProduceTagsAsync(
+        internal async Task ProduceTagsAsync(
             TaggerContext<NavigableHighlightTag> context,
             SnapshotPoint position,
             Document document)
@@ -145,7 +145,8 @@ namespace Microsoft.CodeAnalysis.Editor.ReferenceHighlighting
                         {
                             foreach (var documentHighlights in documentHighlightsList)
                             {
-                                await AddTagSpansAsync(context, documentHighlights).ConfigureAwait(false);
+                                await AddTagSpansAsync(
+                                    context, document.Project.Solution, documentHighlights).ConfigureAwait(false);
                             }
                         }
                     }
@@ -153,8 +154,9 @@ namespace Microsoft.CodeAnalysis.Editor.ReferenceHighlighting
             }
         }
 
-        private static async Task AddTagSpansAsync(
+        private async Task AddTagSpansAsync(
             TaggerContext<NavigableHighlightTag> context,
+            Solution solution,
             DocumentHighlights documentHighlights)
         {
             var cancellationToken = context.CancellationToken;

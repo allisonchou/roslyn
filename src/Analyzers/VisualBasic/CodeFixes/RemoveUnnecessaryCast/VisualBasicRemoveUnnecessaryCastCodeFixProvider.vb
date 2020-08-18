@@ -91,13 +91,13 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.RemoveUnnecessaryCast
             Dim expandedRoot = Await ExpandSurroundingStatementsAsync(trackedDocument, originalCastNodes, cancellationToken).ConfigureAwait(False)
             Dim expandedDocument = document.WithSyntaxRoot(expandedRoot)
 
-            Dim removedRoot = Await RemoveCastsAsync(
+            Dim removedRoot = Await RemoveCasts(
                 expandedDocument, originalCastNodes, cancellationToken).ConfigureAwait(False)
 
             editor.ReplaceNode(editor.OriginalRoot, removedRoot)
         End Function
 
-        Private Shared Async Function RemoveCastsAsync(
+        Private Shared Async Function RemoveCasts(
                 document As Document, originalCastNodes As ImmutableArray(Of ExpressionSyntax),
                 cancellationToken As CancellationToken) As Task(Of SyntaxNode)
 

@@ -143,7 +143,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
             Language = language;
             _displayName = displayName;
 
-            var fileExtensionToWatch = language switch { LanguageNames.CSharp => ".cs", LanguageNames.VisualBasic => ".vb", _ => null };
+            string? fileExtensionToWatch = language switch { LanguageNames.CSharp => ".cs", LanguageNames.VisualBasic => ".vb", _ => null };
 
             if (filePath != null && fileExtensionToWatch != null)
             {

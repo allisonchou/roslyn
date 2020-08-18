@@ -100,7 +100,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Me._session.Start(GetLinkedEditSpans(e.Before, token), e)
         End Sub
 
-        Private Shared Function GetLinkedEditSpans(snapshot As ITextSnapshot, token As SyntaxToken) As IEnumerable(Of ITrackingSpan)
+        Private Function GetLinkedEditSpans(snapshot As ITextSnapshot, token As SyntaxToken) As IEnumerable(Of ITrackingSpan)
             Dim startToken = GetBeginToken(token.Parent)
             If startToken.Kind = SyntaxKind.None Then
                 startToken = GetCorrespondingBeginToken(token)
@@ -155,7 +155,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return snapshot.AreOnSameLine(change.NewPosition, change.NewEnd)
         End Function
 
-        Private Shared Function IsChangeOnCorrectToken(token As SyntaxToken) As Boolean
+        Private Function IsChangeOnCorrectToken(token As SyntaxToken) As Boolean
             Select Case token.Kind
                 Case SyntaxKind.StructureKeyword, SyntaxKind.EnumKeyword, SyntaxKind.InterfaceKeyword,
                      SyntaxKind.ClassKeyword, SyntaxKind.ModuleKeyword, SyntaxKind.NamespaceKeyword,
@@ -178,7 +178,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return False
         End Function
 
-        Private Shared Function CorrespondingBeginTokenExist(token As SyntaxToken) As Boolean
+        Private Function CorrespondingBeginTokenExist(token As SyntaxToken) As Boolean
             Dim pairToken = GetCorrespondingBeginToken(token)
 
             Dim hasValidToken = pairToken.Kind <> SyntaxKind.None AndAlso Not pairToken.IsMissing AndAlso token.ValueText = pairToken.ValueText
@@ -193,7 +193,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return False
         End Function
 
-        Private Shared Function GetCorrespondingBeginToken(token As SyntaxToken) As SyntaxToken
+        Private Function GetCorrespondingBeginToken(token As SyntaxToken) As SyntaxToken
             If token.Parent.Parent Is Nothing Then
                 Return New SyntaxToken()
             End If
@@ -213,7 +213,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return GetBeginToken(beginNode)
         End Function
 
-        Private Shared Function IsChangeOnEndToken(token As SyntaxToken) As Boolean
+        Private Function IsChangeOnEndToken(token As SyntaxToken) As Boolean
             Dim endBlockStatement = TryCast(token.Parent, EndBlockStatementSyntax)
             If endBlockStatement Is Nothing Then
                 Return False
@@ -222,13 +222,13 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return endBlockStatement.BlockKeyword = token
         End Function
 
-        Private Shared Function CorrespondingEndTokenExist(token As SyntaxToken) As Boolean
+        Private Function CorrespondingEndTokenExist(token As SyntaxToken) As Boolean
             Dim pairToken = GetCorrespondingEndToken(token)
 
             Return pairToken.Kind <> SyntaxKind.None AndAlso Not pairToken.IsMissing AndAlso token.ValueText = pairToken.ValueText
         End Function
 
-        Private Shared Function GetCorrespondingEndToken(token As SyntaxToken) As SyntaxToken
+        Private Function GetCorrespondingEndToken(token As SyntaxToken) As SyntaxToken
             If token.Parent.Parent Is Nothing Then
                 Return New SyntaxToken()
             End If
@@ -242,7 +242,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
                 Function(dontCare As SyntaxNode) New SyntaxToken())
         End Function
 
-        Private Shared Function IsChangeOnBeginToken(token As SyntaxToken) As Boolean
+        Private Function IsChangeOnBeginToken(token As SyntaxToken) As Boolean
             Dim pairToken = GetBeginToken(token.Parent)
 
             Dim hasValidToken = pairToken.Kind <> SyntaxKind.None AndAlso Not pairToken.IsMissing AndAlso token = pairToken
@@ -257,7 +257,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return False
         End Function
 
-        Private Shared Function BeginStatementIsInValidForm(node As SyntaxNode) As Boolean
+        Private Function BeginStatementIsInValidForm(node As SyntaxNode) As Boolean
             ' turns out in malformed code, parser would pair some constructs together even if user wouldn't consider them being
             ' paired. So, rather than the feature being very naive, we will make sure begin construct have at least some valid shape.
             Return node.TypeSwitch(
@@ -270,7 +270,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
                 Function(dontCare As SyntaxNode) False)
         End Function
 
-        Private Shared Function GetBeginToken(node As SyntaxNode) As SyntaxToken
+        Private Function GetBeginToken(node As SyntaxNode) As SyntaxToken
             Return node.TypeSwitch(
                 Function(context As TypeStatementSyntax) context.DeclarationKeyword,
                 Function(context As EnumStatementSyntax) context.EnumKeyword,
@@ -281,7 +281,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
                 Function(dontCare As SyntaxNode) New SyntaxToken())
         End Function
 
-        Private Shared Function IsChangeOnCorrectText(snapshot As ITextSnapshot, position As Integer) As Boolean
+        Private Function IsChangeOnCorrectText(snapshot As ITextSnapshot, position As Integer) As Boolean
             Dim line = snapshot.GetLineFromPosition(position)
 
             Dim text = line.GetText()
@@ -308,7 +308,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return AutomaticEndConstructSet.Contains(textUnderPosition)
         End Function
 
-        Private Shared Function GetStartIndexOfWord(text As String, position As Integer) As Integer
+        Private Function GetStartIndexOfWord(text As String, position As Integer) As Integer
             For index = position To 0 Step -1
                 If Not Char.IsLetter(text(index)) Then
                     Return index + 1
@@ -318,7 +318,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
             Return 0
         End Function
 
-        Private Shared Function GetEndIndexOfWord(text As String, position As Integer) As Integer
+        Private Function GetEndIndexOfWord(text As String, position As Integer) As Integer
             For index = position To text.Length - 1
                 If Not Char.IsLetter(text(index)) Then
                     Return index - 1

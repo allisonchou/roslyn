@@ -69,7 +69,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.ConvertAutoPropertyToFu
                 { CSharpCodeStyleOptions.PreferExpressionBodiedAccessors, CSharpCodeStyleOptions.NeverWithSilentEnforcement },
             };
 
-        private static NamingStylePreferences CreateCustomFieldNamingStylePreference()
+        private NamingStylePreferences CreateCustomFieldNamingStylePreference()
         {
             var symbolSpecification = new SymbolSpecification(
                 null,
@@ -101,7 +101,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.ConvertAutoPropertyToFu
             return info;
         }
 
-        private static NamingStylePreferences CreateUnderscorePrefixedFieldNamingStylePreference()
+        private NamingStylePreferences CreateUnderscorePrefixedFieldNamingStylePreference()
         {
             var symbolSpecification = new SymbolSpecification(
                 null,
@@ -133,7 +133,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.ConvertAutoPropertyToFu
             return info;
         }
 
-        private static NamingStylePreferences CreateCustomStaticFieldNamingStylePreference()
+        private NamingStylePreferences CreateCustomStaticFieldNamingStylePreference()
         {
             var symbolSpecification = new SymbolSpecification(
                 null,

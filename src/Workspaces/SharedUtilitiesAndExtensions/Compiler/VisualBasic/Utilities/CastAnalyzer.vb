@@ -113,16 +113,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Extensions
                 Return semanticModel.GetTypeInfo(otherExpression).Type
             End If
 
-            Dim parentSimpleArgument = TryCast(parent, SimpleArgumentSyntax)
-            If TypeOf parentSimpleArgument?.Expression Is CastExpressionSyntax OrElse
-               TypeOf parentSimpleArgument?.Expression Is PredefinedCastExpressionSyntax Then
-                Return semanticModel.GetTypeInfo(parentSimpleArgument.Expression, cancellationToken).Type
-            End If
-
             Return expressionTypeInfo.ConvertedType
         End Function
 
-        Private Shared Function GetSpeculatedExpressionToOuterTypeConversion(speculationAnalyzer As SpeculationAnalyzer, speculatedExpression As ExpressionSyntax, outerSpeculatedExpression As ExpressionSyntax, cancellationToken As CancellationToken, <Out> ByRef speculatedExpressionOuterType As ITypeSymbol) As Conversion
+        Private Shared Function GetSpeculatedExpressionToOuterTypeConversion(speculatedExpression As ExpressionSyntax, speculationAnalyzer As SpeculationAnalyzer, cancellationToken As CancellationToken, <Out> ByRef speculatedExpressionOuterType As ITypeSymbol) As Conversion
             Dim innerSpeculatedExpression = speculatedExpression.WalkDownParentheses()
             Dim typeInfo = speculationAnalyzer.SpeculativeSemanticModel.GetTypeInfo(innerSpeculatedExpression, cancellationToken)
             Dim conv = speculationAnalyzer.SpeculativeSemanticModel.GetConversion(innerSpeculatedExpression, cancellationToken)
@@ -135,7 +129,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Extensions
             speculatedExpression = speculatedExpression.WalkUpParentheses()
             typeInfo = speculationAnalyzer.SpeculativeSemanticModel.GetTypeInfo(speculatedExpression, cancellationToken)
             speculatedExpressionOuterType = GetOuterCastType(speculatedExpression, typeInfo, speculationAnalyzer.SpeculativeSemanticModel, cancellationToken)
-            If speculatedExpressionOuterType Is Nothing OrElse outerSpeculatedExpression.IsParentKind(SyntaxKind.SimpleArgument) Then
+            If speculatedExpressionOuterType Is Nothing Then
                 Return Nothing
             End If
 
@@ -242,7 +236,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Extensions
                 ' Simple case: If the conversion from the inner expression to the cast type is identity,
                 ' the cast can be removed.
                 Return True
-            ElseIf expressionToCastType.IsNarrowing AndAlso expressionToCastType.IsReference Then
+            ElseIf expressionToCastType.IsNarrowing AndAlso expressionToCastType.IsReference
                 ' If the conversion from the inner expression to the cast type is narrowing reference conversion,
                 ' the cast cannot be removed.
                 Return False
@@ -262,13 +256,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Extensions
                     speculatedExpressionOuterType = outerType
                     expressionToOuterType = _semanticModel.ClassifyConversion(_castExpressionNode.WalkDownParentheses(), speculatedExpressionOuterType)
                 Else
-                    expressionToOuterType = GetSpeculatedExpressionToOuterTypeConversion(speculationAnalyzer, speculationAnalyzer.ReplacedExpression, outerSpeculatedExpression, _cancellationToken, speculatedExpressionOuterType)
-                    If expressionToOuterType = Nothing AndAlso outerSpeculatedExpression.IsParentKind(SyntaxKind.SimpleArgument) Then
-                        ' If we are here we might be inside a SimpleArgument but it is
-                        ' not part of a ParamArray which is handled above.
-                        speculatedExpressionOuterType = outerType
-                        expressionToOuterType = _semanticModel.ClassifyConversion(_castExpressionNode.WalkDownParentheses(), speculatedExpressionOuterType)
-                    End If
+                    expressionToOuterType = GetSpeculatedExpressionToOuterTypeConversion(speculationAnalyzer.ReplacedExpression, speculationAnalyzer, _cancellationToken, speculatedExpressionOuterType)
                 End If
 
                 ' CONSIDER: Anonymous function conversions cannot be compared from different semantic models as lambda symbol comparison requires syntax tree equality. Should this be a compiler bug?
@@ -278,7 +266,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Extensions
                 End If
 
                 ' If there is an user-defined conversion from the expression to the cast type or the cast
-                ' to the outer type, we need to make sure that the same user-defined conversion will be
+                ' to the outer type, we need to make sure that the same user-defined conversion will be 
                 ' called if the cast is removed.
                 If castToOuterType.IsUserDefined OrElse expressionToCastType.IsUserDefined Then
                     Return (HaveSameUserDefinedConversion(expressionToCastType, expressionToOuterType) OrElse
@@ -299,7 +287,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Extensions
                     Dim expressionToCastTypeIsWideningRefOrDefault As Boolean = expressionToCastType.IsWidening AndAlso (expressionToCastType.IsReference OrElse expressionToCastType.IsDefault)
                     Dim expressionToOuterTypeIsWideningRefOrDefault As Boolean = expressionToOuterType.IsWidening AndAlso (expressionToOuterType.IsReference OrElse expressionToOuterType.IsDefault)
 
-                    If expressionToCastTypeIsWideningRefOrDefault AndAlso expressionToOuterTypeIsWideningRefOrDefault Then
+                    If (expressionToCastTypeIsWideningRefOrDefault AndAlso expressionToOuterTypeIsWideningRefOrDefault) Then
                         If expressionToCastType.IsDefault Then
                             Return Not CastRemovalChangesDefaultValue(castType, outerType)
                         End If
@@ -317,7 +305,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Extensions
                 End If
 
                 If Not castToOuterType.IsValueType AndAlso castToOuterType = expressionToOuterType Then
-                    If castToOuterType.IsNullableValueType Then
+                    If (castToOuterType.IsNullableValueType) Then
                         Return expressionToOuterType.IsWidening AndAlso
                             DirectCast(castExpressionType.OriginalDefinition, ITypeSymbol).SpecialType = SpecialType.System_Nullable_T
                     ElseIf expressionToCastType.IsWidening AndAlso expressionToCastType.IsNumeric AndAlso Not castToOuterType.IsIdentity Then

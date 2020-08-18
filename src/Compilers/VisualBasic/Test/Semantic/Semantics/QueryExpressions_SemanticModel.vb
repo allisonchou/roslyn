@@ -3787,7 +3787,7 @@ End Module
 
         <WorkItem(546132, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/546132")>
         <Fact()>
-        Public Sub SymbolInfoForFunctionAgtAregationSyntax()
+        Public Sub SymbolInfoForFunctionAggregationSyntax()
             Dim compilation = CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(
 <compilation>
     <file name="a.vb"><![CDATA[
@@ -3821,7 +3821,7 @@ Module AggrArgsInvalidmod
     End Sub
 End Module
     ]]></file>
-</compilation>, references:={TestMetadata.Net40.SystemCore})
+</compilation>, references:={TestReferences.NetFx.v4_0_30319.System_Core})
 
             compilation.VerifyDiagnostics(Diagnostic(ERRID.ERR_QueryOperatorNotFound, "aggr4").WithArguments("aggr4"))
 

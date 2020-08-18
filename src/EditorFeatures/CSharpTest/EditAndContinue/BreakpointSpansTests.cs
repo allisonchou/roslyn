@@ -21,16 +21,16 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests.Debugging
     {
         #region Helpers 
 
-        private static void TestSpan(string markup, ParseOptions options = null)
+        private void TestSpan(string markup, ParseOptions options = null)
             => Test(markup, isMissing: false, isLine: false, options: options);
 
-        private static void TestMissing(string markup)
+        private void TestMissing(string markup)
             => Test(markup, isMissing: true, isLine: false);
 
-        private static void TestLine(string markup)
+        private void TestLine(string markup)
             => Test(markup, isMissing: false, isLine: true);
 
-        private static void Test(string markup, bool isMissing, bool isLine, ParseOptions options = null)
+        private void Test(string markup, bool isMissing, bool isLine, ParseOptions options = null)
         {
             MarkupTestFile.GetPositionAndSpan(
                 markup, out var source, out var position, out TextSpan? expectedSpan);
@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests.Debugging
             }
         }
 
-        private static void TestAll(string markup)
+        private void TestAll(string markup)
         {
             MarkupTestFile.GetPositionAndSpans(markup,
                 out var source, out var position, out ImmutableArray<TextSpan> expectedSpans);
@@ -74,7 +74,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests.Debugging
         {
             TextSpan lastSpan = default;
             var endPosition = root.Span.End;
-            for (var p = position; p < endPosition; p++)
+            for (int p = position; p < endPosition; p++)
             {
                 if (BreakpointSpans.TryGetClosestBreakpointSpan(root, p, out var span) && span.Start > lastSpan.Start)
                 {

@@ -4,7 +4,6 @@
 
 Imports System.Threading
 Imports Microsoft.CodeAnalysis
-Imports Microsoft.CodeAnalysis.Editor.UnitTests
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Formatting
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 Imports Microsoft.CodeAnalysis.Formatting
@@ -20,9 +19,6 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Formatting
     Public Class VisualBasicFormatterTestBase
         Inherits CoreFormatterTestsBase
 
-        Private Shared ReadOnly s_composition As TestComposition = EditorTestCompositions.EditorFeatures.AddParts(
-            GetType(TestFormattingRuleFactoryServiceFactory))
-
         Public Sub New(output As ITestOutputHelper)
             MyBase.New(output)
         End Sub
@@ -35,9 +31,8 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Formatting
             Return SyntaxFactory.ParseCompilationUnit(expected)
         End Function
 
-        Protected Shared Async Function AssertFormatSpanAsync(content As String, expected As String, Optional baseIndentation As Integer? = Nothing, Optional span As TextSpan = Nothing) As Task
-
-            Using workspace = TestWorkspace.CreateVisualBasic(content, composition:=s_composition)
+        Protected Async Function AssertFormatSpanAsync(content As String, expected As String, Optional baseIndentation As Integer? = Nothing, Optional span As TextSpan = Nothing) As Tasks.Task
+            Using workspace = TestWorkspace.CreateVisualBasic(content)
                 Dim hostdoc = workspace.Documents.First()
 
                 ' get original buffer
@@ -52,7 +47,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Formatting
                 ' Add Base IndentationRule that we had just set up.
                 Dim formattingRuleProvider = workspace.Services.GetService(Of IHostDependentFormattingRuleFactoryService)()
                 If baseIndentation.HasValue Then
-                    Dim factory = CType(formattingRuleProvider, TestFormattingRuleFactoryServiceFactory.Factory)
+                    Dim factory = TryCast(formattingRuleProvider, TestFormattingRuleFactoryServiceFactory.Factory)
                     factory.BaseIndentation = baseIndentation.Value
                     factory.TextSpan = span
                 End If

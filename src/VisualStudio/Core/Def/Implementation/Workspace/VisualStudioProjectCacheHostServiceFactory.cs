@@ -86,6 +86,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Workspaces
 
         private class ActiveProjectCacheManager
         {
+            private readonly IDocumentTrackingService _documentTrackingService;
             private readonly ProjectCacheService _projectCacheService;
             private readonly object _guard = new object();
 
@@ -94,6 +95,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Workspaces
 
             public ActiveProjectCacheManager(IDocumentTrackingService documentTrackingService, ProjectCacheService projectCacheService)
             {
+                _documentTrackingService = documentTrackingService;
                 _projectCacheService = projectCacheService;
 
                 if (documentTrackingService != null)

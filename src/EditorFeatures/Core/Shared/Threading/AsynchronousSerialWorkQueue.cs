@@ -159,35 +159,20 @@ namespace Microsoft.CodeAnalysis.Editor.Shared.Threading
             _currentBackgroundTask.Wait();
         }
 
-        internal TestAccessor GetTestAccessor()
+        /// <summary>
+        /// Wait until all tasks have been completed.  NOTE that this will do a pumping wait if
+        /// called on the UI thread. Also, it isn't guaranteed to be stable in the case of tasks
+        /// enqueuing other tasks in arbitrary orders, though it does support our common pattern of
+        /// "timer task->background task->foreground task with results"
+        /// 
+        /// Use this method very judiciously.  Most of the time, we should be able to just use 
+        /// IAsynchronousOperationListener for tests.
+        /// </summary>
+        public void WaitUntilCompletion_ForTestingPurposesOnly()
         {
-            return new TestAccessor(this);
-        }
+            AssertIsForeground();
 
-        internal readonly struct TestAccessor
-        {
-            private readonly AsynchronousSerialWorkQueue _asynchronousSerialWorkQueue;
-
-            internal TestAccessor(AsynchronousSerialWorkQueue asynchronousSerialWorkQueue)
-            {
-                _asynchronousSerialWorkQueue = asynchronousSerialWorkQueue;
-            }
-
-            /// <summary>
-            /// Wait until all tasks have been completed.  NOTE that this will do a pumping wait if
-            /// called on the UI thread. Also, it isn't guaranteed to be stable in the case of tasks
-            /// enqueuing other tasks in arbitrary orders, though it does support our common pattern of
-            /// "timer task->background task->foreground task with results"
-            /// 
-            /// Use this method very judiciously.  Most of the time, we should be able to just use 
-            /// IAsynchronousOperationListener for tests.
-            /// </summary>
-            public void WaitUntilCompletion()
-            {
-                _asynchronousSerialWorkQueue.AssertIsForeground();
-
-                _asynchronousSerialWorkQueue.WaitForPendingBackgroundWork();
-            }
+            WaitForPendingBackgroundWork();
         }
     }
 }

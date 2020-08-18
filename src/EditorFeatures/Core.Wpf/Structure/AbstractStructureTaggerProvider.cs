@@ -139,7 +139,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Structure
             }
         }
 
-        private static BlockStructureService TryGetService(
+        private BlockStructureService TryGetService(
             TaggerContext<TRegionTag> context,
             DocumentSnapshotSpan documentSnapshotSpan)
         {
@@ -217,7 +217,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Structure
 
         private static bool s_exceptionReported = false;
 
-        private static ImmutableArray<BlockSpan> GetMultiLineRegions(
+        private ImmutableArray<BlockSpan> GetMultiLineRegions(
             BlockStructureService service,
             ImmutableArray<BlockSpan> regions, ITextSnapshot snapshot)
         {

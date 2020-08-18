@@ -18,6 +18,122 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ExtractInterface
     <[UseExportProvider]>
     Public Class ExtractInterfaceViewModelTests
         <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_InterfaceNameIsSameAsPassedIn() As Task
+            Dim markup = <Text><![CDATA[
+class $$MyClass
+{
+    public void Goo()
+    {
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
+            Assert.Equal("IMyClass", viewModel.InterfaceName)
+
+            Dim monitor = New PropertyChangedTestMonitor(viewModel)
+            monitor.AddExpectation(Function() viewModel.GeneratedName)
+            monitor.AddExpectation(Function() viewModel.FileName)
+
+            viewModel.InterfaceName = "IMyClassChanged"
+            Assert.Equal("IMyClassChanged.cs", viewModel.FileName)
+            Assert.Equal("IMyClassChanged", viewModel.GeneratedName)
+
+            monitor.VerifyExpectations()
+            monitor.Detach()
+        End Function
+
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_FileNameHasExpectedExtension() As Task
+            Dim markup = <Text><![CDATA[
+class $$MyClass
+{
+    public void Goo()
+    {
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
+            Assert.Equal("IMyClass.cs", viewModel.FileName)
+        End Function
+
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_GeneratedNameInGlobalNamespace() As Task
+            Dim markup = <Text><![CDATA[
+class $$MyClass
+{
+    public void Goo()
+    {
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
+            Assert.Equal("IMyClass", viewModel.GeneratedName)
+        End Function
+
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_GeneratedNameInNestedNamespaces() As Task
+            Dim markup = <Text><![CDATA[
+namespace Outer
+{
+    namespace Inner
+    {
+        class $$MyClass
+        {
+            public void Goo()
+            {
+            }
+        }
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass", defaultNamespace:="Outer.Inner")
+            Assert.Equal("Outer.Inner.IMyClass", viewModel.GeneratedName)
+        End Function
+
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_GeneratedNameWithTypeParameters() As Task
+            Dim markup = <Text><![CDATA[
+namespace Outer
+{
+    namespace Inner
+    {
+        class $$MyClass<X, Y>
+        {
+            public void Goo(X x, Y y)
+            {
+            }
+        }
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass", defaultNamespace:="Outer.Inner", generatedNameTypeParameterSuffix:="<X, Y>")
+            Assert.Equal("Outer.Inner.IMyClass<X, Y>", viewModel.GeneratedName)
+
+            viewModel.InterfaceName = "IMyClassChanged"
+            Assert.Equal("Outer.Inner.IMyClassChanged<X, Y>", viewModel.GeneratedName)
+        End Function
+
+        <Fact>
+        <WorkItem(716122, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/716122"), Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_GeneratedNameIsGeneratedFromTrimmedInterfaceName() As Task
+            Dim markup = <Text><![CDATA[
+namespace Ns
+{
+    class C$$
+    {
+        public void Goo()
+        {
+        }
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IC", defaultNamespace:="Ns")
+
+            viewModel.InterfaceName = "     IC2       "
+            Assert.Equal("Ns.IC2", viewModel.GeneratedName)
+        End Function
+
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
         Public Async Function TestExtractInterface_MembersCheckedByDefault() As Task
             Dim markup = <Text><![CDATA[
 class $$MyClass
@@ -31,6 +147,62 @@ class $$MyClass
             Assert.True(viewModel.MemberContainers.Single().IsChecked)
         End Function
 
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_InterfaceNameChangesUpdateGeneratedName() As Task
+            Dim markup = <Text><![CDATA[
+class $$MyClass
+{
+    public void Goo()
+    {
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
+            Dim monitor = New PropertyChangedTestMonitor(viewModel)
+            monitor.AddExpectation(Function() viewModel.GeneratedName)
+
+            viewModel.InterfaceName = "IMyClassChanged"
+            Assert.Equal("IMyClassChanged", viewModel.GeneratedName)
+
+            monitor.VerifyExpectations()
+            monitor.Detach()
+        End Function
+
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_InterfaceNameChangesUpdateFileName() As Task
+            Dim markup = <Text><![CDATA[
+class $$MyClass
+{
+    public void Goo()
+    {
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
+            Dim monitor = New PropertyChangedTestMonitor(viewModel)
+            monitor.AddExpectation(Function() viewModel.FileName)
+
+            viewModel.InterfaceName = "IMyClassChanged"
+            Assert.Equal("IMyClassChanged.cs", viewModel.FileName)
+
+            monitor.VerifyExpectations()
+            monitor.Detach()
+        End Function
+
+        <Fact>
+        <WorkItem(716122, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/716122"), Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_FileNameIsGeneratedFromTrimmedInterfaceName() As Task
+            Dim markup = <Text><![CDATA[
+public class C$$
+{
+    public void Goo() { }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IC")
+            viewModel.InterfaceName = "                 IC2     "
+            Assert.Equal("IC2.cs", viewModel.FileName)
+        End Function
+
         <Fact>
         <WorkItem(716122, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/716122"), Trait(Traits.Feature, Traits.Features.ExtractInterface)>
         Public Async Function TestExtractInterface_InterfaceNameIsTrimmedOnSubmit() As Task
@@ -41,7 +213,7 @@ public class C$$
 }"]]></Text>
 
             Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IC")
-            viewModel.DestinationViewModel.TypeName = "                 IC2     "
+            viewModel.InterfaceName = "                 IC2     "
             Dim submitSucceeded = viewModel.TrySubmit()
             Assert.True(submitSucceeded, String.Format("Submit failed unexpectedly."))
         End Function
@@ -56,9 +228,30 @@ public class C$$
 }"]]></Text>
 
             Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IC")
-            viewModel.DestinationViewModel.FileName = "                 IC2.cs     "
+            viewModel.FileName = "                 IC2.cs     "
             Dim submitSucceeded = viewModel.TrySubmit()
             Assert.True(submitSucceeded, String.Format("Submit failed unexpectedly."))
+        End Function
+
+        <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
+        Public Async Function TestExtractInterface_FileNameChangesDoNotUpdateInterfaceName() As Task
+            Dim markup = <Text><![CDATA[
+class $$MyClass
+{
+    public void Goo()
+    {
+    }
+}"]]></Text>
+
+            Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
+            Dim monitor = New PropertyChangedTestMonitor(viewModel, strict:=True)
+            monitor.AddExpectation(Function() viewModel.FileName)
+
+            viewModel.FileName = "IMyClassChanged.cs"
+            Assert.Equal("IMyClass", viewModel.InterfaceName)
+
+            monitor.VerifyExpectations()
+            monitor.Detach()
         End Function
 
         <Fact, Trait(Traits.Feature, Traits.Features.ExtractInterface)>
@@ -122,7 +315,7 @@ class $$MyClass
 }"]]></Text>
 
             Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
-            viewModel.DestinationViewModel.TypeName = "SomeNamespace.IMyClass"
+            viewModel.InterfaceName = "SomeNamespace.IMyClass"
             Dim submitSucceeded = viewModel.TrySubmit()
             Assert.False(submitSucceeded)
         End Function
@@ -138,7 +331,7 @@ class $$MyClass
 }"]]></Text>
 
             Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
-            viewModel.DestinationViewModel.FileName = "FileName.vb"
+            viewModel.FileName = "FileName.vb"
             Dim submitSucceeded = viewModel.TrySubmit()
             Assert.False(submitSucceeded)
         End Function
@@ -154,7 +347,7 @@ class $$MyClass
 }"]]></Text>
 
             Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
-            viewModel.DestinationViewModel.FileName = "Bad*FileName.cs"
+            viewModel.FileName = "Bad*FileName.cs"
             Dim submitSucceeded = viewModel.TrySubmit()
             Assert.False(submitSucceeded)
         End Function
@@ -170,7 +363,7 @@ class $$MyClass
 }"]]></Text>
 
             Dim viewModel = Await GetViewModelAsync(markup, LanguageNames.CSharp, "IMyClass")
-            viewModel.DestinationViewModel.FileName = "?BadFileName.cs"
+            viewModel.FileName = "?BadFileName.cs"
             Dim submitSucceeded = viewModel.TrySubmit()
             Assert.False(submitSucceeded)
         End Function
@@ -308,7 +501,8 @@ public class $$MyClass
                     conflictingTypeNames:=If(conflictingTypeNames, New List(Of String)),
                     defaultNamespace:=defaultNamespace,
                     generatedNameTypeParameterSuffix:=generatedNameTypeParameterSuffix,
-                    languageName:=doc.Project.Language)
+                    languageName:=doc.Project.Language,
+                    fileExtension:=If(languageName = LanguageNames.CSharp, ".cs", ".vb"))
             End Using
         End Function
     End Class

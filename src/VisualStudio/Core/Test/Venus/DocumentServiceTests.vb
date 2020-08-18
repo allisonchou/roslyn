@@ -28,7 +28,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Venus
                     <Project Language="C#" CommonReferences="true">
                         <Document>class outter { {|Document:class C { $$ }|} }</Document>
                     </Project>
-                </Workspace>, composition:=EditorTestCompositions.EditorFeatures)
+                </Workspace>, exportProvider:=TestExportProvider.ExportProviderWithCSharpAndVisualBasic)
 
                 Dim subjectDocument = workspace.Documents.Single()
                 Dim projectedDocument = workspace.CreateProjectionBufferDocument("class projected { {|Document:|} }", {subjectDocument})
@@ -52,7 +52,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Venus
                     <Project Language="C#" CommonReferences="true">
                         <Document>class outter { {|Document:class C$$ { }|} }</Document>
                     </Project>
-                </Workspace>, composition:=EditorTestCompositions.EditorFeatures)
+                </Workspace>, exportProvider:=TestExportProvider.ExportProviderWithCSharpAndVisualBasic)
 
                 Dim subjectDocument = workspace.Documents.Single()
                 Dim projectedDocument = workspace.CreateProjectionBufferDocument("class projected { {|Document:|} }", {subjectDocument})
@@ -84,7 +84,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Venus
                     <Project Language="C#" CommonReferences="true">
                         <Document>class outter { {|Document:class C$$ { }|} }</Document>
                     </Project>
-                </Workspace>, composition:=EditorTestCompositions.EditorFeatures)
+                </Workspace>, exportProvider:=TestExportProvider.ExportProviderWithCSharpAndVisualBasic)
 
                 Dim subjectDocument = workspace.Documents.Single()
                 Dim projectedDocument = workspace.CreateProjectionBufferDocument("class projected { {|Document:|} }", {subjectDocument})
@@ -110,7 +110,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Venus
                     <Project Language="C#" CommonReferences="true">
                         <Document>class outter { {|Document:class C { }|} }</Document>
                     </Project>
-                </Workspace>, composition:=EditorTestCompositions.EditorFeatures)
+                </Workspace>, exportProvider:=TestExportProvider.ExportProviderWithCSharpAndVisualBasic)
 
                 Dim subjectDocument = workspace.Documents.Single()
                 Dim projectedDocument = workspace.CreateProjectionBufferDocument("class projected { {|Document:|} }", {subjectDocument})
@@ -148,7 +148,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Venus
                     <Project Language="C#" CommonReferences="true">
                         <Document>class outter { {|Document:class C { }|} }</Document>
                     </Project>
-                </Workspace>, composition:=EditorTestCompositions.EditorFeatures)
+                </Workspace>, exportProvider:=TestExportProvider.ExportProviderWithCSharpAndVisualBasic)
 
                 Dim subjectDocument = workspace.Documents.Single()
                 Dim projectedDocument = workspace.CreateProjectionBufferDocument("class projected { {|Document:|} }", {subjectDocument})
@@ -187,7 +187,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Venus
                     <Project Language="C#" CommonReferences="true">
                         <Document>class outter { {|Document:class C { }|} }</Document>
                     </Project>
-                </Workspace>, composition:=EditorTestCompositions.EditorFeatures)
+                </Workspace>, exportProvider:=TestExportProvider.ExportProviderWithCSharpAndVisualBasic)
 
                 Dim projectedContent = <Code>class projected 
 {|Content:                        {|WithoutLeadingWhitespace:{ 
@@ -244,7 +244,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Venus
                     <Project Language="C#" CommonReferences="true">
                         <Document>class outter { {|Document:            class C { }         |} }</Document>
                     </Project>
-                </Workspace>, composition:=EditorTestCompositions.EditorFeatures)
+                </Workspace>, exportProvider:=TestExportProvider.ExportProviderWithCSharpAndVisualBasic)
 
                 Dim projectedContent = <Code>class projected 
 { 

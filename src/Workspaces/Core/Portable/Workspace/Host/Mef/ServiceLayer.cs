@@ -14,11 +14,6 @@ namespace Microsoft.CodeAnalysis.Host.Mef
         /// <summary>
         /// Service layer that overrides <see cref="Editor"/>, <see cref="Desktop"/> and <see cref="Default"/>.
         /// </summary>
-        internal const string Test = nameof(Test);
-
-        /// <summary>
-        /// Service layer that overrides <see cref="Editor"/>, <see cref="Desktop"/> and <see cref="Default"/>.
-        /// </summary>
         public const string Host = nameof(Host);
 
         /// <summary>

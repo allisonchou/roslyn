@@ -25,12 +25,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
         ''' <param name="generalDiagnosticOption">How warning diagnostics should be reported</param>
         ''' <param name="specificDiagnosticOptions">How specific diagnostics should be reported</param>
         ''' <returns>A diagnostic updated to reflect the options, or null if it has been filtered out</returns>
-        Public Shared Function Filter(
-            diagnostic As Diagnostic,
-            generalDiagnosticOption As ReportDiagnostic,
-            specificDiagnosticOptions As IDictionary(Of String, ReportDiagnostic),
-            syntaxTreeOptions As SyntaxTreeOptionsProvider) As Diagnostic
-
+        Public Shared Function Filter(diagnostic As Diagnostic, generalDiagnosticOption As ReportDiagnostic, specificDiagnosticOptions As IDictionary(Of String, ReportDiagnostic)) As Diagnostic
             ' Diagnostic ids must be processed in case-insensitive fashion in VB.
             Dim caseInsensitiveSpecificDiagnosticOptions =
             ImmutableDictionary.Create(Of String, ReportDiagnostic)(CaseInsensitiveComparison.Comparer).AddRange(specificDiagnosticOptions)
@@ -73,19 +68,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 diagnostic.Category,
                 generalDiagnosticOption,
                 caseInsensitiveSpecificDiagnosticOptions,
-                syntaxTreeOptions,
                 hasSourceSuppression)
             Else
-                report = GetDiagnosticReport(
-                    diagnostic.Severity,
-                    diagnostic.IsEnabledByDefault,
-                    diagnostic.Id,
-                    diagnostic.Location,
-                    diagnostic.Category,
-                    generalDiagnosticOption,
-                    caseInsensitiveSpecificDiagnosticOptions,
-                    syntaxTreeOptions,
-                    hasSourceSuppression)
+                report = GetDiagnosticReport(diagnostic.Severity, diagnostic.IsEnabledByDefault, diagnostic.Id, diagnostic.Location,
+                    diagnostic.Category, generalDiagnosticOption, caseInsensitiveSpecificDiagnosticOptions, hasSourceSuppression)
             End If
 
             If hasSourceSuppression Then
@@ -122,7 +108,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                                                    category As String,
                                                    generalDiagnosticOption As ReportDiagnostic,
                                                    caseInsensitiveSpecificDiagnosticOptions As IDictionary(Of String, ReportDiagnostic),
-                                                   syntaxTreeOptions As SyntaxTreeOptionsProvider,
                                                    <Out> ByRef hasDisableDirectiveSuppression As Boolean) As ReportDiagnostic
             hasDisableDirectiveSuppression = False
 
@@ -131,8 +116,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             Dim isSpecified As Boolean = False
 
             ' Global options depend on other options, so calculate those first
-            If tree IsNot Nothing AndAlso syntaxTreeOptions IsNot Nothing AndAlso
-               syntaxTreeOptions.TryGetDiagnosticValue(tree, id, report) Then
+            If tree IsNot Nothing AndAlso tree.DiagnosticOptions.TryGetValue(id, report) Then
                 ' 2. Syntax tree level
                 isSpecified = True
             ElseIf caseInsensitiveSpecificDiagnosticOptions.TryGetValue(id, report) Then

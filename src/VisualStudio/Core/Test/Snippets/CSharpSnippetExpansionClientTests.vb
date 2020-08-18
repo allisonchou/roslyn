@@ -336,7 +336,7 @@ using G=   H.I;
                     subjectBufferDocument.GetTextBuffer(),
                     Nothing)
 
-                SnippetExpansionClientTestsHelper.TestProjectionBuffer(snippetExpansionClient, surfaceBufferDocument, expectedSurfaceBuffer)
+                SnippetExpansionClientTestsHelper.TestProjectionBuffer(snippetExpansionClient, subjectBufferDocument, surfaceBufferDocument, expectedSurfaceBuffer)
             End Using
         End Sub
 

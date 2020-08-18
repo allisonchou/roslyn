@@ -13,7 +13,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeGeneration;
 using Microsoft.CodeAnalysis.CodeRefactorings;
-using Microsoft.CodeAnalysis.Diagnostics.Analyzers.NamingStyles;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
@@ -54,8 +53,6 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
         where TTypeBlockSyntax : SyntaxNode
         where TNamespaceDeclarationSyntax : SyntaxNode
     {
-        protected abstract TArgumentSyntax GetArgumentWithChangedName(TArgumentSyntax argument, string name);
-
         public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         {
             var (document, textSpan, cancellationToken) = context;
@@ -206,7 +203,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
             return document.WithSyntaxRoot(newRoot).Project.Solution;
         }
 
-        private async Task<Solution> ConvertToStructInCurrentProcessAsync(
+        private static async Task<Solution> ConvertToStructInCurrentProcessAsync(
             Document document, TextSpan span, Scope scope, CancellationToken cancellationToken)
         {
             var (tupleExprOrTypeNode, tupleType) = await TryGetTupleInfoAsync(
@@ -235,14 +232,10 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                                        .Distinct()
                                        .ToImmutableArray();
 
-            // Get the rule that will name the parameter according to the users preferences for this document
-            // (and importantly not any of the documents where we change the call sites, below)
-            var parameterNamingRule = await document.GetApplicableNamingRuleAsync(SymbolKind.Parameter, Accessibility.NotApplicable, cancellationToken).ConfigureAwait(false);
-
             // Next, generate the full struct that will be used to replace all instances of this
             // tuple type.
             var namedTypeSymbol = await GenerateFinalNamedTypeAsync(
-                document, scope, structName, capturedTypeParameters, tupleType, parameterNamingRule, cancellationToken).ConfigureAwait(false);
+                document, scope, structName, capturedTypeParameters, tupleType, cancellationToken).ConfigureAwait(false);
 
             var documentToEditorMap = new Dictionary<Document, SyntaxEditor>();
             var documentsToUpdate = await GetDocumentsToUpdateAsync(
@@ -254,7 +247,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                 documentToEditorMap, documentsToUpdate,
                 tupleExprOrTypeNode, tupleType,
                 structName, capturedTypeParameters,
-                containingNamespace, parameterNamingRule, cancellationToken).ConfigureAwait(false);
+                containingNamespace, cancellationToken).ConfigureAwait(false);
 
             await GenerateStructIntoContainingNamespaceAsync(
                 document, tupleExprOrTypeNode, namedTypeSymbol,
@@ -266,12 +259,12 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
             return updatedSolution;
         }
 
-        private async Task ReplaceExpressionAndTypesInScopeAsync(
+        private static async Task ReplaceExpressionAndTypesInScopeAsync(
             Dictionary<Document, SyntaxEditor> documentToEditorMap,
             ImmutableArray<DocumentToUpdate> documentsToUpdate,
             SyntaxNode tupleExprOrTypeNode, INamedTypeSymbol tupleType,
             string structName, ImmutableArray<ITypeParameterSymbol> typeParameters,
-            INamespaceSymbol containingNamespace, NamingRule parameterNamingRule, CancellationToken cancellationToken)
+            INamespaceSymbol containingNamespace, CancellationToken cancellationToken)
         {
             // Process the documents one project at a time.
             foreach (var group in documentsToUpdate.GroupBy(d => d.Document.Project))
@@ -312,7 +305,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                     // We should only ever get a default array (meaning, update the root), or a
                     // non-empty array.  We should never be asked to update exactly '0' nodes.
                     Debug.Assert(documentToUpdate.NodesToUpdate.IsDefault ||
-                                 !documentToUpdate.NodesToUpdate.IsEmpty);
+                                 documentToUpdate.NodesToUpdate.Length >= 1);
 
                     // If we were given specific nodes to update, only update those.  Otherwise
                     // updated everything from the root down.
@@ -327,7 +320,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                     foreach (var container in nodesToUpdate)
                     {
                         replaced |= await ReplaceTupleExpressionsAndTypesInDocumentAsync(
-                            document, parameterNamingRule, editor, tupleExprOrTypeNode, tupleType,
+                            document, editor, tupleExprOrTypeNode, tupleType,
                             fullTypeName, structName, typeParameters,
                             container, cancellationToken).ConfigureAwait(false);
                     }
@@ -354,7 +347,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                 structNameToken = structNameToken.WithAdditionalAnnotations(RenameAnnotation.Create());
             }
 
-            return typeParameters.IsEmpty
+            return typeParameters.Length == 0
                 ? (TNameSyntax)generator.IdentifierName(structNameToken)
                 : (TNameSyntax)generator.GenericName(structNameToken, typeParameters.Select(tp => generator.IdentifierName(tp.Name)));
         }
@@ -553,15 +546,15 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
             return currentSolution;
         }
 
-        private async Task<bool> ReplaceTupleExpressionsAndTypesInDocumentAsync(
-            Document document, NamingRule parameterNamingRule, SyntaxEditor editor, SyntaxNode startingNode,
+        private static async Task<bool> ReplaceTupleExpressionsAndTypesInDocumentAsync(
+            Document document, SyntaxEditor editor, SyntaxNode startingNode,
             INamedTypeSymbol tupleType, TNameSyntax fullyQualifiedStructName,
             string structName, ImmutableArray<ITypeParameterSymbol> typeParameters,
             SyntaxNode containerToUpdate, CancellationToken cancellationToken)
         {
             var changed = false;
             changed |= await ReplaceMatchingTupleExpressionsAsync(
-                document, parameterNamingRule, editor, startingNode, tupleType,
+                document, editor, startingNode, tupleType,
                 fullyQualifiedStructName, structName, typeParameters,
                 containerToUpdate, cancellationToken).ConfigureAwait(false);
 
@@ -573,8 +566,8 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
             return changed;
         }
 
-        private async Task<bool> ReplaceMatchingTupleExpressionsAsync(
-            Document document, NamingRule parameterNamingRule, SyntaxEditor editor, SyntaxNode startingNode,
+        private static async Task<bool> ReplaceMatchingTupleExpressionsAsync(
+            Document document, SyntaxEditor editor, SyntaxNode startingNode,
             INamedTypeSymbol tupleType, TNameSyntax qualifiedTypeName,
             string typeName, ImmutableArray<ITypeParameterSymbol> typeParameters,
             SyntaxNode containingMember, CancellationToken cancellationToken)
@@ -599,7 +592,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                 {
                     changed = true;
                     ReplaceWithObjectCreation(
-                        editor, typeName, typeParameters, qualifiedTypeName, startingNode, childCreation, parameterNamingRule);
+                        editor, typeName, typeParameters, qualifiedTypeName, startingNode, childCreation);
                 }
             }
 
@@ -629,9 +622,9 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
             return true;
         }
 
-        private void ReplaceWithObjectCreation(
+        private static void ReplaceWithObjectCreation(
             SyntaxEditor editor, string typeName, ImmutableArray<ITypeParameterSymbol> typeParameters,
-            TNameSyntax qualifiedTypeName, SyntaxNode startingCreationNode, TTupleExpressionSyntax childCreation, NamingRule parameterNamingRule)
+            TNameSyntax qualifiedTypeName, SyntaxNode startingCreationNode, TTupleExpressionSyntax childCreation)
         {
             // Use the callback form as tuples types may be nested, and we want to
             // properly replace them even in that case.
@@ -649,38 +642,34 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                     var syntaxFacts = g.SyntaxFacts;
                     syntaxFacts.GetPartsOfTupleExpression<TArgumentSyntax>(
                         currentTupleExpr, out var openParen, out var arguments, out var closeParen);
-                    arguments = ConvertArguments(g, parameterNamingRule, arguments);
+                    arguments = ConvertArguments(g, arguments);
 
                     return g.ObjectCreationExpression(typeNameNode, openParen, arguments, closeParen)
                         .WithAdditionalAnnotations(Formatter.Annotation);
                 });
         }
 
-        private SeparatedSyntaxList<TArgumentSyntax> ConvertArguments(SyntaxGenerator generator, NamingRule parameterNamingRule, SeparatedSyntaxList<TArgumentSyntax> arguments)
-            => generator.SeparatedList<TArgumentSyntax>(ConvertArguments(generator, parameterNamingRule, arguments.GetWithSeparators()));
+        private static SeparatedSyntaxList<TArgumentSyntax> ConvertArguments(SyntaxGenerator generator, SeparatedSyntaxList<TArgumentSyntax> arguments)
+            => generator.SeparatedList<TArgumentSyntax>(ConvertArguments(generator, arguments.GetWithSeparators()));
 
-        private SyntaxNodeOrTokenList ConvertArguments(SyntaxGenerator generator, NamingRule parameterNamingRule, SyntaxNodeOrTokenList list)
-            => new SyntaxNodeOrTokenList(list.Select(v => ConvertArgumentOrToken(generator, parameterNamingRule, v)));
+        private static SyntaxNodeOrTokenList ConvertArguments(SyntaxGenerator generator, SyntaxNodeOrTokenList list)
+            => new SyntaxNodeOrTokenList(list.Select(v => ConvertArgumentOrToken(generator, v)));
 
-        private SyntaxNodeOrToken ConvertArgumentOrToken(SyntaxGenerator generator, NamingRule parameterNamingRule, SyntaxNodeOrToken arg)
+        private static SyntaxNodeOrToken ConvertArgumentOrToken(SyntaxGenerator generator, SyntaxNodeOrToken arg)
             => arg.IsToken
                 ? arg
-                : ConvertArgument(generator, parameterNamingRule, (TArgumentSyntax)arg.AsNode());
+                : ConvertArgument(generator, (TArgumentSyntax)arg.AsNode());
 
-        private TArgumentSyntax ConvertArgument(
-            SyntaxGenerator generator, NamingRule parameterNamingRule, TArgumentSyntax argument)
+        private static TArgumentSyntax ConvertArgument(
+            SyntaxGenerator generator, TArgumentSyntax argument)
         {
-            // If the original arguments had names then we keep them, but convert the case to match the
-            // the constructor parameters they now refer to. It helps keep the code self-documenting.
+            // Keep named arguments for literal args.  It helps keep the code self-documenting.
             // Remove for complex args as it's most likely just clutter a person doesn't need
             // when instantiating their new type.
             var expr = generator.SyntaxFacts.GetExpressionOfArgument(argument);
             if (expr is TLiteralExpressionSyntax)
             {
-                var argumentName = generator.SyntaxFacts.GetNameForArgument(argument);
-                var newArgumentName = GetConstructorParameterName(parameterNamingRule, argumentName);
-
-                return GetArgumentWithChangedName(argument, newArgumentName);
+                return argument;
             }
 
             return (TArgumentSyntax)generator.Argument(expr).WithTriviaFrom(argument);
@@ -740,7 +729,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
         private static async Task<INamedTypeSymbol> GenerateFinalNamedTypeAsync(
             Document document, Scope scope, string structName,
             ImmutableArray<ITypeParameterSymbol> typeParameters,
-            INamedTypeSymbol tupleType, NamingRule parameterNamingRule, CancellationToken cancellationToken)
+            INamedTypeSymbol tupleType, CancellationToken cancellationToken)
         {
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
@@ -756,8 +745,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                 semanticModel.Compilation.Assembly, scope, structName, typeParameters, members: default);
 
             var generator = SyntaxGenerator.GetGenerator(document);
-
-            var constructor = CreateConstructor(semanticModel, structName, fields, generator, parameterNamingRule);
+            var constructor = CreateConstructor(semanticModel, structName, fields, generator);
 
             // Generate Equals/GetHashCode.  We can defer to our existing language service for this
             // so that we generate the same Equals/GetHashCode that our other IDE features generate.
@@ -812,9 +800,9 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
             SyntaxGenerator generator, ArrayBuilder<ISymbol> members,
             INamedTypeSymbol tupleType, INamedTypeSymbol structType)
         {
-            const string ValueName = "value";
+            const string valueName = "value";
 
-            var valueNode = generator.IdentifierName(ValueName);
+            var valueNode = generator.IdentifierName(valueName);
             var arguments = tupleType.TupleElements.SelectAsArray<IFieldSymbol, SyntaxNode>(
                 field => generator.Argument(
                     generator.MemberAccessExpression(valueNode, field.Name)));
@@ -830,7 +818,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                 Accessibility.Public,
                 DeclarationModifiers.Static,
                 tupleType,
-                CodeGenerationSymbolFactory.CreateParameterSymbol(structType, ValueName),
+                CodeGenerationSymbolFactory.CreateParameterSymbol(structType, valueName),
                 isImplicit: true,
                 ImmutableArray.Create(convertToTupleStatement)));
             members.Add(CodeGenerationSymbolFactory.CreateConversionSymbol(
@@ -838,7 +826,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
                 Accessibility.Public,
                 DeclarationModifiers.Static,
                 structType,
-                CodeGenerationSymbolFactory.CreateParameterSymbol(tupleType, ValueName),
+                CodeGenerationSymbolFactory.CreateParameterSymbol(tupleType, valueName),
                 isImplicit: true,
                 ImmutableArray.Create(convertToStructStatement)));
         }
@@ -858,8 +846,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
 
         private static IMethodSymbol CreateConstructor(
             SemanticModel semanticModel, string className,
-            ImmutableArray<IFieldSymbol> fields, SyntaxGenerator generator,
-            NamingRule parameterNamingRule)
+            ImmutableArray<IFieldSymbol> fields, SyntaxGenerator generator)
         {
             // For every property, create a corresponding parameter, as well as an assignment
             // statement from that parameter to the property.
@@ -867,7 +854,7 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
             var parameters = fields.SelectAsArray<IFieldSymbol, IParameterSymbol>(field =>
             {
                 var parameter = CodeGenerationSymbolFactory.CreateParameterSymbol(
-                    field.Type, GetConstructorParameterName(parameterNamingRule, field.Name));
+                    field.Type, field.Name.ToCamelCase(trimLeadingTypePrefix: false));
 
                 parameterToPropMap[parameter.Name] = field;
 
@@ -884,9 +871,6 @@ namespace Microsoft.CodeAnalysis.ConvertTupleToStruct
 
             return constructor;
         }
-
-        private static string GetConstructorParameterName(NamingRule parameterNamingRule, string name)
-            => parameterNamingRule.NamingStyle.MakeCompliant(name).First();
 
         private class MyCodeAction : CodeAction.SolutionChangeAction
         {

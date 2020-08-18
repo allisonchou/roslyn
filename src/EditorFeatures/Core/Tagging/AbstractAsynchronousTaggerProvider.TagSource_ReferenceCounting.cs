@@ -53,7 +53,7 @@ StackTrace:
                 this.Disconnect();
             }
 
-            internal void OnTaggerAdded(Tagger _)
+            internal void OnTaggerAdded(Tagger tagger)
             {
                 // this should be only called from UI thread. 
                 // in unit test, must be called from same thread as OnTaggerDisposed
@@ -65,7 +65,7 @@ StackTrace:
                 DebugRecordCurrentThread();
             }
 
-            internal void OnTaggerDisposed(Tagger _)
+            internal void OnTaggerDisposed(Tagger tagger)
             {
                 // this should be only called from UI thread.
                 // in unit test, must be called from same thread as OnTaggerAdded
@@ -104,15 +104,15 @@ StackTrace:
             private void DebugVerifyThread()
                 => Contract.ThrowIfFalse(Thread.CurrentThread == _thread);
 #else
-            private static void DebugRecordInitialStackTrace()
+            private void DebugRecordInitialStackTrace()
             {
             }
 
-            private static void DebugRecordCurrentThread()
+            private void DebugRecordCurrentThread()
             {
             }
 
-            private static void DebugVerifyThread()
+            private void DebugVerifyThread()
             {
             }
 #endif

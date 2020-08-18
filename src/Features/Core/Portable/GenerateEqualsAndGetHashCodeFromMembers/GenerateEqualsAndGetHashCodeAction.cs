@@ -54,8 +54,6 @@ namespace Microsoft.CodeAnalysis.GenerateEqualsAndGetHashCodeFromMembers
                 _generateOperators = generateOperators;
             }
 
-            public override string EquivalenceKey => Title;
-
             protected override async Task<Document> GetChangedDocumentAsync(CancellationToken cancellationToken)
             {
                 using var _ = ArrayBuilder<IMethodSymbol>.GetInstance(out var methods);
@@ -82,10 +80,8 @@ namespace Microsoft.CodeAnalysis.GenerateEqualsAndGetHashCodeFromMembers
                     await AddOperatorsAsync(methods, cancellationToken).ConfigureAwait(false);
                 }
 
-                var options = await _document.GetOptionsAsync(cancellationToken).ConfigureAwait(false);
                 var newTypeDeclaration = CodeGenerator.AddMemberDeclarations(
-                    _typeDeclaration, methods, _document.Project.Solution.Workspace,
-                    new CodeGenerationOptions(options: options));
+                    _typeDeclaration, methods, _document.Project.Solution.Workspace);
 
                 if (constructedTypeToImplement is object)
                 {

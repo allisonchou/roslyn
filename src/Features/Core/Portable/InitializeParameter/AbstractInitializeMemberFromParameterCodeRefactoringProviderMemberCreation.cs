@@ -420,10 +420,9 @@ namespace Microsoft.CodeAnalysis.InitializeParameter
             CancellationToken cancellationToken)
         {
             var workspace = document.Project.Solution.Workspace;
-            var root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+            var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var editor = new SyntaxEditor(root, workspace);
             var generator = editor.Generator;
-            var options = await document.GetOptionsAsync(cancellationToken).ConfigureAwait(false);
 
             if (fieldOrProperty.ContainingType == null)
             {
@@ -449,13 +448,13 @@ namespace Microsoft.CodeAnalysis.InitializeParameter
                         {
                             return CodeGenerator.AddPropertyDeclaration(
                                 currentTypeDecl, property, workspace,
-                                GetAddOptions<IPropertySymbol>(parameter, blockStatementOpt, typeDeclaration, options, cancellationToken));
+                                GetAddOptions<IPropertySymbol>(parameter, blockStatementOpt, typeDeclaration, cancellationToken));
                         }
                         else if (fieldOrProperty is IFieldSymbol field)
                         {
                             return CodeGenerator.AddFieldDeclaration(
                                 currentTypeDecl, field, workspace,
-                                GetAddOptions<IFieldSymbol>(parameter, blockStatementOpt, typeDeclaration, options, cancellationToken));
+                                GetAddOptions<IFieldSymbol>(parameter, blockStatementOpt, typeDeclaration, cancellationToken));
                         }
                         else
                         {
@@ -483,9 +482,9 @@ namespace Microsoft.CodeAnalysis.InitializeParameter
             return document.WithSyntaxRoot(editor.GetChangedRoot());
         }
 
-        private static CodeGenerationOptions GetAddOptions<TSymbol>(
+        private static CodeGenerationOptions? GetAddOptions<TSymbol>(
             IParameterSymbol parameter, IBlockOperation? blockStatementOpt,
-            SyntaxNode typeDeclaration, OptionSet options, CancellationToken cancellationToken)
+            SyntaxNode typeDeclaration, CancellationToken cancellationToken)
             where TSymbol : ISymbol
         {
             foreach (var (sibling, before) in GetSiblingParameters(parameter))
@@ -503,19 +502,19 @@ namespace Microsoft.CodeAnalysis.InitializeParameter
                         {
                             // Found an existing field/property that corresponds to a preceding parameter.
                             // Place ourselves directly after it.
-                            return new CodeGenerationOptions(afterThisLocation: symbolSyntax.GetLocation(), options: options);
+                            return new CodeGenerationOptions(afterThisLocation: symbolSyntax.GetLocation());
                         }
                         else
                         {
                             // Found an existing field/property that corresponds to a following parameter.
                             // Place ourselves directly before it.
-                            return new CodeGenerationOptions(beforeThisLocation: symbolSyntax.GetLocation(), options: options);
+                            return new CodeGenerationOptions(beforeThisLocation: symbolSyntax.GetLocation());
                         }
                     }
                 }
             }
 
-            return new CodeGenerationOptions(options: options);
+            return null;
         }
 
         private static ImmutableArray<(IParameterSymbol parameter, bool before)> GetSiblingParameters(IParameterSymbol parameter)

@@ -13,5 +13,8 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.CodeRefactorings
         protected override ParseOptions GetScriptOptions() => Options.Script;
 
         protected internal override string GetLanguage() => LanguageNames.CSharp;
+
+        protected override TestWorkspace CreateWorkspaceFromFile(string initialMarkup, TestParameters parameters)
+            => TestWorkspace.CreateCSharp(initialMarkup, parameters.parseOptions, parameters.compilationOptions);
     }
 }

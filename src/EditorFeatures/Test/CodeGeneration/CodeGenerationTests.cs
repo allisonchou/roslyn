@@ -420,9 +420,6 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeGeneration
                 getAccessor,
                 setAccessor,
                 isIndexer);
-
-            codeGenerationOptions ??= new CodeGenerationOptions();
-            codeGenerationOptions = codeGenerationOptions.With(options: codeGenerationOptions.Options ?? workspace.Options);
             context.Result = await context.Service.AddPropertyAsync(context.Solution, (INamedTypeSymbol)context.GetDestination(), property, codeGenerationOptions);
         }
 
@@ -465,7 +462,8 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeGeneration
         internal static async Task TestRemoveAttributeAsync<T>(
             string initial,
             string expected,
-            Type attributeClass) where T : SyntaxNode
+            Type attributeClass,
+            SyntaxToken? target = null) where T : SyntaxNode
         {
             using var context = await TestContext.CreateAsync(initial, expected);
             var attributeType = (INamedTypeSymbol)GetTypeSymbol(attributeClass)(context.SemanticModel);
@@ -549,11 +547,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeGeneration
                 .GetDocument(documentId)
                 .GetSemanticModelAsync();
 
-            var docOptions = await context.Document.GetOptionsAsync();
-            codeGenerationOptions ??= new CodeGenerationOptions();
-            codeGenerationOptions = codeGenerationOptions.With(options: codeGenerationOptions.Options ?? docOptions);
-
-            var symbol = TestContext.GetSelectedSymbol<INamespaceOrTypeSymbol>(destSpan, semanticModel);
+            var symbol = context.GetSelectedSymbol<INamespaceOrTypeSymbol>(destSpan, semanticModel);
             var destination = context.GetDestination();
             if (destination.IsType)
             {
@@ -765,6 +759,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeGeneration
             private readonly bool _ignoreResult;
 
             public TestContext(
+                string initial,
                 string expected,
                 bool ignoreResult,
                 string language,
@@ -789,7 +784,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeGeneration
                 var workspace = CreateWorkspaceFromFile(initial.NormalizeLineEndings(), isVisualBasic, null, null);
                 var semanticModel = await workspace.CurrentSolution.Projects.Single().Documents.Single().GetSemanticModelAsync();
 
-                return new TestContext(expected, ignoreResult, language, workspace, semanticModel);
+                return new TestContext(initial, expected, ignoreResult, language, workspace, semanticModel);
             }
 
             public Solution Solution { get { return Workspace.CurrentSolution; } }
@@ -815,7 +810,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.CodeGeneration
                 }
             }
 
-            public static T GetSelectedSymbol<T>(TextSpan selection, SemanticModel semanticModel)
+            public T GetSelectedSymbol<T>(TextSpan selection, SemanticModel semanticModel)
                 where T : class, ISymbol
             {
                 var token = semanticModel.SyntaxTree.GetRoot().FindToken(selection.Start);

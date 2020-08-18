@@ -114,7 +114,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.IntelliSense.Completion
             VerifyWorker(text, validLocation: false, options: Options.Script);
         }
 
-        protected static string AddInsideMethod(string text)
+        protected string AddInsideMethod(string text)
         {
             return
 @"class C
@@ -126,7 +126,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.IntelliSense.Completion
 }";
         }
 
-        protected static string AddInsideClass(string text)
+        protected string AddInsideClass(string text)
         {
             return
 @"class C

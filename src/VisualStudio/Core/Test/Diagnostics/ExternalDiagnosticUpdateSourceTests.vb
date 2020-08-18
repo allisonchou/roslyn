@@ -7,8 +7,6 @@ Imports System.Threading
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.CommonDiagnosticAnalyzers
 Imports Microsoft.CodeAnalysis.Diagnostics
-Imports Microsoft.CodeAnalysis.Editor.UnitTests
-Imports Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 Imports Microsoft.CodeAnalysis.PooledObjects
 Imports Microsoft.CodeAnalysis.Shared.TestHooks
@@ -22,10 +20,6 @@ Imports Roslyn.Utilities
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
     <[UseExportProvider]>
     Public Class ExternalDiagnosticUpdateSourceTests
-        Private Shared ReadOnly s_compositionWithMockDiagnosticUpdateSourceRegistrationService As TestComposition = EditorTestCompositions.EditorFeatures _
-            .AddExcludedPartTypes(GetType(IDiagnosticUpdateSourceRegistrationService)) _
-            .AddParts(GetType(MockDiagnosticUpdateSourceRegistrationService))
-
         <Fact>
         Public Sub TestExternalDiagnostics_SupportGetDiagnostics()
             Using workspace = TestWorkspace.CreateCSharp(String.Empty)
@@ -208,7 +202,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
 
         <Fact>
         Public Async Function TestExternalDiagnostics_CompilationEndAnalyzer() As Task
-            Using workspace = TestWorkspace.CreateCSharp(String.Empty, composition:=s_compositionWithMockDiagnosticUpdateSourceRegistrationService)
+            Using workspace = TestWorkspace.CreateCSharp(String.Empty)
                 Dim analyzer = New CompilationEndAnalyzer()
                 Dim compiler = DiagnosticExtensions.GetCompilerDiagnosticAnalyzer(LanguageNames.CSharp)
 
@@ -219,8 +213,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
 
                 Dim project = workspace.CurrentSolution.Projects.First()
 
-                Assert.IsType(Of MockDiagnosticUpdateSourceRegistrationService)(workspace.GetService(Of IDiagnosticUpdateSourceRegistrationService)())
-                Dim service = Assert.IsType(Of DiagnosticAnalyzerService)(workspace.GetService(Of IDiagnosticAnalyzerService)())
+                Dim service = New Microsoft.CodeAnalysis.Diagnostics.TestDiagnosticAnalyzerService()
                 Dim registation = service.CreateIncrementalAnalyzer(workspace)
 
                 Dim source = New ExternalErrorDiagnosticUpdateSource(workspace, service, waiter)
@@ -241,7 +234,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
 
         <Fact>
         Public Async Function TestExternalDiagnostics_CompilationAnalyzer() As Task
-            Using workspace = TestWorkspace.CreateCSharp(String.Empty, composition:=s_compositionWithMockDiagnosticUpdateSourceRegistrationService)
+            Using workspace = TestWorkspace.CreateCSharp(String.Empty)
                 Dim analyzer = New CompilationAnalyzer()
                 Dim compiler = DiagnosticExtensions.GetCompilerDiagnosticAnalyzer(LanguageNames.CSharp)
 
@@ -252,8 +245,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
 
                 Dim project = workspace.CurrentSolution.Projects.First()
 
-                Assert.IsType(Of MockDiagnosticUpdateSourceRegistrationService)(workspace.GetService(Of IDiagnosticUpdateSourceRegistrationService)())
-                Dim service = Assert.IsType(Of DiagnosticAnalyzerService)(workspace.GetService(Of IDiagnosticAnalyzerService)())
+                Dim service = New Microsoft.CodeAnalysis.Diagnostics.TestDiagnosticAnalyzerService()
                 Dim registation = service.CreateIncrementalAnalyzer(workspace)
 
                 Dim source = New ExternalErrorDiagnosticUpdateSource(workspace, service, waiter)
@@ -274,7 +266,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
 
         <Fact>
         Public Async Function TestExternalDiagnostics_CompilationAnalyzerWithFSAOn() As Task
-            Using workspace = TestWorkspace.CreateCSharp(String.Empty, composition:=s_compositionWithMockDiagnosticUpdateSourceRegistrationService)
+            Using workspace = TestWorkspace.CreateCSharp(String.Empty)
                 ' turn on FSA
                 Dim options = workspace.CurrentSolution.Options.WithChangedOption(
                     SolutionCrawlerOptions.BackgroundAnalysisScopeOption, LanguageNames.CSharp, BackgroundAnalysisScope.FullSolution)
@@ -288,8 +280,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
                 Dim waiter = New AsynchronousOperationListener()
                 Dim project = workspace.CurrentSolution.Projects.First()
 
-                Assert.IsType(Of MockDiagnosticUpdateSourceRegistrationService)(workspace.GetService(Of IDiagnosticUpdateSourceRegistrationService)())
-                Dim service = Assert.IsType(Of DiagnosticAnalyzerService)(workspace.GetService(Of IDiagnosticAnalyzerService)())
+                Dim service = New Microsoft.CodeAnalysis.Diagnostics.TestDiagnosticAnalyzerService()
                 Dim registation = service.CreateIncrementalAnalyzer(workspace)
 
                 Dim source = New ExternalErrorDiagnosticUpdateSource(workspace, service, waiter)
@@ -345,7 +336,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
 
         <Fact>
         Public Async Function TestCompilerDiagnosticWithoutDocumentId() As Task
-            Using workspace = TestWorkspace.CreateCSharp(String.Empty, composition:=s_compositionWithMockDiagnosticUpdateSourceRegistrationService)
+            Using workspace = TestWorkspace.CreateCSharp(String.Empty)
                 Dim analyzer = New CompilationAnalyzer()
                 Dim compiler = DiagnosticExtensions.GetCompilerDiagnosticAnalyzer(LanguageNames.CSharp)
 
@@ -357,8 +348,9 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Diagnostics
 
                 Dim project = workspace.CurrentSolution.Projects.First()
 
-                Assert.IsType(Of MockDiagnosticUpdateSourceRegistrationService)(workspace.GetService(Of IDiagnosticUpdateSourceRegistrationService)())
-                Dim service = Assert.IsType(Of DiagnosticAnalyzerService)(workspace.GetService(Of IDiagnosticAnalyzerService)())
+                Dim diagnosticWaiter = TryCast(listenerProvider.GetListener(FeatureAttribute.DiagnosticService), AsynchronousOperationListener)
+
+                Dim service = New Microsoft.CodeAnalysis.Diagnostics.TestDiagnosticAnalyzerService(listener:=diagnosticWaiter)
                 Dim registation = service.CreateIncrementalAnalyzer(workspace)
                 Dim source = New ExternalErrorDiagnosticUpdateSource(workspace, service, waiter)
 

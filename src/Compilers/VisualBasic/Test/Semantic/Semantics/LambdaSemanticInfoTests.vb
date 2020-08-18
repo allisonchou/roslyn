@@ -1035,7 +1035,7 @@ Namespace ThenIncludeIntellisenseBug
     End Module
 End Namespace"
     ]]></file>
-</compilation>, references:={TestMetadata.Net40.SystemCore})
+</compilation>, references:={SystemCoreRef})
 
             Dim tree = compilation.SyntaxTrees(0)
             Dim model = compilation.GetSemanticModel(tree)

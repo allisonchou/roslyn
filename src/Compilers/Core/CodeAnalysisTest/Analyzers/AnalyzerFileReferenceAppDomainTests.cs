@@ -91,9 +91,8 @@ public class TestAnalyzer : DiagnosticAnalyzer
                 new SyntaxTree[] { CSharp.SyntaxFactory.ParseSyntaxTree(analyzerSource) },
                 new MetadataReference[]
                 {
-                    TestMetadata.NetStandard20.mscorlib,
-                    TestMetadata.NetStandard20.netstandard,
-                    TestMetadata.NetStandard20.SystemRuntime,
+                    TestReferences.NetStandard20.NetStandard,
+                    TestReferences.NetStandard20.SystemRuntimeRef,
                     MetadataReference.CreateFromFile(immutable.Path),
                     MetadataReference.CreateFromFile(analyzer.Path)
                 },

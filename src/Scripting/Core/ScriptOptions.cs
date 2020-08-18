@@ -25,7 +25,7 @@ namespace Microsoft.CodeAnalysis.Scripting
             filePath: string.Empty,
             references: GetDefaultMetadataReferences(),
             namespaces: ImmutableArray<string>.Empty,
-            metadataResolver: ScriptMetadataResolver.Default,
+            metadataResolver: RuntimeMetadataReferenceResolver.Default,
             sourceResolver: SourceFileResolver.Default,
             emitDebugInformation: false,
             fileEncoding: null,

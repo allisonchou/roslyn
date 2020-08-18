@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting.Rules;
-using Microsoft.CodeAnalysis.LanguageServices;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Shared.Utilities;
 using Microsoft.CodeAnalysis.Text;
@@ -24,14 +23,12 @@ namespace Microsoft.CodeAnalysis.Formatting
         private readonly ChainedFormattingRules _formattingRules;
         private readonly int _tabSize;
         private readonly int _indentationSize;
-        private readonly ISyntaxFacts _syntaxFacts;
 
         public BottomUpBaseIndentationFinder(
             ChainedFormattingRules formattingRules,
             int tabSize,
             int indentationSize,
-            TokenStream? tokenStream,
-            ISyntaxFacts syntaxFacts)
+            TokenStream? tokenStream)
         {
             Contract.ThrowIfNull(formattingRules);
 
@@ -39,7 +36,6 @@ namespace Microsoft.CodeAnalysis.Formatting
             _tabSize = tabSize;
             _indentationSize = indentationSize;
             _tokenStream = tokenStream;
-            _syntaxFacts = syntaxFacts;
         }
 
         public int? FromIndentBlockOperations(
@@ -171,8 +167,7 @@ namespace Microsoft.CodeAnalysis.Formatting
                 }
 
                 var baseIndentation = tokenColumnGetter(baseToken);
-                var delta = operation.GetAdjustedIndentationDelta(_syntaxFacts, root, baseToken);
-                return Math.Max(0, baseIndentation + (indentationLevel + delta) * _indentationSize);
+                return Math.Max(0, baseIndentation + (indentationLevel + operation.IndentationDeltaOrPosition) * _indentationSize);
             }
 
             if (operation.Option.IsOn(IndentBlockOption.AbsolutePosition))

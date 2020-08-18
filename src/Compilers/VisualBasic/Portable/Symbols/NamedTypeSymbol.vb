@@ -1007,43 +1007,30 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Symbols
 
         Private Function DeriveUseSiteErrorInfoFromTypeArguments() As DiagnosticInfo
             Dim argsErrorInfo As DiagnosticInfo = Nothing
-            Dim currentType As NamedTypeSymbol = Me
 
-            Do
-                For Each arg As TypeSymbol In currentType.TypeArgumentsNoUseSiteDiagnostics
-                    Dim errorInfo As DiagnosticInfo = DeriveUseSiteErrorInfoFromType(arg)
+            For Each arg As TypeSymbol In Me.TypeArgumentsNoUseSiteDiagnostics
+                Dim errorInfo As DiagnosticInfo = DeriveUseSiteErrorInfoFromType(arg)
 
-                    If errorInfo IsNot Nothing Then
-                        If errorInfo.Code = ERRID.ERR_UnsupportedType1 Then
-                            Return errorInfo
-                        End If
-
-                        If argsErrorInfo Is Nothing Then
-                            argsErrorInfo = errorInfo
-                        End If
+                If errorInfo IsNot Nothing Then
+                    If errorInfo.Code = ERRID.ERR_UnsupportedType1 Then
+                        Return errorInfo
                     End If
-                Next
 
-                If currentType.HasTypeArgumentsCustomModifiers Then
-                    Dim modifiersErrorInfo As DiagnosticInfo = Nothing
-
-                    For i As Integer = 0 To currentType.Arity - 1
-                        modifiersErrorInfo = MergeUseSiteErrorInfo(modifiersErrorInfo, DeriveUseSiteErrorInfoFromCustomModifiers(currentType.GetTypeArgumentCustomModifiers(i)))
-                    Next
-
-                    If modifiersErrorInfo IsNot Nothing Then
-                        If modifiersErrorInfo.Code = ERRID.ERR_UnsupportedType1 Then
-                            Return modifiersErrorInfo
-                        End If
-
-                        If argsErrorInfo Is Nothing Then
-                            argsErrorInfo = modifiersErrorInfo
-                        End If
+                    If argsErrorInfo Is Nothing Then
+                        argsErrorInfo = errorInfo
                     End If
                 End If
+            Next
 
-                currentType = currentType.ContainingType
-            Loop While currentType IsNot Nothing AndAlso Not currentType.IsDefinition
+            If Me.HasTypeArgumentsCustomModifiers Then
+                Dim modifiersErrorInfo As DiagnosticInfo = Nothing
+
+                For i As Integer = 0 To Me.Arity - 1
+                    modifiersErrorInfo = MergeUseSiteErrorInfo(modifiersErrorInfo, DeriveUseSiteErrorInfoFromCustomModifiers(Me.GetTypeArgumentCustomModifiers(i)))
+                Next
+
+                Return MergeUseSiteErrorInfo(argsErrorInfo, modifiersErrorInfo)
+            End If
 
             Return argsErrorInfo
         End Function

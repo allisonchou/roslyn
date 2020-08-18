@@ -2,7 +2,6 @@
 ' The .NET Foundation licenses this file to you under the MIT license.
 ' See the LICENSE file in the project root for more information.
 
-' These tests specifically cover late binding scenarios
 Option Strict Off
 
 Imports System.Dynamic

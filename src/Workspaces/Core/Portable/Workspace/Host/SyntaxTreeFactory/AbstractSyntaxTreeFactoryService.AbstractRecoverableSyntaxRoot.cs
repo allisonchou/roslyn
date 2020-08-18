@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
@@ -24,19 +25,24 @@ namespace Microsoft.CodeAnalysis.Host
             public readonly ValueSource<TextAndVersion> TextSource;
             public readonly Encoding Encoding;
             public readonly int Length;
+            public readonly ImmutableDictionary<string, ReportDiagnostic> DiagnosticOptions;
 
             public SyntaxTreeInfo(
                 string filePath,
                 ParseOptions options,
                 ValueSource<TextAndVersion> textSource,
                 Encoding encoding,
-                int length)
+                int length,
+                ImmutableDictionary<string, ReportDiagnostic> diagnosticOptions)
             {
+                RoslynDebug.Assert(diagnosticOptions is object);
+
                 FilePath = filePath ?? string.Empty;
                 Options = options;
                 TextSource = textSource;
                 Encoding = encoding;
                 Length = length;
+                DiagnosticOptions = diagnosticOptions;
             }
 
             internal bool TryGetText([NotNullWhen(true)] out SourceText? text)
@@ -64,7 +70,8 @@ namespace Microsoft.CodeAnalysis.Host
                     Options,
                     TextSource,
                     Encoding,
-                    Length);
+                    Length,
+                    DiagnosticOptions);
             }
 
             internal SyntaxTreeInfo WithOptionsAndLength(ParseOptions options, int length)
@@ -74,7 +81,20 @@ namespace Microsoft.CodeAnalysis.Host
                     options,
                     TextSource,
                     Encoding,
-                    length);
+                    length,
+                    DiagnosticOptions);
+            }
+
+            internal SyntaxTreeInfo WithDiagnosticOptions(ImmutableDictionary<string, ReportDiagnostic> options)
+            {
+                RoslynDebug.Assert(options is object);
+                return new SyntaxTreeInfo(
+                    FilePath,
+                    Options,
+                    TextSource,
+                    Encoding,
+                    Length,
+                    options);
             }
         }
 

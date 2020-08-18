@@ -91,7 +91,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             textView.SetSelection(anchor, active);
         }
 
-        public void Undo(ITextBuffer _)
+        public void Undo(ITextBuffer subjectBuffer)
         {
             if (this.UndoStack.Count > 0)
             {
@@ -105,7 +105,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
         }
 
-        public void Redo(ITextBuffer _)
+        public void Redo(ITextBuffer subjectBuffer)
         {
             if (this.RedoStack.Count > 0)
             {
@@ -144,7 +144,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
         }
 
-        protected static string GetUndoTransactionDescription(string replacementText)
+        protected string GetUndoTransactionDescription(string replacementText)
             => replacementText == string.Empty ? "Delete Text" : replacementText;
     }
 }

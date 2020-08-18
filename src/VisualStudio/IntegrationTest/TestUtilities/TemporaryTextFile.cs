@@ -12,9 +12,9 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities
     /// </summary>
     public class TemporaryTextFile : IDisposable
     {
-        private readonly string _fileName;
-        private readonly string _content;
-        private readonly string _path;
+        private string _fileName;
+        private string _content;
+        private string _path;
 
         public TemporaryTextFile(string fileName, string content)
         {
@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities
         {
             IntegrationHelper.CreateDirectory(_path, deleteExisting: true);
 
-            using (var stream = File.Create(FullName))
+            using (FileStream stream = File.Create(FullName))
             {
             }
 

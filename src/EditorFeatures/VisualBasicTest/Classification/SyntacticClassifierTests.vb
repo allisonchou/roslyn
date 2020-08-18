@@ -5,25 +5,22 @@
 Imports System.Collections.Immutable
 Imports Microsoft.CodeAnalysis.Classification
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Classification.FormattedClassifications
-Imports Microsoft.CodeAnalysis.Remote.Testing
 Imports Microsoft.CodeAnalysis.Text
 
 Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
-    <Trait(Traits.Feature, Traits.Features.Classification)>
     Public Class SyntacticClassifierTests
         Inherits AbstractVisualBasicClassifierTests
 
-        Protected Overrides Function GetClassificationSpansAsync(code As String, span As TextSpan, parseOptions As ParseOptions, testHost As TestHost) As Task(Of ImmutableArray(Of ClassifiedSpan))
-            Using workspace = CreateWorkspace(code, testHost)
+        Protected Overrides Function GetClassificationSpansAsync(code As String, span As TextSpan, parseOptions As ParseOptions, outOfProcess As Boolean) As Task(Of ImmutableArray(Of ClassifiedSpan))
+            Using workspace = CreateWorkspace(code, outOfProcess)
                 Dim document = workspace.CurrentSolution.Projects.First().Documents.First()
                 Return GetSyntacticClassificationsAsync(document, span)
             End Using
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName1() As Task
             Await TestInExpressionAsync("<goo></goo>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlDelimiter(">"),
@@ -32,71 +29,63 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName2() As Task
             Await TestInExpressionAsync("<goo",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName3() As Task
             Await TestInExpressionAsync("<goo>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName4() As Task
             Await TestInExpressionAsync("<goo.",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo."))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName5() As Task
             Await TestInExpressionAsync("<goo.b",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo.b"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName6() As Task
             Await TestInExpressionAsync("<goo.b>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo.b"),
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName7(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName7() As Task
             Await TestInExpressionAsync("<goo:",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlName(":"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName8(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName8() As Task
             Await TestInExpressionAsync("<goo:b",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlName(":"),
                 VBXmlName("b"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlStartElementName9(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlStartElementName9() As Task
             Await TestInExpressionAsync("<goo:b>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlName(":"),
@@ -104,47 +93,42 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmptyElementName1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmptyElementName1() As Task
             Await TestInExpressionAsync("<goo/>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmptyElementName2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmptyElementName2() As Task
             Await TestInExpressionAsync("<goo. />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo."),
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmptyElementName3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmptyElementName3() As Task
             Await TestInExpressionAsync("<goo.bar />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo.bar"),
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmptyElementName4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmptyElementName4() As Task
             Await TestInExpressionAsync("<goo: />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlName(":"),
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmptyElementName5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmptyElementName5() As Task
             Await TestInExpressionAsync("<goo:bar />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlName(":"),
@@ -152,38 +136,34 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeName1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeName1() As Task
             Await TestInExpressionAsync("<goo b",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("b"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeName2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeName2() As Task
             Await TestInExpressionAsync("<goo ba",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("ba"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeName3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeName3() As Task
             Await TestInExpressionAsync("<goo bar=",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
                 VBXmlDelimiter("="))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValue1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValue1() As Task
             Await TestInExpressionAsync("<goo bar=""",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -191,10 +171,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValue2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValue2() As Task
             Await TestInExpressionAsync("<goo bar=""b",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -203,10 +182,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeValue("b" & vbCrLf))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValue3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValue3() As Task
             Await TestInExpressionAsync("<goo bar=""ba",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -215,10 +193,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeValue("ba" & vbCrLf))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValue4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValue4() As Task
             Await TestInExpressionAsync("<goo bar=""ba""",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -228,10 +205,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValue5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValue5() As Task
             Await TestInExpressionAsync("<goo bar=""""",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -240,10 +216,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValue6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValue6() As Task
             Await TestInExpressionAsync("<goo bar=""b""",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -253,10 +228,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValue7(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValue7() As Task
             Await TestInExpressionAsync("<goo bar=""ba""",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -266,10 +240,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValueMultiple1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValueMultiple1() As Task
             Await TestInExpressionAsync("<goo bar=""ba"" baz="""" ",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -283,10 +256,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeValueMultiple2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeValueMultiple2() As Task
             Await TestInExpressionAsync("<goo bar=""ba"" baz=""a"" ",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -301,10 +273,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementContent1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementContent1() As Task
             Await TestInExpressionAsync("<f>&l</f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -315,10 +286,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementContent2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementContent2() As Task
             Await TestInExpressionAsync("<f>goo</f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -328,10 +298,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementContent3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementContent3() As Task
             Await TestInExpressionAsync("<f>&#x03C0;</f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -341,10 +310,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementContent4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementContent4() As Task
             Await TestInExpressionAsync("<f>goo &#x03C0;</f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -355,10 +323,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementContent5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementContent5() As Task
             Await TestInExpressionAsync("<f>goo &lt;</f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -369,10 +336,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementContent6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementContent6() As Task
             Await TestInExpressionAsync("<f>goo &lt; bar</f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -384,10 +350,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementContent7(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementContent7() As Task
             Await TestInExpressionAsync("<f>goo &lt;",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -395,10 +360,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlEntityReference("&lt;"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlCData1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlCData1() As Task
             Await TestInExpressionAsync("<f><![CDATA[bar]]></f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -410,10 +374,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlCData4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlCData4() As Task
             Await TestInExpressionAsync("<f><![CDATA[bar]]>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -422,10 +385,9 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter("]]>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlCData5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlCData5() As Task
             Await TestInExpressionAsync("<f><![CDATA[<>/]]>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -434,14 +396,13 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Classification
                 VBXmlDelimiter("]]>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlCData6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlCData6() As Task
             Dim code =
 "<f><![CDATA[goo
 baz]]></f>"
 
             Await TestInExpressionAsync(code,
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -454,37 +415,33 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAtElementName1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAtElementName1() As Task
             Await TestInExpressionAsync("<<%= ",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlEmbeddedExpression("<%="))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAtElementName2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAtElementName2() As Task
             Await TestInExpressionAsync("<<%= %>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlEmbeddedExpression("<%="),
                 VBXmlEmbeddedExpression("%>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAtElementName3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAtElementName3() As Task
             Await TestInExpressionAsync("<<%= bar %>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlEmbeddedExpression("<%="),
                 Identifier("bar"),
                 VBXmlEmbeddedExpression("%>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAtElementName4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAtElementName4() As Task
             Await TestInExpressionAsync("<<%= bar.Baz() %>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlEmbeddedExpression("<%="),
                 Identifier("bar"),
@@ -495,10 +452,9 @@ baz]]></f>"
                 VBXmlEmbeddedExpression("%>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAtElementName5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAtElementName5() As Task
             Await TestInExpressionAsync("<<%= bar.Baz() %> />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlEmbeddedExpression("<%="),
                 Identifier("bar"),
@@ -510,10 +466,9 @@ baz]]></f>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAtElementName6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAtElementName6() As Task
             Await TestInExpressionAsync("<<%= bar %> />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlEmbeddedExpression("<%="),
                 Identifier("bar"),
@@ -521,10 +476,9 @@ baz]]></f>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsAttribute1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsAttribute1() As Task
             Await TestInExpressionAsync("<goo <%= bar %>>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlEmbeddedExpression("<%="),
@@ -533,10 +487,9 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsAttribute2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsAttribute2() As Task
             Await TestInExpressionAsync("<goo <%= bar %>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlEmbeddedExpression("<%="),
@@ -544,10 +497,9 @@ baz]]></f>"
                 VBXmlEmbeddedExpression("%>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsAttribute3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsAttribute3() As Task
             Await TestInExpressionAsync("<goo <%= bar %>></goo>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlEmbeddedExpression("<%="),
@@ -559,10 +511,9 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsAttribute4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsAttribute4() As Task
             Await TestInExpressionAsync("<goo <%= bar %> />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlEmbeddedExpression("<%="),
@@ -571,10 +522,9 @@ baz]]></f>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsAttributeValue1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsAttributeValue1() As Task
             Await TestInExpressionAsync("<goo bar=<%=baz >",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -584,10 +534,9 @@ baz]]></f>"
                 Operators.GreaterThan)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsAttributeValue2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsAttributeValue2() As Task
             Await TestInExpressionAsync("<goo bar=<%=baz %> >",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -598,10 +547,9 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsAttributeValue3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsAttributeValue3() As Task
             Await TestInExpressionAsync("<goo bar=<%=baz.Goo %> >",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("bar"),
@@ -614,10 +562,9 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsElementContent1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsElementContent1() As Task
             Await TestInExpressionAsync("<f><%= bar %></f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -629,10 +576,9 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsElementContent2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsElementContent2() As Task
             Await TestInExpressionAsync("<f><%= bar.Goo %></f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -646,10 +592,9 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsElementContent3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsElementContent3() As Task
             Await TestInExpressionAsync("<f><%= bar.Goo %> jaz</f>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("f"),
                 VBXmlDelimiter(">"),
@@ -664,8 +609,8 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsElementContentNested(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsElementContentNested() As Task
             Dim code =
 "Dim doc = _
     <goo>
@@ -675,7 +620,6 @@ baz]]></f>"
     </goo>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("doc"),
                 Operators.Equals,
@@ -703,8 +647,8 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbeddedExpressionAsElementContentNestedCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbeddedExpressionAsElementContentNestedCommentsAfterLineContinuation() As Task
             Dim code =
 "Dim doc = _ ' Test
     <goo>
@@ -714,7 +658,6 @@ baz]]></f>"
     </goo>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("doc"),
                 Operators.Equals,
@@ -743,15 +686,14 @@ baz]]></f>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiteralsInLambdas(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiteralsInLambdas() As Task
             Dim code =
 "Dim x = Function() _
                     <element val=""something""/>
 Dim y = Function() <element val=""something""/>"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("x"),
                 Operators.Equals,
@@ -783,15 +725,14 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiteralsInLambdasCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiteralsInLambdasCommentsAfterLineContinuation() As Task
             Dim code =
 "Dim x = Function() _ 'Test
                     <element val=""something""/>
 Dim y = Function() <element val=""something""/>"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("x"),
                 Operators.Equals,
@@ -824,10 +765,9 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocumentPrologue(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocumentPrologue() As Task
             Await TestInExpressionAsync("<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>",
-                testHost,
                 VBXmlDelimiter("<?"),
                 VBXmlName("xml"),
                 VBXmlAttributeName("version"),
@@ -848,8 +788,8 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter("?>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals1() As Task
             Dim code =
 "Dim a = <Customer id1=""1"" id2=""2"" id3=<%= n2 %> id4="""">
                     <!-- This is a simple Xml element with all of the node types -->
@@ -863,7 +803,6 @@ Dim y = Function() <element val=""something""/>"
                 </Customer>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("a"),
                 Operators.Equals,
@@ -939,8 +878,8 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals2() As Task
             Dim code =
 "Dim b = <?xml version=""1.0""?>
          <!-- comment before the root -->
@@ -957,7 +896,6 @@ Dim y = Function() <element val=""something""/>"
          </p:Customer>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("b"),
                 Operators.Equals,
@@ -1076,14 +1014,13 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals3() As Task
             Dim code =
 "Dim c = <p:x xmlns:p=""abc
 123""/>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("c"),
                 Operators.Equals,
@@ -1102,15 +1039,14 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals4() As Task
             Dim code =
 "Dim d = _
         <?xml version=""1.0""?>
         <a/>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("d"),
                 Operators.Equals,
@@ -1128,15 +1064,14 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals4CommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals4CommentsAfterLineContinuation() As Task
             Dim code =
 "Dim d = _ ' Test
         <?xml version=""1.0""?>
         <a/>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("d"),
                 Operators.Equals,
@@ -1155,8 +1090,8 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals5() As Task
             Dim code =
 "Dim i = 100
         Process( _
@@ -1164,7 +1099,6 @@ Dim y = Function() <element val=""something""/>"
                 </Customer>)"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("i"),
                 Operators.Equals,
@@ -1192,8 +1126,8 @@ Dim y = Function() <element val=""something""/>"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals5CommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals5CommentsAfterLineContinuation() As Task
             Dim code =
 "Dim i = 100
         Process( _ '    Test
@@ -1201,7 +1135,6 @@ Dim y = Function() <element val=""something""/>"
                 </Customer>)"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("i"),
                 Operators.Equals,
@@ -1230,8 +1163,8 @@ Dim y = Function() <element val=""something""/>"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals6() As Task
             Dim code =
 "Dim xmlwithkeywords = <MODULE>
                            <CLASS>
@@ -1246,7 +1179,6 @@ Dim y = Function() <element val=""something""/>"
                        </MODULE>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("xmlwithkeywords"),
                 Operators.Equals,
@@ -1300,14 +1232,13 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlLiterals7(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlLiterals7() As Task
             Dim code =
 "Dim spacetest = <a b=""1"" c=""2"">
                  </a>"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("spacetest"),
                 Operators.Equals,
@@ -1329,8 +1260,8 @@ Dim y = Function() <element val=""something""/>"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestOptionKeywordsInClassContext(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestOptionKeywordsInClassContext() As Task
             Dim code =
 "Class OptionNoContext
     Dim Infer
@@ -1343,7 +1274,6 @@ Dim y = Function() <element val=""something""/>"
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("OptionNoContext"),
                 Keyword("Dim"),
@@ -1364,14 +1294,13 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestOptionInferAndExplicit(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestOptionInferAndExplicit() As Task
             Dim text =
 "Option Infer On
 Option Explicit Off"
 
             Await TestAsync(text,
-                testHost,
                 Keyword("Option"),
                 Keyword("Infer"),
                 Keyword("On"),
@@ -1380,14 +1309,13 @@ Option Explicit Off"
                 Keyword("Off"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestOptionCompareTextBinary(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestOptionCompareTextBinary() As Task
             Dim code =
 "Option Compare Text ' comment
 Option Compare Binary "
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Option"),
                 Keyword("Compare"),
                 Keyword("Text"),
@@ -1397,32 +1325,29 @@ Option Compare Binary "
                 Keyword("Binary"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestOptionInfer1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestOptionInfer1() As Task
             Await TestAsync("Option Infer",
-                testHost,
                 Keyword("Option"),
                 Keyword("Infer"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestOptionExplicit1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestOptionExplicit1() As Task
             Await TestAsync("Option Explicit",
-                testHost,
                 Keyword("Option"),
                 Keyword("Explicit"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestOptionStrict1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestOptionStrict1() As Task
             Await TestAsync("Option Strict",
-                testHost,
                 Keyword("Option"),
                 Keyword("Strict"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestLinqContextualKeywords(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestLinqContextualKeywords() As Task
             Dim code =
 "Dim from = 0
 Dim aggregate = 0
@@ -1440,7 +1365,6 @@ Dim where = 0
 Dim order = 0"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("from"),
                 Operators.Equals,
@@ -1499,20 +1423,18 @@ Dim order = 0"
                 Number("0"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestFromLinqExpression1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFromLinqExpression1() As Task
             Await TestInExpressionAsync("From it in goo",
-                testHost,
                 Keyword("From"),
                 Identifier("it"),
                 Keyword("in"),
                 Identifier("goo"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestFromLinqExpression2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFromLinqExpression2() As Task
             Await TestInExpressionAsync("From it in goofooo.Goo",
-                testHost,
                 Keyword("From"),
                 Identifier("it"),
                 Keyword("in"),
@@ -1521,42 +1443,38 @@ Dim order = 0"
                 Identifier("Goo"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestFromLinqExpression3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFromLinqExpression3() As Task
             Await TestInExpressionAsync("From it ",
-                testHost,
                 Keyword("From"),
                 Identifier("it"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestFromNotInContext1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFromNotInContext1() As Task
             Dim code =
 "Class From
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("From"),
                 Keyword("End"),
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestFromNotInContext2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFromNotInContext2() As Task
             Await TestInMethodAsync("Dim from = 42",
-                testHost,
                 Keyword("Dim"),
                 Local("from"),
                 Operators.Equals,
                 Number("42"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestWhereLinqExpression1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestWhereLinqExpression1() As Task
             Await TestInExpressionAsync("From it in goo Where it <> 4",
-                testHost,
                 Keyword("From"),
                 Identifier("it"),
                 Keyword("in"),
@@ -1567,8 +1485,8 @@ End Class"
                 Number("4"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestLinqQuery1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestLinqQuery1() As Task
             Dim code =
 "Dim src = New List(Of Boolean)
 Dim var3 = 1
@@ -1582,7 +1500,6 @@ Dim q = From var1 In src Where var1 And True _
         Group Join var6 In src On var6 Equals var5 Into var7 Into var8 = Count()"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("src"),
                 Operators.Equals,
@@ -1676,8 +1593,8 @@ Dim q = From var1 In src Where var1 And True _
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestLinqQuery1CommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestLinqQuery1CommentsAfterLineContinuation() As Task
             Dim code =
 "Dim src = New List(Of Boolean)
 Dim var3 = 1
@@ -1691,7 +1608,6 @@ Dim q = From var1 In src Where var1 And True _ ' Test 1 space
         Group Join var6 In src On var6 Equals var5 Into var7 Into var8 = Count()"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("src"),
                 Operators.Equals,
@@ -1793,14 +1709,13 @@ Dim q = From var1 In src Where var1 And True _ ' Test 1 space
         End Function
 
         <WorkItem(542387, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/542387")>
-        <Theory, CombinatorialData>
-        Public Async Function TestFromInQuery(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFromInQuery() As Task
             Dim code =
 "Dim From = New List(Of Integer)
 Dim result = From s In From Select s"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("From"),
                 Operators.Equals,
@@ -1821,8 +1736,8 @@ Dim result = From s In From Select s"
                 Identifier("s"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestKeyKeyword1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestKeyKeyword1() As Task
             Dim code =
 "Dim Value = ""Test""
 Dim Key As String = Key.Length & (Key.Length)
@@ -1841,7 +1756,6 @@ o = New With {Key _
                 }"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("Value"),
                 Operators.Equals,
@@ -1940,8 +1854,8 @@ o = New With {Key _
                 Punctuation.CloseCurly)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestKeyKeyword1CommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestKeyKeyword1CommentsAfterLineContinuation() As Task
             Dim code =
 "Dim Value = ""Test""
 Dim Key As String = Key.Length & (Key.Length)
@@ -1960,7 +1874,6 @@ o = New With {Key _ ' Test
                 }"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("Value"),
                 Operators.Equals,
@@ -2069,8 +1982,8 @@ o = New With {Key _ ' Test
                 Punctuation.CloseCurly)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestKeyKeyword2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestKeyKeyword2() As Task
             Dim code =
 "Dim k = 10
 Dim x = New With {Key If(k > 3, 2, -2).GetTypeCode}
@@ -2085,7 +1998,6 @@ Dim z5 As New List(Of Integer) From {1, 2, 3}
 Dim z6 = New List(Of Integer) With {.Capacity = 2}"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("k"),
                 Operators.Equals,
@@ -2252,14 +2164,13 @@ Dim z6 = New List(Of Integer) With {.Capacity = 2}"
                 Punctuation.CloseCurly)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestNamespaceDeclaration(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestNamespaceDeclaration() As Task
             Dim code =
 "Namespace N1.N2
 End Namespace"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Namespace"),
                 [Namespace]("N1"),
                 Operators.Dot,
@@ -2268,36 +2179,33 @@ End Namespace"
                 Keyword("Namespace"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestClassDeclaration1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestClassDeclaration1() As Task
             Dim code = "Class C1"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("C1"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestClassDeclaration2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestClassDeclaration2() As Task
             Dim code =
 "Class C1
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("C1"),
                 Keyword("End"),
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestClassDeclaration3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestClassDeclaration3() As Task
             Dim code = "Class C1 : End Class"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("C1"),
                 Punctuation.Colon,
@@ -2305,22 +2213,20 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestStructDeclaration1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestStructDeclaration1() As Task
             Dim code = "Structure S1"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Structure"),
                 Struct("S1"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestStructDeclaration2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestStructDeclaration2() As Task
             Dim code = "Structure S1 : End Structure"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Structure"),
                 Struct("S1"),
                 Punctuation.Colon,
@@ -2328,36 +2234,33 @@ End Class"
                 Keyword("Structure"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestStructDeclaration3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestStructDeclaration3() As Task
             Dim code =
 "Structure S1
 End Structure"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Structure"),
                 Struct("S1"),
                 Keyword("End"),
                 Keyword("Structure"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestInterfaceDeclaration1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestInterfaceDeclaration1() As Task
             Dim code = "Interface I1"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Interface"),
                 [Interface]("I1"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestInterfaceDeclaration2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestInterfaceDeclaration2() As Task
             Dim code = "Interface I1 : End Interface"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Interface"),
                 [Interface]("I1"),
                 Punctuation.Colon,
@@ -2365,36 +2268,33 @@ End Structure"
                 Keyword("Interface"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestInterfaceDeclaration3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestInterfaceDeclaration3() As Task
             Dim code =
 "Interface I1
 End Interface"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Interface"),
                 [Interface]("I1"),
                 Keyword("End"),
                 Keyword("Interface"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestEnumDeclaration1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestEnumDeclaration1() As Task
             Dim code = "Enum E1"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Enum"),
                 [Enum]("E1"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestEnumDeclaration2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestEnumDeclaration2() As Task
             Dim code = "Enum E1 : End Enum"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Enum"),
                 [Enum]("E1"),
                 Punctuation.Colon,
@@ -2402,26 +2302,24 @@ End Interface"
                 Keyword("Enum"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestEnumDeclaration3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestEnumDeclaration3() As Task
             Dim code =
 "Enum E1
 End Enum"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Enum"),
                 [Enum]("E1"),
                 Keyword("End"),
                 Keyword("Enum"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestDelegateSubDeclaration1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestDelegateSubDeclaration1() As Task
             Dim code = "Public Delegate Sub Goo()"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Public"),
                 Keyword("Delegate"),
                 Keyword("Sub"),
@@ -2430,12 +2328,11 @@ End Enum"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestDelegateFunctionDeclaration1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestDelegateFunctionDeclaration1() As Task
             Dim code = "Public Delegate Function Goo() As Integer"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Public"),
                 Keyword("Delegate"),
                 Keyword("Function"),
@@ -2446,12 +2343,11 @@ End Enum"
                 Keyword("Integer"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestTernaryConditionalExpression(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestTernaryConditionalExpression() As Task
             Dim code = "Dim i = If(True, 1, 2)"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("i"),
                 Operators.Equals,
@@ -2465,13 +2361,12 @@ End Enum"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestForStatement(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestForStatement() As Task
             Dim code =
 "For i = 0 To 10
 Exit For"
             Await TestInMethodAsync(code,
-                testHost,
                 ControlKeyword("For"),
                 Identifier("i"),
                 Operators.Equals,
@@ -2482,82 +2377,73 @@ Exit For"
                 ControlKeyword("For"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestFloatLiteral(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFloatLiteral() As Task
             Await TestInExpressionAsync("1.0",
-                testHost,
                 Number("1.0"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIntLiteral(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIntLiteral() As Task
             Await TestInExpressionAsync("1",
-                testHost,
                 Number("1"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestDecimalLiteral(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestDecimalLiteral() As Task
             Await TestInExpressionAsync("123D",
-                testHost,
                 Number("123D"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestStringLiterals1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestStringLiterals1() As Task
             Await TestInExpressionAsync("""goo""",
-                testHost,
                 [String]("""goo"""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestCharacterLiteral(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestCharacterLiteral() As Task
             Await TestInExpressionAsync("""f""c",
-                testHost,
                 [String]("""f""c"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestRegression_DoUntil1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestRegression_DoUntil1() As Task
             Dim code = "Do Until True"
             Await TestInMethodAsync(code,
-                testHost,
                 ControlKeyword("Do"),
                 ControlKeyword("Until"),
                 Keyword("True"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestComment1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestComment1() As Task
             Dim code = "'goo"
 
             Await TestAsync(code,
-                testHost,
-                Comment("'goo"))
+               Comment("'goo"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestComment2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestComment2() As Task
             Dim code =
 "Class C1
 'hello"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("C1"),
                 Comment("'hello"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_SingleLine(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_SingleLine() As Task
             Dim code =
 "'''<summary>something</summary>
 Class Bar
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Delimiter("<"),
                 XmlDoc.Name("summary"),
@@ -2572,8 +2458,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_ExteriorTrivia(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_ExteriorTrivia() As Task
             Dim code =
 "''' <summary>
 ''' something
@@ -2582,7 +2468,6 @@ Class Bar
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.Delimiter("<"),
@@ -2601,8 +2486,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_ExteriorTriviaInsideEndTag(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_ExteriorTriviaInsideEndTag() As Task
             Dim code =
 "''' <summary></
 ''' summary>
@@ -2610,7 +2495,6 @@ Class Bar
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.Delimiter("<"),
@@ -2627,8 +2511,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_AttributesWithExteriorTrivia(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_AttributesWithExteriorTrivia() As Task
             Dim code =
 "''' <summary att1=""value1""
 ''' att2=""value2"">
@@ -2638,7 +2522,6 @@ Class Bar
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.Delimiter("<"),
@@ -2670,8 +2553,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_EmptyElementAttributesWithExteriorTrivia(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_EmptyElementAttributesWithExteriorTrivia() As Task
             Dim code =
 "''' <summary att1=""value1""
 ''' att2=""value2"" />
@@ -2679,7 +2562,6 @@ Class Bar
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.Delimiter("<"),
@@ -2705,8 +2587,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_XmlCommentWithExteriorTrivia(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_XmlCommentWithExteriorTrivia() As Task
             Dim code =
 "'''<summary>
 '''<!--first
@@ -2716,7 +2598,6 @@ Class Bar
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Delimiter("<"),
                 XmlDoc.Name("summary"),
@@ -2737,8 +2618,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_CDataWithExteriorTrivia(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_CDataWithExteriorTrivia() As Task
             Dim code =
 "'''<summary>
 '''<![CDATA[first
@@ -2748,7 +2629,6 @@ Class Bar
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Delimiter("<"),
                 XmlDoc.Name("summary"),
@@ -2769,39 +2649,35 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_PreprocessingInstruction1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_PreprocessingInstruction1() As Task
             Await TestAsync("''' <?",
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.ProcessingInstruction("<?"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_PreprocessingInstruction2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_PreprocessingInstruction2() As Task
             Await TestAsync("''' <??>",
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.ProcessingInstruction("<?"),
                 XmlDoc.ProcessingInstruction("?>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_PreprocessingInstruction3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_PreprocessingInstruction3() As Task
             Await TestAsync("''' <?xml",
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.ProcessingInstruction("<?"),
                 XmlDoc.ProcessingInstruction("xml"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_PreprocessingInstruction4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_PreprocessingInstruction4() As Task
             Await TestAsync("''' <?xml version=""1.0""?>",
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.ProcessingInstruction("<?"),
@@ -2811,10 +2687,9 @@ End Class"
                 XmlDoc.ProcessingInstruction("?>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_PreprocessingInstruction5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_PreprocessingInstruction5() As Task
             Await TestAsync("''' <?goo?>",
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.ProcessingInstruction("<?"),
@@ -2822,10 +2697,9 @@ End Class"
                 XmlDoc.ProcessingInstruction("?>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDocComment_PreprocessingInstruction6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDocComment_PreprocessingInstruction6() As Task
             Await TestAsync("''' <?goo bar?>",
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.ProcessingInstruction("<?"),
@@ -2835,10 +2709,9 @@ End Class"
                 XmlDoc.ProcessingInstruction("?>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIsTrue(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIsTrue() As Task
             Await TestInClassAsync("    Public Shared Operator IsTrue(c As C) As Boolean",
-                testHost,
                 Keyword("Public"),
                 Keyword("Shared"),
                 Keyword("Operator"),
@@ -2852,10 +2725,9 @@ End Class"
                 Keyword("Boolean"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIsFalse(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIsFalse() As Task
             Await TestInClassAsync("    Public Shared Operator IsFalse(c As C) As Boolean",
-                testHost,
                 Keyword("Public"),
                 Keyword("Shared"),
                 Keyword("Operator"),
@@ -2869,10 +2741,9 @@ End Class"
                 Keyword("Boolean"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestDelegate1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestDelegate1() As Task
             Await TestAsync("Delegate Sub Goo()",
-                testHost,
                 Keyword("Delegate"),
                 Keyword("Sub"),
                 [Delegate]("Goo"),
@@ -2880,14 +2751,13 @@ End Class"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestImports1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestImports1() As Task
             Dim code =
 "Imports Goo
 Imports Bar"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Imports"),
                 Identifier("Goo"),
                 Keyword("Imports"),
@@ -2897,27 +2767,25 @@ Imports Bar"
         ''' <summary>
         ''' Clear Syntax Error
         ''' </summary>
-        <Theory, CombinatorialData>
-        Public Async Function TestImports2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestImports2() As Task
             Dim code =
 "Imports
 Imports Bar"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Imports"),
                 Keyword("Imports"),
                 Identifier("Bar"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestImports3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestImports3() As Task
             Dim code =
 "Imports Goo=Baz
 Imports Bar=Quux"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Imports"),
                 Identifier("Goo"),
                 Operators.Equals,
@@ -2928,22 +2796,20 @@ Imports Bar=Quux"
                 Identifier("Quux"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestImports4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestImports4() As Task
             Dim code = "Imports System.Text"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Imports"),
                 Identifier("System"),
                 Operators.Dot,
                 Identifier("Text"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElement1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElement1() As Task
             Await TestInExpressionAsync("<goo></goo>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlDelimiter(">"),
@@ -2955,10 +2821,9 @@ Imports Bar=Quux"
         '''<summary>
         ''' Broken XmlElement should classify
         ''' </summary>
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElement3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElement3() As Task
             Await TestInExpressionAsync("<goo>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlDelimiter(">"))
@@ -2967,19 +2832,17 @@ Imports Bar=Quux"
         '''<summary>
         ''' Broken end only element should still classify
         ''' </summary>
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElement4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElement4() As Task
             Await TestInExpressionAsync("</goo>",
-                testHost,
                 VBXmlDelimiter("</"),
                 VBXmlName("goo"),
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElement5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElement5() As Task
             Await TestInExpressionAsync("<goo.bar></goo.bar>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo.bar"),
                 VBXmlDelimiter(">"),
@@ -2988,10 +2851,9 @@ Imports Bar=Quux"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElement6(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElement6() As Task
             Await TestInExpressionAsync("<goo:bar>hello</goo:bar>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlName(":"),
@@ -3005,19 +2867,17 @@ Imports Bar=Quux"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElement7(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElement7() As Task
             Await TestInExpressionAsync("<goo.bar />",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo.bar"),
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbedded1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbedded1() As Task
             Await TestInExpressionAsync("<goo><%= bar %></goo>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlDelimiter(">"),
@@ -3029,10 +2889,9 @@ Imports Bar=Quux"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbedded3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbedded3() As Task
             Await TestInExpressionAsync("<<%= bar %>/>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlEmbeddedExpression("<%="),
                 Identifier("bar"),
@@ -3040,10 +2899,9 @@ Imports Bar=Quux"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbedded4(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbedded4() As Task
             Await TestInExpressionAsync("<goo <%= bar %>=""42""/>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlEmbeddedExpression("<%="),
@@ -3056,10 +2914,9 @@ Imports Bar=Quux"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlEmbedded5(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlEmbedded5() As Task
             Await TestInExpressionAsync("<goo a1=<%= bar %>/>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("goo"),
                 VBXmlAttributeName("a1"),
@@ -3070,27 +2927,24 @@ Imports Bar=Quux"
                 VBXmlDelimiter("/>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlComment1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlComment1() As Task
             Await TestInExpressionAsync("<!---->",
-                testHost,
                 VBXmlDelimiter("<!--"),
                 VBXmlDelimiter("-->"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlComment2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlComment2() As Task
             Await TestInExpressionAsync("<!--goo-->",
-                testHost,
                 VBXmlDelimiter("<!--"),
                 VBXmlComment("goo"),
                 VBXmlDelimiter("-->"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlComment3(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlComment3() As Task
             Await TestInExpressionAsync("<a><!--goo--></a>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("a"),
                 VBXmlDelimiter(">"),
@@ -3102,10 +2956,9 @@ Imports Bar=Quux"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlPreprocessingInstruction2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlPreprocessingInstruction2() As Task
             Await TestInExpressionAsync("<a><?pi value=2?></a>",
-                testHost,
                 VBXmlDelimiter("<"),
                 VBXmlName("a"),
                 VBXmlDelimiter(">"),
@@ -3118,10 +2971,9 @@ Imports Bar=Quux"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDescendantsMemberAccess1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDescendantsMemberAccess1() As Task
             Await TestInExpressionAsync("x...<goo>",
-                testHost,
                 Identifier("x"),
                 VBXmlDelimiter("."),
                 VBXmlDelimiter("."),
@@ -3131,10 +2983,9 @@ Imports Bar=Quux"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlElementMemberAccess1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlElementMemberAccess1() As Task
             Await TestInExpressionAsync("x.<goo>",
-                testHost,
                 Identifier("x"),
                 VBXmlDelimiter("."),
                 VBXmlDelimiter("<"),
@@ -3142,20 +2993,18 @@ Imports Bar=Quux"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeMemberAccess1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeMemberAccess1() As Task
             Await TestInExpressionAsync("x.@goo",
-                testHost,
                 Identifier("x"),
                 VBXmlDelimiter("."),
                 VBXmlDelimiter("@"),
                 VBXmlAttributeName("goo"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlAttributeMemberAccess2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlAttributeMemberAccess2() As Task
             Await TestInExpressionAsync("x.@goo:bar",
-                testHost,
                 Identifier("x"),
                 VBXmlDelimiter("."),
                 VBXmlDelimiter("@"),
@@ -3164,19 +3013,17 @@ Imports Bar=Quux"
                 VBXmlAttributeName("bar"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorReference(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorReference() As Task
             Await TestInNamespaceAsync("#R ""Ref""",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("R"),
                 [String]("""Ref"""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorConst1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorConst1() As Task
             Await TestInNamespaceAsync("#Const Goo = 1",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("Const"),
                 Identifier("Goo"),
@@ -3184,9 +3031,8 @@ Imports Bar=Quux"
                 Number("1"))
         End Function
 
-        Public Async Function TestPreprocessorConst2(testHost As TestHost) As Task
+        Public Async Function TestPreprocessorConst2() As Task
             Await TestInNamespaceAsync("#Const DebugCode = True",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("Const"),
                 Identifier("DebugCode"),
@@ -3194,47 +3040,42 @@ Imports Bar=Quux"
                 Keyword("True"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorIfThen1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorIfThen1() As Task
             Await TestInNamespaceAsync("#If Goo Then",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("If"),
                 Identifier("Goo"),
                 PPKeyword("Then"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorElseIf1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorElseIf1() As Task
             Await TestInNamespaceAsync("#ElseIf Goo Then",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("ElseIf"),
                 Identifier("Goo"),
                 PPKeyword("Then"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorElse1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorElse1() As Task
             Await TestInNamespaceAsync("#Else",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("Else"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorEndIf1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorEndIf1() As Task
             Await TestInNamespaceAsync("#End If",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("End"),
                 PPKeyword("If"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorExternalSource1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorExternalSource1() As Task
             Await TestInNamespaceAsync("#ExternalSource(""c:\wwwroot\inetpub\test.aspx"", 30)",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("ExternalSource"),
                 Punctuation.OpenParen,
@@ -3244,15 +3085,14 @@ Imports Bar=Quux"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorExternalChecksum1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorExternalChecksum1() As Task
             Dim code =
 "#ExternalChecksum(""c:\wwwroot\inetpub\test.aspx"", _
 ""{12345678-1234-1234-1234-123456789abc}"", _
 ""1a2b3c4e5f617239a49b9a9c0391849d34950f923fab9484"")"
 
             Await TestInNamespaceAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("ExternalChecksum"),
                 Punctuation.OpenParen,
@@ -3266,15 +3106,14 @@ Imports Bar=Quux"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorExternalChecksum1CommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorExternalChecksum1CommentsAfterLineContinuation() As Task
             Dim code =
 "#ExternalChecksum(""c:\wwwroot\inetpub\test.aspx"", _ ' Test
 ""{12345678-1234-1234-1234-123456789abc}"", _ ' Test
 ""1a2b3c4e5f617239a49b9a9c0391849d34950f923fab9484"")"
 
             Await TestInNamespaceAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("ExternalChecksum"),
                 Punctuation.OpenParen,
@@ -3290,8 +3129,8 @@ Imports Bar=Quux"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorExternalChecksum2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorExternalChecksum2() As Task
             Dim code =
 "#ExternalChecksum(""c:\wwwroot\inetpub\test.aspx"", _
 ""{12345678-1234-1234-1234-123456789abc}"", _
@@ -3305,7 +3144,6 @@ Module Test
 End Module"
 
             Await TestInNamespaceAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("ExternalChecksum"),
                 Punctuation.OpenParen,
@@ -3345,8 +3183,8 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreprocessorExternalChecksum2CommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreprocessorExternalChecksum2CommentsAfterLineContinuation() As Task
             Dim code =
 "#ExternalChecksum(""c:\wwwroot\inetpub\test.aspx"", _ ' Test 1
 ""{12345678-1234-1234-1234-123456789abc}"", _ ' Test 2
@@ -3360,7 +3198,6 @@ Module Test
 End Module"
 
             Await TestInNamespaceAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("ExternalChecksum"),
                 Punctuation.OpenParen,
@@ -3402,8 +3239,8 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug2641_1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug2641_1() As Task
             Dim code =
 "Class PreprocessorNoContext
 Dim Region
@@ -3427,7 +3264,6 @@ End _
 Region"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("PreprocessorNoContext"),
                 Keyword("Dim"),
@@ -3478,8 +3314,8 @@ Region"
                 PPKeyword("Region"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug2641_1CommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug2641_1CommentsAfterLineContinuation() As Task
             Dim code =
 "Class PreprocessorNoContext
 Dim Region
@@ -3503,7 +3339,6 @@ End _ ' Test 6
 Region"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("PreprocessorNoContext"),
                 Keyword("Dim"),
@@ -3560,8 +3395,8 @@ Region"
                 PPKeyword("Region"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug2641_2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug2641_2() As Task
             Dim code =
 "#ExternalSource(""Test.vb"", 123)
 #End ExternalSource
@@ -3578,7 +3413,6 @@ End _
 ExternalSource"
 
             Await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("ExternalSource"),
                 Punctuation.OpenParen,
@@ -3620,8 +3454,8 @@ ExternalSource"
                 PPKeyword("ExternalSource"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug2640(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug2640() As Task
             Dim code =
 "# _
 Region ""Test""
@@ -3635,7 +3469,6 @@ End _
 Region"
 
             Await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 LineContinuation,
                 PPKeyword("Region"),
@@ -3656,8 +3489,8 @@ Region"
                 PPKeyword("Region"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug2638(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug2638() As Task
             Dim code =
 "Module M
     Sub Main()
@@ -3666,7 +3499,6 @@ Region"
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("M"),
                 Keyword("Sub"),
@@ -3683,8 +3515,8 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug2562(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug2562() As Task
             Dim code =
 "Module Program
   Sub Main(args As String())
@@ -3694,7 +3526,6 @@ End Module"
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("Program"),
                 Keyword("Sub"),
@@ -3719,8 +3550,8 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug3004(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug3004() As Task
             Dim code =
 "''' <summary>
 ''' &#65;
@@ -3729,7 +3560,6 @@ Module M
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 XmlDoc.Delimiter("'''"),
                 XmlDoc.Text(" "),
                 XmlDoc.Delimiter("<"),
@@ -3749,14 +3579,13 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug3006(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug3006() As Task
             Dim code =
 "#If True Then ' comment
 #End If"
 
             Await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("If"),
                 Keyword("True"),
@@ -3767,14 +3596,13 @@ End Module"
                 PPKeyword("If"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug3008(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug3008() As Task
             Dim code =
 "#If #12/2/2010# = #12/2/2010# Then
 #End If"
 
             Await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("If"),
                 Number("#12/2/2010#"),
@@ -3786,29 +3614,27 @@ End Module"
                 PPKeyword("If"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBug927678(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBug927678() As Task
             Dim code =
             "'This is not usually a " & vbCrLf &
             "'collapsible comment block" & vbCrLf &
             "x = 2"
 
             Await TestInMethodAsync(code,
-                testHost,
-                Comment("'This is not usually a "),
+                         Comment("'This is not usually a "),
                          Comment("'collapsible comment block"),
                          Identifier("x"),
                          Operators.Equals,
                          Number("2"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestAttribute(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestAttribute() As Task
             Dim code = "<Assembly: Goo()>"
 
             Await TestAsync(code,
-                testHost,
-                Punctuation.OpenAngle,
+                 Punctuation.OpenAngle,
                  Keyword("Assembly"),
                  Punctuation.Colon,
                  Identifier("Goo"),
@@ -3817,14 +3643,13 @@ End Module"
                  Punctuation.CloseAngle)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestAngleBracketsOnGenericConstraints_Bug932262(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestAngleBracketsOnGenericConstraints_Bug932262() As Task
             Dim code =
 "Class C(Of T As A(Of T))
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("C"),
                 Punctuation.OpenParen,
@@ -3841,8 +3666,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIntegerAsContextualKeyword(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIntegerAsContextualKeyword() As Task
             Dim code =
 "Sub CallMeInteger(ByVal [Integer] As Integer)
     CallMeInteger(Integer:=1)
@@ -3853,7 +3678,6 @@ End Sub
 Dim [Class] As Integer"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Sub"),
                 Method("CallMeInteger"),
                 Punctuation.OpenParen,
@@ -3884,8 +3708,8 @@ Dim [Class] As Integer"
                 Keyword("Integer"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIntegerAsContextualKeywordCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIntegerAsContextualKeywordCommentsAfterLineContinuation() As Task
             Dim code =
 "Sub CallMeInteger(ByVal [Integer] As Integer)
     CallMeInteger(Integer:=1)
@@ -3896,7 +3720,6 @@ End Sub
 Dim [Class] As Integer"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Sub"),
                 Method("CallMeInteger"),
                 Punctuation.OpenParen,
@@ -3929,8 +3752,8 @@ Dim [Class] As Integer"
                 Keyword("Integer"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIndexStrings(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIndexStrings() As Task
             Dim code =
 "Default ReadOnly Property IndexMe(ByVal arg As String) As Integer
     Get
@@ -3946,7 +3769,6 @@ Dim [Class] As Integer"
 End Property"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Default"),
                 Keyword("ReadOnly"),
                 Keyword("Property"),
@@ -3989,8 +3811,8 @@ End Property"
                 Keyword("Property"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIndexStringsCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIndexStringsCommentsAfterLineContinuation() As Task
             Dim code =
 "Default ReadOnly Property IndexMe(ByVal arg As String) As Integer
     Get
@@ -4006,7 +3828,6 @@ End Property"
 End Property"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Default"),
                 Keyword("ReadOnly"),
                 Keyword("Property"),
@@ -4051,8 +3872,8 @@ End Property"
                 Keyword("Property"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestMyIsIdentifierOnSyntaxLevel(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestMyIsIdentifierOnSyntaxLevel() As Task
             Dim code =
 "Dim My
 Dim var = My.Application.GetEnvironmentVariable(""test"")
@@ -4081,7 +3902,6 @@ Sub CallMeMy(ByVal My As Integer)
 End Sub"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("My"),
                 Keyword("Dim"),
@@ -4176,8 +3996,8 @@ End Sub"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestMyIsIdentifierOnSyntaxLevelCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestMyIsIdentifierOnSyntaxLevelCommentsAfterLineContinuation() As Task
             Dim code =
 "Dim My
 Dim var = My.Application.GetEnvironmentVariable(""test"")
@@ -4206,7 +4026,6 @@ Sub CallMeMy(ByVal My As Integer)
 End Sub"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("My"),
                 Keyword("Dim"),
@@ -4309,8 +4128,8 @@ End Sub"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestIsTrueIsFalse(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestIsTrueIsFalse() As Task
             Dim code =
 "Class IsTrueIsFalseTests
     Dim IsTrue
@@ -4322,7 +4141,6 @@ End Sub"
 End Class"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Class"),
                 [Class]("IsTrueIsFalseTests"),
                 Keyword("Dim"),
@@ -4359,8 +4177,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestDeclareAnsiAutoUnicode(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestDeclareAnsiAutoUnicode() As Task
             Dim code =
 "    Dim Ansi
     Dim Unicode
@@ -4376,7 +4194,6 @@ End Class"
         Unicode Sub UnicodeTest2 Lib ""Test.dll"" ()"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("Ansi"),
                 Keyword("Dim"),
@@ -4436,8 +4253,8 @@ End Class"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestDeclareAnsiAutoUnicodeCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestDeclareAnsiAutoUnicodeCommentsAfterLineContinuation() As Task
             Dim code =
 "    Dim Ansi
     Dim Unicode
@@ -4453,7 +4270,6 @@ End Class"
         Unicode Sub UnicodeTest2 Lib ""Test.dll"" ()"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("Ansi"),
                 Keyword("Dim"),
@@ -4516,8 +4332,8 @@ End Class"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestUntil(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestUntil() As Task
             Dim code =
 "    Dim Until
     Sub TestSub()
@@ -4534,7 +4350,6 @@ End Class"
     End Sub"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("Until"),
                 Keyword("Sub"),
@@ -4563,8 +4378,8 @@ End Class"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestUntilCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestUntilCommentsAfterLineContinuation() As Task
             Dim code =
 "    Dim Until
     Sub TestSub()
@@ -4581,7 +4396,6 @@ End Class"
     End Sub"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("Until"),
                 Keyword("Sub"),
@@ -4612,8 +4426,8 @@ End Class"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreserve(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreserve() As Task
             Dim code =
 "    Dim Preserve
     Sub TestSub()
@@ -4624,7 +4438,6 @@ End Class"
     End Sub"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("Preserve"),
                 Keyword("Sub"),
@@ -4656,8 +4469,8 @@ End Class"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestPreserveCommentsAfterLineContinuation(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestPreserveCommentsAfterLineContinuation() As Task
             Dim code =
 "    Dim Preserve
     Sub TestSub()
@@ -4668,7 +4481,6 @@ End Class"
     End Sub"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Field("Preserve"),
                 Keyword("Sub"),
@@ -4701,8 +4513,8 @@ End Class"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestSkippedTextAsTokens(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestSkippedTextAsTokens() As Task
             Dim code =
 "Module Program
     Sub Test(ByVal readOnly As Boolean)
@@ -4710,7 +4522,6 @@ End Class"
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("Program"),
                 Keyword("Sub"),
@@ -4727,9 +4538,9 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(538647, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/538647")>
-        Public Async Function TestRegression4315_VariableNamesClassifiedAsType(testHost As TestHost) As Task
+        Public Async Function TestRegression4315_VariableNamesClassifiedAsType() As Task
             Dim code =
 "Module M
     Sub S()
@@ -4738,7 +4549,6 @@ End Module"
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("M"),
                 Keyword("Sub"),
@@ -4753,11 +4563,10 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539203, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539203")>
-        Public Async Function TestColonTrivia(testHost As TestHost) As Task
+        Public Async Function TestColonTrivia() As Task
             Await TestInMethodAsync("    : Console.WriteLine()",
-                testHost,
                 Punctuation.Colon,
                 Identifier("Console"),
                 Operators.Dot,
@@ -4766,11 +4575,10 @@ End Module"
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539642, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539642")>
-        Public Async Function TestFromInCollectionInitializer1(testHost As TestHost) As Task
+        Public Async Function TestFromInCollectionInitializer1() As Task
             Await TestInMethodAsync("Dim y = New Goo() From",
-                testHost,
                 Keyword("Dim"),
                 Local("y"),
                 Operators.Equals,
@@ -4781,11 +4589,10 @@ End Module"
                 Keyword("From"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539642, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539642")>
-        Public Async Function TestFromInCollectionInitializer2(testHost As TestHost) As Task
+        Public Async Function TestFromInCollectionInitializer2() As Task
             Await TestInMethodAsync("Dim y As New Goo() From",
-                testHost,
                 Keyword("Dim"),
                 Local("y"),
                 Keyword("As"),
@@ -4796,52 +4603,47 @@ End Module"
                 Keyword("From"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestPartiallyTypedXmlNamespaceImport1(testHost As TestHost) As Task
+        Public Async Function TestPartiallyTypedXmlNamespaceImport1() As Task
             Await TestAsync("Imports <x",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlName("x"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestPartiallyTypedXmlNamespaceImport2(testHost As TestHost) As Task
+        Public Async Function TestPartiallyTypedXmlNamespaceImport2() As Task
             Await TestAsync("Imports <xml",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlName("xml"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestPartiallyTypedXmlNamespaceImport3(testHost As TestHost) As Task
+        Public Async Function TestPartiallyTypedXmlNamespaceImport3() As Task
             Await TestAsync("Imports <xmlns",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlAttributeName("xmlns"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestPartiallyTypedXmlNamespaceImport4(testHost As TestHost) As Task
+        Public Async Function TestPartiallyTypedXmlNamespaceImport4() As Task
             Await TestAsync("Imports <xmlns:",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlAttributeName("xmlns"),
                 VBXmlAttributeName(":"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestPartiallyTypedXmlNamespaceImport5(testHost As TestHost) As Task
+        Public Async Function TestPartiallyTypedXmlNamespaceImport5() As Task
             Await TestAsync("Imports <xmlns:ns",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlAttributeName("xmlns"),
@@ -4849,11 +4651,10 @@ End Module"
                 VBXmlAttributeName("ns"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestPartiallyTypedXmlNamespaceImport6(testHost As TestHost) As Task
+        Public Async Function TestPartiallyTypedXmlNamespaceImport6() As Task
             Await TestAsync("Imports <xmlns:ns=",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlAttributeName("xmlns"),
@@ -4862,11 +4663,10 @@ End Module"
                 VBXmlDelimiter("="))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestPartiallyTypedXmlNamespaceImport7(testHost As TestHost) As Task
+        Public Async Function TestPartiallyTypedXmlNamespaceImport7() As Task
             Await TestAsync("Imports <xmlns:ns=""http://goo""",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlAttributeName("xmlns"),
@@ -4878,11 +4678,10 @@ End Module"
                 VBXmlAttributeQuotes(""""))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(539779, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/539779")>
-        Public Async Function TestFullyTypedXmlNamespaceImport(testHost As TestHost) As Task
+        Public Async Function TestFullyTypedXmlNamespaceImport() As Task
             Await TestAsync("Imports <xmlns:ns=""http://goo"">",
-                testHost,
                 Keyword("Imports"),
                 VBXmlDelimiter("<"),
                 VBXmlAttributeName("xmlns"),
@@ -4895,29 +4694,26 @@ End Module"
                 VBXmlDelimiter(">"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestGetXmlNamespaceExpression(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestGetXmlNamespaceExpression() As Task
             Await TestInExpressionAsync("GetXmlNamespace(Name)",
-                testHost,
                 Keyword("GetXmlNamespace"),
                 Punctuation.OpenParen,
                 VBXmlName("Name"),
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestGetXmlNamespaceExpressionWithNoName(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestGetXmlNamespaceExpressionWithNoName() As Task
             Await TestInExpressionAsync("GetXmlNamespace()",
-                testHost,
                 Keyword("GetXmlNamespace"),
                 Punctuation.OpenParen,
                 Punctuation.CloseParen)
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestClassifyXmlDocumentFollowingMisc(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestClassifyXmlDocumentFollowingMisc() As Task
             Await TestInExpressionAsync("<?xml ?><x></x><!--h-->",
-                testHost,
                 VBXmlDelimiter("<?"),
                 VBXmlName("xml"),
                 VBXmlDelimiter("?>"),
@@ -4932,10 +4728,9 @@ End Module"
                 VBXmlDelimiter("-->"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestXmlDeclaration(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestXmlDeclaration() As Task
             Await TestInExpressionAsync("<?xml version=""1.0""?>",
-                testHost,
                 VBXmlDelimiter("<?"),
                 VBXmlName("xml"),
                 VBXmlAttributeName("version"),
@@ -4946,8 +4741,8 @@ End Module"
                 VBXmlDelimiter("?>"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestEnableWarningDirective(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestEnableWarningDirective() As Task
             Dim code =
 "Module Program
     Sub Main
@@ -4956,7 +4751,6 @@ End Module"
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("Program"),
                 Keyword("Sub"),
@@ -4975,8 +4769,8 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestDisableWarningDirective(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestDisableWarningDirective() As Task
             Dim code =
 "Module Program
     Sub Main
@@ -4985,7 +4779,6 @@ End Module"
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("Program"),
                 Keyword("Sub"),
@@ -4999,8 +4792,8 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestBadWarningDirectives(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestBadWarningDirectives() As Task
             Dim code =
 "Module Program
     Sub Main
@@ -5013,7 +4806,6 @@ End Module
 #Disable Warning blah"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("Program"),
                 Keyword("Sub"),
@@ -5040,8 +4832,8 @@ End Module
                 Identifier("blah"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestInterpolatedString1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestInterpolatedString1() As Task
             Dim code =
 "Module Program
     Sub Main
@@ -5050,7 +4842,6 @@ End Module
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("Program"),
                 Keyword("Sub"),
@@ -5075,8 +4866,8 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestInterpolatedString2(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestInterpolatedString2() As Task
             Dim code =
 "Module Program
     Sub Main
@@ -5085,7 +4876,6 @@ End Module"
 End Module"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Module"),
                 [Module]("Program"),
                 Keyword("Sub"),
@@ -5108,9 +4898,9 @@ End Module"
                 Keyword("Module"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(2126, "https://github.com/dotnet/roslyn/issues/2126")>
-        Public Async Function CommentBeforeXmlAccessExpression(testHost As TestHost) As Task
+        Public Async Function CommentBeforeXmlAccessExpression() As Task
             Dim code =
 " ' Comment
   x.@Name = ""Text""
@@ -5120,7 +4910,6 @@ End Module"
                 className:="C",
                 methodName:="M",
                 code,
-                testHost,
                 Comment("' Comment"),
                 Identifier("x"),
                 VBXmlDelimiter("."),
@@ -5131,16 +4920,15 @@ End Module"
                 Comment("' Comment"))
         End Function
 
-        <Theory, CombinatorialData>
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
         <WorkItem(3291, "https://github.com/dotnet/roslyn/issues/3291")>
-        Public Async Function TestCommentOnCollapsedEndRegion(testHost As TestHost) As Task
+        Public Async Function TestCommentOnCollapsedEndRegion() As Task
             Dim code =
 "#Region ""Stuff""
 #End Region ' Stuff"
 
             Await TestAsync(
                 code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("Region"),
                 [String]("""Stuff"""),
@@ -5150,8 +4938,8 @@ End Module"
                 Comment("' Stuff"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestConflictMarkers1(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestConflictMarkers1() As Task
             Dim code =
 "interface I
 <<<<<<< Start
@@ -5163,7 +4951,6 @@ end interface"
 
             Await TestAsync(
                 code,
-                testHost,
                 Keyword("interface"),
                 [Interface]("I"),
                 Comment("<<<<<<< Start"),
@@ -5181,12 +4968,11 @@ end interface"
                 Keyword("interface"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestConstField(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestConstField() As Task
             Dim code = "Const Number = 42"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Const"),
                 Constant("Number"),
                 [Static]("Number"),
@@ -5194,26 +4980,24 @@ end interface"
                 Number("42"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestLocalConst(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestLocalConst() As Task
             Dim code = "Const Number = 42"
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Const"),
                 Constant("Number"),
                 Operators.Equals,
                 Number("42"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestModifiedIdentifiersInLocals(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestModifiedIdentifiersInLocals() As Task
             Dim code =
 "Dim x$ = ""23""
 x$ = ""19"""
 
             Await TestInMethodAsync(code,
-                testHost,
                 Keyword("Dim"),
                 Local("x$"),
                 Operators.Equals,
@@ -5223,14 +5007,13 @@ x$ = ""19"""
                 [String]("""19"""))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestModifiedIdentifiersInFields(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestModifiedIdentifiersInFields() As Task
             Dim code =
 "Const x$ = ""23""
 Dim y$ = x$"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Const"),
                 Constant("x$"),
                 [Static]("x$"),
@@ -5242,15 +5025,14 @@ Dim y$ = x$"
                 Identifier("x$"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestFunctionNamesWithTypeCharacters(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestFunctionNamesWithTypeCharacters() As Task
             Dim code =
 "Function x%()
     x% = 42
 End Function"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Function"),
                 Method("x%"),
                 Punctuation.OpenParen,
@@ -5262,8 +5044,8 @@ End Function"
                 Keyword("Function"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestExtensionMethod(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestExtensionMethod() As Task
             Dim code = "
 Imports System.Runtime.CompilerServices
 
@@ -5283,7 +5065,6 @@ Class C
 End Class"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Imports"),
                 Identifier("System"),
                 Operators.Dot,
@@ -5339,8 +5120,8 @@ End Class"
                 Keyword("Class"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestSimpleEvent(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestSimpleEvent() As Task
             Dim code = "
 Event E(x As Integer)
 
@@ -5349,7 +5130,6 @@ Sub M()
 End Sub"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Event"),
                 [Event]("E"),
                 Punctuation.OpenParen,
@@ -5370,8 +5150,8 @@ End Sub"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestOperators(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestOperators() As Task
             Dim code = "
 Public Shared Operator Not(t As Test) As Test
     Return New Test()
@@ -5381,7 +5161,6 @@ Public Shared Operator +(t1 As Test, t2 As Test) As Integer
 End Operator"
 
             Await TestInClassAsync(code,
-                testHost,
                 Keyword("Public"),
                 Keyword("Shared"),
                 Keyword("Operator"),
@@ -5421,8 +5200,8 @@ End Operator"
                 Keyword("Operator"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestLabelName(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestLabelName() As Task
             Dim code =
 "Sub Main
 E:
@@ -5430,7 +5209,6 @@ E:
 End Sub"
 
             Await TestAsync(code,
-                testHost,
                 Keyword("Sub"),
                 Method("Main"),
                 Label("E"),
@@ -5441,8 +5219,8 @@ End Sub"
                 Keyword("Sub"))
         End Function
 
-        <Theory, CombinatorialData>
-        Public Async Function TestCatchStatement(testHost As TestHost) As Task
+        <Fact, Trait(Traits.Feature, Traits.Features.Classification)>
+        Public Async Function TestCatchStatement() As Task
             Dim code =
 "Try
 
@@ -5451,7 +5229,6 @@ Catch ex As Exception
 End Try"
 
             Await TestInMethodAsync(code,
-                testHost,
                 ControlKeyword("Try"),
                 ControlKeyword("Catch"),
                 Local("ex"),

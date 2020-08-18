@@ -7,7 +7,6 @@ Imports System.Text
 Imports System.Xml.Linq
 Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Roslyn.Test.Utilities
-Imports Roslyn.Test.Utilities.TestMetadata
 
 Namespace Microsoft.CodeAnalysis.VisualBasic.UnitTests
     ''' <summary>
@@ -38,7 +37,7 @@ End Module]]></file>
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe.WithOverflowChecks(True),
                  expectedOutput:=<![CDATA[
 Lambda(
@@ -733,13 +732,13 @@ Lambda(
 ]]>
 
             CompileAndVerify(source,
-                          references:={Net40.SystemCore},
+                          references:={SystemCoreRef},
                           options:=TestOptions.ReleaseExe.WithOverflowChecks(True),
                           expectedOutput:=expected
             )
 
             CompileAndVerify(source,
-                        references:={Net40.SystemCore},
+                        references:={SystemCoreRef},
                         options:=TestOptions.ReleaseExe.WithOverflowChecks(False),
                         expectedOutput:=expected
             )
@@ -1202,7 +1201,7 @@ Lambda(
                          </compilation>
 
             CompileAndVerify(source,
-                             references:={Net40.SystemCore},
+                             references:={SystemCoreRef},
                              options:=TestOptions.ReleaseExe.WithOverflowChecks(checked),
                              expectedOutput:=result.Trim
             ).VerifyDiagnostics()
@@ -1224,7 +1223,7 @@ Lambda(
                          </compilation>
 
             CompileAndVerify(source,
-                             references:={Net40.SystemCore},
+                             references:={SystemCoreRef},
                              options:=TestOptions.ReleaseExe.WithOverflowChecks(checked),
                              expectedOutput:=result.Trim
             ).VerifyDiagnostics()
@@ -1449,7 +1448,7 @@ Lambda(
                          </compilation>
 
             CompileAndVerify(source,
-                             references:={Net40.SystemCore},
+                             references:={SystemCoreRef},
                              options:=TestOptions.ReleaseExe.WithOverflowChecks(checked),
                              expectedOutput:=result.Trim
             ).VerifyDiagnostics(Diagnostic(ERRID.WRN_ObsoleteIdentityDirectCastForValueType, "x"),
@@ -1810,7 +1809,7 @@ End Structure
                         <%= _exprTesting %>
                         <%= _queryTesting %>
                     </compilation>,
-                    references:=If(addXmlReferences, DefaultVbReferences.Concat(Net40XmlReferences), DefaultVbReferences),
+                    references:=If(addXmlReferences, DefaultVbReferences.Concat(XmlReferences), DefaultVbReferences),
                     options:=If(optimize, TestOptions.ReleaseDll, TestOptions.DebugDll).WithOverflowChecks(checked))
 
             CompilationUtils.AssertTheseDiagnostics(compilation, diagnostics)
@@ -1832,7 +1831,7 @@ End Structure
                 </compilation>,
                 options:=If(optimize, TestOptions.ReleaseExe, TestOptions.DebugExe).WithOverflowChecks(checked),
                 expectedOutput:=If(result IsNot Nothing, result.Trim, Nothing),
-                references:=If(addXmlReferences, Net40XmlReferences, {}),
+                references:=If(addXmlReferences, XmlReferences, {}),
                 useLatestFramework:=latestReferences)
         End Function
 
@@ -1920,7 +1919,7 @@ End Module
             Dim src = source...<file>.Value
 
             CompileAndVerify(source,
-                             references:={Net40.SystemCore},
+                             references:={SystemCoreRef},
                              options:=TestOptions.ReleaseExe.WithOverflowChecks(checked),
                              expectedOutput:=result.Trim
             ).VerifyDiagnostics(If(diagnostics, {}))
@@ -2014,7 +2013,7 @@ End Module
 ]]></file>
                          </compilation>
 
-            CompileAndVerify(source, references:={Net40.SystemCore}).VerifyDiagnostics()
+            CompileAndVerify(source, references:={SystemCoreRef}).VerifyDiagnostics()
         End Sub
 
         <ConditionalFact(GetType(WindowsOnly), Reason:="https://github.com/dotnet/roslyn/issues/29660")>
@@ -6606,7 +6605,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:=<![CDATA[
 Lambda(
   Parameter(
@@ -6664,7 +6663,7 @@ End Class
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:=<![CDATA[
 Lambda(
   Parameter(
@@ -6769,7 +6768,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:=<![CDATA[
 Infer A=System.Decimal
 Infer B=System.String
@@ -6812,7 +6811,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:=<![CDATA[Where Select]]>).VerifyDiagnostics()
         End Sub
 
@@ -6862,7 +6861,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:="GroupBy 1;Select;GroupBy 2;Select;").VerifyDiagnostics()
         End Sub
 
@@ -6905,7 +6904,7 @@ End Module]]></file>
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:="GroupJoin;").VerifyDiagnostics()
         End Sub
 
@@ -6988,7 +6987,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:=<![CDATA[A1 B2 C1 D2 E1 F2]]>)
         End Sub
 
@@ -7029,7 +7028,7 @@ End Module]]></file>
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:=<![CDATA[f1 f1 g1]]>)
         End Sub
 
@@ -7056,7 +7055,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:="() => (value(Form1+_Closure$__0-0).$VB$Local_s1_a ?? Convert(value(Form1+_Closure$__0-0).$VB$Local_s1_b))").VerifyDiagnostics()
         End Sub
 
@@ -7174,7 +7173,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:="10").VerifyDiagnostics()
         End Sub
 
@@ -7253,7 +7252,7 @@ end class
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:="m => m").VerifyDiagnostics()
         End Sub
 
@@ -7293,7 +7292,7 @@ End Class
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  expectedOutput:="").VerifyDiagnostics()
         End Sub
 
@@ -8283,7 +8282,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe,
                  expectedOutput:=<![CDATA[
 () => (value(M+_Closure$__2-0`1[M+X]).$VB$Local_x == null)
@@ -8343,7 +8342,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe,
                  expectedOutput:=<![CDATA[
 () => (value(M+_Closure$__2-0`1[M+X]).$VB$Local_x == null)
@@ -8385,7 +8384,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe,
                  expectedOutput:=<![CDATA[
 () => Concat(value(M+_Closure$__0-0).$VB$Local_str, null)
@@ -8439,7 +8438,7 @@ End Namespace
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe,
                  expectedOutput:=<![CDATA[
 In catch
@@ -8504,7 +8503,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe,
                  expectedOutput:=<![CDATA[
 x => x.set_City(ItIs(s => IsNullOrEmpty(s)))
@@ -8581,7 +8580,7 @@ End Module
                          </compilation>
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe,
                  expectedOutput:=<![CDATA[
 x => x.set_City(1, ItIs(s => IsNullOrEmpty(s)))
@@ -8648,7 +8647,7 @@ End Module
 
 
             Dim compilation = CreateCompilationWithMscorlib45AndVBRuntime(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe)
 
             compilation.VerifyDiagnostics(
@@ -8699,7 +8698,7 @@ End Class
 
 
             CompileAndVerify(source,
-                 references:={Net40.SystemCore},
+                 references:={SystemCoreRef},
                  options:=TestOptions.ReleaseExe,
                  expectedOutput:=<![CDATA[
 42

@@ -34,6 +34,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Snippets
 
         int IVsExpansionFunction.GetListText(int index, out string text)
         {
+            index = 0;
             text = string.Empty;
             return VSConstants.E_NOTIMPL;
         }

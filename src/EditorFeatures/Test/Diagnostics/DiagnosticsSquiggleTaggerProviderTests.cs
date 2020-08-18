@@ -31,8 +31,11 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
     [UseExportProvider]
     public class DiagnosticsSquiggleTaggerProviderTests
     {
-        private static readonly TestComposition s_compositionWithMockDiagnosticService =
-            EditorTestCompositions.EditorFeatures.AddExcludedPartTypes(typeof(IDiagnosticService)).AddParts(typeof(MockDiagnosticService));
+        private static readonly IExportProviderFactory s_exportProviderWithMockDiagnosticService =
+            ExportProviderCache.GetOrCreateExportProviderFactory(
+                TestExportProvider.EntireAssemblyCatalogWithCSharpAndVisualBasic
+                    .WithoutPartsOfType(typeof(IDiagnosticService))
+                    .WithPart(typeof(MockDiagnosticService)));
 
         [WpfFact, Trait(Traits.Feature, Traits.Features.Diagnostics)]
         public async Task Test_TagSourceDiffer()
@@ -122,7 +125,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
             using var workspace = TestWorkspace.CreateCSharp(
                 new string[] { "class A { }" },
                 CSharpParseOptions.Default,
-                composition: s_compositionWithMockDiagnosticService);
+                exportProvider: s_exportProviderWithMockDiagnosticService.CreateExportProvider());
 
             var listenerProvider = workspace.ExportProvider.GetExportedValue<IAsynchronousOperationListenerProvider>();
 
@@ -159,7 +162,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics
             using var workspace = TestWorkspace.CreateCSharp(
                 new string[] { "class A { }" },
                 CSharpParseOptions.Default,
-                composition: s_compositionWithMockDiagnosticService);
+                exportProvider: s_exportProviderWithMockDiagnosticService.CreateExportProvider());
 
             var listenerProvider = workspace.ExportProvider.GetExportedValue<IAsynchronousOperationListenerProvider>();
 

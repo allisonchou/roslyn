@@ -81,7 +81,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.FindReferences
             AssertResult(context.Result, "C.C()", "class C");
         }
 
-        private static void AssertResult(
+        private void AssertResult(
             List<DefinitionItem> result,
             params string[] definitions)
         {

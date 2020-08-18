@@ -31,11 +31,15 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
             _metadataAsSourceFileService = metadataAsSourceFileService;
         }
 
-        public override async Task<LSP.VSReferenceItem[]> HandleRequestAsync(ReferenceParams referenceParams, RequestContext context, CancellationToken cancellationToken)
+        public override async Task<LSP.VSReferenceItem[]> HandleRequestAsync(
+            ReferenceParams referenceParams,
+            ClientCapabilities clientCapabilities,
+            string? clientName,
+            CancellationToken cancellationToken)
         {
-            Debug.Assert(context.ClientCapabilities.HasVisualStudioLspCapability());
+            Debug.Assert(clientCapabilities.HasVisualStudioLspCapability());
 
-            var document = SolutionProvider.GetDocument(referenceParams.TextDocument, context.ClientName);
+            var document = SolutionProvider.GetDocument(referenceParams.TextDocument, clientName);
             if (document == null)
             {
                 return Array.Empty<LSP.VSReferenceItem>();
@@ -45,12 +49,12 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
             var position = await document.GetPositionFromLinePositionAsync(
                 ProtocolConversions.PositionToLinePosition(referenceParams.Position), cancellationToken).ConfigureAwait(false);
 
-            var findUsagesContext = new FindUsagesLSPContext(
+            var context = new FindUsagesLSPContext(
                 referenceParams.PartialResultToken, document, position, _metadataAsSourceFileService, cancellationToken);
 
             // Finds the references for the symbol at the specific position in the document, reporting them via streaming to the LSP client.
-            await findUsagesService.FindReferencesAsync(document, position, findUsagesContext).ConfigureAwait(false);
-            await findUsagesContext.OnCompletedAsync().ConfigureAwait(false);
+            await findUsagesService.FindReferencesAsync(document, position, context).ConfigureAwait(false);
+            await context.OnCompletedAsync().ConfigureAwait(false);
 
             // The results have already been reported to the client, so we don't need to return anything here.
             return Array.Empty<LSP.VSReferenceItem>();

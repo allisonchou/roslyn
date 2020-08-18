@@ -192,13 +192,13 @@ End Class</text>
                  Sub(x, y) AssertEx.AssertEqualToleratingWhitespaceDifferences(x, y))
         End Sub
 
-        Private Shared Sub Test(code As XElement, expectedText As XElement, nextHandler As Action, assertion As Action(Of String, String))
+        Private Sub Test(code As XElement, expectedText As XElement, nextHandler As Action, assertion As Action(Of String, String))
             Using workspace = GetWorkspace(code)
                 Test(workspace, expectedText, nextHandler, assertion)
             End Using
         End Sub
 
-        Private Shared Sub Test(workspace As TestWorkspace, expectedText As XElement, nextHandler As Action, assertion As Action(Of String, String))
+        Private Sub Test(workspace As TestWorkspace, expectedText As XElement, nextHandler As Action, assertion As Action(Of String, String))
             Dim document = workspace.Documents.Single()
             Dim view = document.GetTextView()
             Dim cursorPosition = document.CursorPosition.Value
@@ -215,7 +215,7 @@ End Class</text>
             assertion(expectedText.NormalizedValue, text)
         End Sub
 
-        Private Shared Function GetWorkspace(code As XElement) As TestWorkspace
+        Private Function GetWorkspace(code As XElement) As TestWorkspace
             Return TestWorkspace.Create(
 <Workspace>
     <Project Language="Visual Basic" AssemblyName="Assembly" CommonReferences="true">
@@ -224,7 +224,7 @@ End Class</text>
         </Document>
     </Project>
 </Workspace>,
-            composition:=EditorTestCompositions.EditorFeatures.AddExcludedPartTypes(GetType(CommitConnectionListener)))
+exportProvider:=ExportProviderCache.GetOrCreateExportProviderFactory(TestExportProvider.EntireAssemblyCatalogWithCSharpAndVisualBasic.WithoutPartsOfType(GetType(CommitConnectionListener))).CreateExportProvider())
         End Function
     End Class
 End Namespace

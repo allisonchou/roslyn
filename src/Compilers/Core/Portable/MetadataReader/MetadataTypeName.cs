@@ -15,7 +15,6 @@ namespace Microsoft.CodeAnalysis
     /// Also, allows us to stop using strings in the APIs that accept only metadata names, 
     /// making usage of them less bug prone.
     /// </summary>
-    [NonCopyable]
     internal partial struct MetadataTypeName
     {
         /// <summary>
@@ -245,7 +244,7 @@ namespace Microsoft.CodeAnalysis
         /// I.e. arity is inferred from the name and matching type must have the same
         /// emitted name and arity.
         /// </summary>
-        public readonly bool UseCLSCompliantNameArityEncoding
+        public bool UseCLSCompliantNameArityEncoding
         {
             get
             {
@@ -259,7 +258,7 @@ namespace Microsoft.CodeAnalysis
         /// If ForcedArity >= 0 and UseCLSCompliantNameArityEncoding, lookup may
         /// fail because ForcedArity doesn't match the one encoded in the name.
         /// </summary>
-        public readonly int ForcedArity
+        public int ForcedArity
         {
             get
             {
@@ -283,7 +282,7 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        public readonly bool IsNull
+        public bool IsNull
         {
             get
             {

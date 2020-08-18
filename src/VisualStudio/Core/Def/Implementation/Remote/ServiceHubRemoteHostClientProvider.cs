@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
     internal sealed class ServiceHubRemoteHostClientProvider : IRemoteHostClientProvider
     {
         [ExportWorkspaceServiceFactory(typeof(IRemoteHostClientProvider), WorkspaceKind.Host), Shared]
-        internal sealed class Factory : IWorkspaceServiceFactory
+        private sealed class Factory : IWorkspaceServiceFactory
         {
             [ImportingConstructor]
             [Obsolete(MefConstruction.ImportingConstructorMessage, error: true)]
@@ -27,30 +27,20 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
             {
             }
 
-            [Obsolete(MefConstruction.FactoryMethodMessage, error: true)]
             public IWorkspaceService CreateService(HostWorkspaceServices workspaceServices)
-            {
-                if (!RemoteHostOptions.IsUsingServiceHubOutOfProcess(workspaceServices)
-                    || workspaceServices.Workspace is not VisualStudioWorkspace)
-                {
-                    // Run code in the current process
-                    return new DefaultRemoteHostClientProvider();
-                }
-
-                return new ServiceHubRemoteHostClientProvider(workspaceServices);
-            }
+                => new ServiceHubRemoteHostClientProvider(workspaceServices);
         }
 
         private readonly HostWorkspaceServices _services;
         private readonly AsyncLazy<RemoteHostClient> _lazyClient;
 
-        private ServiceHubRemoteHostClientProvider(HostWorkspaceServices services)
+        public ServiceHubRemoteHostClientProvider(HostWorkspaceServices services)
         {
             _services = services;
             _lazyClient = new AsyncLazy<RemoteHostClient>(cancellationToken => ServiceHubRemoteHostClient.CreateAsync(_services, cancellationToken), cacheResult: true);
         }
 
         public Task<RemoteHostClient?> TryGetRemoteHostClientAsync(CancellationToken cancellationToken)
-            => _lazyClient.GetValueAsync(cancellationToken).AsNullable();
+            => (_services.Workspace is VisualStudioWorkspace) ? _lazyClient.GetValueAsync(cancellationToken).AsNullable() : SpecializedTasks.Null<RemoteHostClient>();
     }
 }

@@ -3,7 +3,6 @@
 ' See the LICENSE file in the project root for more information.
 
 Imports Microsoft.CodeAnalysis.Rename.ConflictEngine
-Imports Microsoft.CodeAnalysis.Remote.Testing
 Imports Xunit.Abstractions
 
 Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
@@ -17,7 +16,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <WorkItem(543759, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/543759")>
         <Theory, CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameNamespaceAlias(host As RenameTestHost)
+        Public Sub RenameNamespaceAlias(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                     <Workspace>
                         <Project Language="C#" CommonReferences="true">
@@ -37,7 +36,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameNamespaceAndAlias(host As RenameTestHost)
+        Public Sub RenameNamespaceAndAlias(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -58,7 +57,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameNamespaceButNotDifferentlyNamedAlias(host As RenameTestHost)
+        Public Sub RenameNamespaceButNotDifferentlyNamedAlias(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -79,7 +78,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameConstructedTypeAliasFromUse(host As RenameTestHost)
+        Public Sub RenameConstructedTypeAliasFromUse(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -102,7 +101,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameConstructedTypeAliasFromDeclaration(host As RenameTestHost)
+        Public Sub RenameConstructedTypeAliasFromDeclaration(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -124,7 +123,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameConstructedTypeAliasFromDeclaration2(host As RenameTestHost)
+        Public Sub RenameConstructedTypeAliasFromDeclaration2(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -146,7 +145,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameSimpleTypeAliasFromUse(host As RenameTestHost)
+        Public Sub RenameSimpleTypeAliasFromUse(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -168,7 +167,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameSimpleTypeAliasFromDeclaration(host As RenameTestHost)
+        Public Sub RenameSimpleTypeAliasFromDeclaration(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -190,7 +189,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameSimpleSpecialTypeAliasVariable(host As RenameTestHost)
+        Public Sub RenameSimpleSpecialTypeAliasVariable(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -212,7 +211,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameSimpleSpecialTypeDoubleAliasVariable(host As RenameTestHost)
+        Public Sub RenameSimpleSpecialTypeDoubleAliasVariable(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -235,7 +234,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameSimpleTypeAliasVariable(host As RenameTestHost)
+        Public Sub RenameSimpleTypeAliasVariable(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -257,7 +256,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename.CSharp
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameAliasNoConflict(host As RenameTestHost)
+        Public Sub RenameAliasNoConflict(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -290,7 +289,7 @@ public class C3
 
         <Theory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameAliasToSameNameNoConflict(host As RenameTestHost)
+        Public Sub RenameAliasToSameNameNoConflict(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -318,7 +317,7 @@ public class C3
         <Theory>
         <WorkItem(586743, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/586743")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameOneDuplicateAliasToNoConflict(host As RenameTestHost)
+        Public Sub RenameOneDuplicateAliasToNoConflict(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -345,7 +344,7 @@ public class C3
         <Theory>
         <WorkItem(542693, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/542693")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameOuterAliasWithNestedAlias(host As RenameTestHost)
+        Public Sub RenameOuterAliasWithNestedAlias(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -371,7 +370,7 @@ namespace N
         <Theory>
         <WorkItem(10028, "DevDiv_Projects/Roslyn")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameConflictWithAlias(host As RenameTestHost)
+        Public Sub RenameConflictWithAlias(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -401,7 +400,7 @@ class C1
         <Theory>
         <WorkItem(579200, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/579200")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub Bug579200_RenameNestedAliasTarget(host As RenameTestHost)
+        Public Sub Bug579200_RenameNestedAliasTarget(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -429,7 +428,7 @@ namespace N
         <Theory>
         <WorkItem(579214, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/579214")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub Bug579214_RenameAttributeNamedDynamic(host As RenameTestHost)
+        Public Sub Bug579214_RenameAttributeNamedDynamic(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -446,7 +445,7 @@ class C : [|$$dynamic|]::Object { }
         <Theory>
         <WorkItem(629695, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/629695")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub Bug629695_DetectConflictWithAliasInSameBlockCompUnit(host As RenameTestHost)
+        Public Sub Bug629695_DetectConflictWithAliasInSameBlockCompUnit(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -491,7 +490,7 @@ class Program
         <Theory>
         <WorkItem(629695, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/629695")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub Bug629695_DetectConflictWithAliasInSameBlockNSDecl(host As RenameTestHost)
+        Public Sub Bug629695_DetectConflictWithAliasInSameBlockNSDecl(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -539,7 +538,7 @@ namespace X
         <Theory>
         <WorkItem(629695, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/629695")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub Bug629695_DetectConflictWithAliasInSameBlockWithEscaping(host As RenameTestHost)
+        Public Sub Bug629695_DetectConflictWithAliasInSameBlockWithEscaping(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -587,7 +586,7 @@ namespace X
         <Theory>
         <WorkItem(603365, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/603365"), WorkItem(745833, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/745833")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub Bug603365_RenameAliasToClassNameOnlyFixesAliasUsages_1(host As RenameTestHost)
+        Public Sub Bug603365_RenameAliasToClassNameOnlyFixesAliasUsages_1(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -615,7 +614,7 @@ namespace N
         <Theory>
         <WorkItem(603365, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/603365")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub Bug603365_RenameAliasToClassNameOnlyFixesAliasUsages_2(host As RenameTestHost)
+        Public Sub Bug603365_RenameAliasToClassNameOnlyFixesAliasUsages_2(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -645,7 +644,7 @@ namespace N
         <WorkItem(633860, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/633860")>
         <WorkItem(632303, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/632303")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameAliasToAttributeAndEndingWithAttributeAttribute(host As RenameTestHost)
+        Public Sub RenameAliasToAttributeAndEndingWithAttributeAttribute(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -680,7 +679,7 @@ class Program
         <WorkItem(633860, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/633860")>
         <WorkItem(632303, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/632303")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameAliasToAttributeAndEndingWithAttributeAttributeWithResolvedConflict(host As RenameTestHost)
+        Public Sub RenameAliasToAttributeAndEndingWithAttributeAttributeWithResolvedConflict(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -717,7 +716,7 @@ class Program
         <Theory>
         <WorkItem(529531, "http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/529531")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RenameAliasToNullableWithResolvedConflict(host As RenameTestHost)
+        Public Sub RenameAliasToNullableWithResolvedConflict(host As TestHost)
             Using result = RenameEngineResult.Create(_outputHelper,
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">

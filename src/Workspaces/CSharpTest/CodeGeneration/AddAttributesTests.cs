@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Test.Utilities;
-using Roslyn.Test.Utilities;
 using Xunit;
 
 namespace Microsoft.CodeAnalysis.CSharp.UnitTests.CodeGeneration
@@ -24,7 +23,7 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests.CodeGeneration
                     "test",
                     "test.dll",
                     LanguageNames.CSharp,
-                    metadataReferences: new[] { TestMetadata.Net451.mscorlib }));
+                    metadataReferences: new[] { TestReferences.NetFx.v4_0_30319.mscorlib }));
 
             return emptyProject.AddDocument("test.cs", code);
         }

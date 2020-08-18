@@ -5,7 +5,6 @@
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Editor.Shared.Utilities;
-using Microsoft.CodeAnalysis.UnifiedSuggestions.UnifiedSuggestedActions;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.Suggestions
@@ -13,10 +12,8 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Suggestions
     /// <summary>
     /// Represents light bulb menu item for code refactorings.
     /// </summary>
-    internal sealed class CodeRefactoringSuggestedAction : SuggestedActionWithNestedFlavors, ICodeRefactoringSuggestedAction
+    internal sealed class CodeRefactoringSuggestedAction : SuggestedActionWithNestedFlavors
     {
-        public CodeRefactoringProvider CodeRefactoringProvider { get; }
-
         public CodeRefactoringSuggestedAction(
             IThreadingContext threadingContext,
             SuggestedActionsSourceProvider sourceProvider,
@@ -26,7 +23,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Suggestions
             CodeAction codeAction)
             : base(threadingContext, sourceProvider, workspace, subjectBuffer, provider, codeAction)
         {
-            CodeRefactoringProvider = provider;
         }
     }
 }

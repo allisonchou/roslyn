@@ -128,7 +128,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.EndConstructGeneration
         ''' </summary>
         ''' <param name="accessorToIgnore">An existing getter to ignore. When we are checking for existing getters, we
         ''' might be in the middle of typing one that would be a false positive. </param>
-        Private Shared Function NeedsGetAccessor(propertyDeclaration As PropertyStatementSyntax, Optional accessorToIgnore As AccessorBlockSyntax = Nothing) As Boolean
+        Private Function NeedsGetAccessor(propertyDeclaration As PropertyStatementSyntax, Optional accessorToIgnore As AccessorBlockSyntax = Nothing) As Boolean
             If propertyDeclaration.Modifiers.Any(Function(m) m.IsKind(SyntaxKind.WriteOnlyKeyword)) Then
                 Return False
             End If
@@ -147,7 +147,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.EndConstructGeneration
             Return True
         End Function
 
-        Private Shared Function GenerateGetAccessor(propertyDeclaration As PropertyStatementSyntax, snapshot As ITextSnapshot) As String()
+        Private Function GenerateGetAccessor(propertyDeclaration As PropertyStatementSyntax, snapshot As ITextSnapshot) As String()
             Dim aligningWhitespace = snapshot.GetAligningWhitespace(propertyDeclaration.SpanStart) & "    "
             Return {aligningWhitespace & "Get",
                     "",
@@ -160,7 +160,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.EndConstructGeneration
         ''' </summary>
         ''' <param name="accessorToIgnore">An existing getter to ignore. When we are checking for existing getters, we
         ''' might be in the middle of typing one that would be a false positive. </param>
-        Private Shared Function NeedsSetAccessor(propertyDeclaration As PropertyStatementSyntax, Optional accessorToIgnore As AccessorBlockSyntax = Nothing) As Boolean
+        Private Function NeedsSetAccessor(propertyDeclaration As PropertyStatementSyntax, Optional accessorToIgnore As AccessorBlockSyntax = Nothing) As Boolean
             If propertyDeclaration.Modifiers.Any(Function(m) m.IsKind(SyntaxKind.ReadOnlyKeyword)) Then
                 Return False
             End If
@@ -179,14 +179,14 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.EndConstructGeneration
             Return True
         End Function
 
-        Private Shared Function GenerateSetAccessor(propertyDeclaration As PropertyStatementSyntax, snapshot As ITextSnapshot) As String()
+        Private Function GenerateSetAccessor(propertyDeclaration As PropertyStatementSyntax, snapshot As ITextSnapshot) As String()
             Dim aligningWhitespace = snapshot.GetAligningWhitespace(propertyDeclaration.SpanStart) & "    "
             Return {aligningWhitespace & "Set" & GenerateSetAccessorArguments(propertyDeclaration),
                     "",
                     aligningWhitespace & "End Set"}
         End Function
 
-        Private Shared Function GenerateSetAccessorArguments(propertyDeclaration As PropertyStatementSyntax) As String
+        Private Function GenerateSetAccessorArguments(propertyDeclaration As PropertyStatementSyntax) As String
             Dim valueSuffix = ""
             If propertyDeclaration.AsClause IsNot Nothing Then
                 valueSuffix = " " & propertyDeclaration.AsClause.ToString

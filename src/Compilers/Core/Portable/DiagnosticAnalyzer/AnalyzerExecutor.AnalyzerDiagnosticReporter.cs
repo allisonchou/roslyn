@@ -5,7 +5,9 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.Text;
@@ -27,7 +29,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 new ObjectPool<AnalyzerDiagnosticReporter>(() => new AnalyzerDiagnosticReporter(), 10);
 
             public static AnalyzerDiagnosticReporter GetInstance(
-                SourceOrAdditionalFile contextFile,
+                SyntaxTree contextTree,
                 TextSpan? span,
                 Compilation compilation,
                 DiagnosticAnalyzer analyzer,
@@ -39,7 +41,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 CancellationToken cancellationToken)
             {
                 var item = s_objectPool.Allocate();
-                item._contextFile = contextFile;
+                item._contextTree = contextTree;
                 item._span = span;
                 item._compilation = compilation;
                 item._analyzer = analyzer;
@@ -54,7 +56,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics
 
             public void Free()
             {
-                _contextFile = null!;
+                _contextTree = null!;
                 _span = null;
                 _compilation = null!;
                 _analyzer = null!;
@@ -67,7 +69,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 s_objectPool.Free(this);
             }
 
-            private SourceOrAdditionalFile? _contextFile;
+            private SyntaxTree _contextTree;
             private TextSpan? _span;
             private Compilation _compilation;
             private DiagnosticAnalyzer _analyzer;
@@ -103,7 +105,8 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 Debug.Assert(_addNonCategorizedDiagnosticOpt == null);
                 RoslynDebug.Assert(_addCategorizedNonLocalDiagnosticOpt != null);
 
-                if (isLocalDiagnostic(diagnostic) &&
+                if (diagnostic.Location.IsInSource &&
+                    _contextTree == diagnostic.Location.SourceTree &&
                     (!_span.HasValue || _span.Value.IntersectsWith(diagnostic.Location.SourceSpan)))
                 {
                     _addCategorizedLocalDiagnosticOpt(diagnostic, _analyzer, _isSyntaxDiagnostic);
@@ -111,25 +114,6 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 else
                 {
                     _addCategorizedNonLocalDiagnosticOpt(diagnostic, _analyzer);
-                }
-
-                return;
-
-                bool isLocalDiagnostic(Diagnostic diagnostic)
-                {
-                    if (diagnostic.Location.IsInSource)
-                    {
-                        return _contextFile?.SourceTree != null &&
-                            _contextFile.Value.SourceTree == diagnostic.Location.SourceTree;
-                    }
-
-                    if (_contextFile?.AdditionalFile != null &&
-                        diagnostic.Location is ExternalFileLocation externalFileLocation)
-                    {
-                        return PathUtilities.Comparer.Equals(_contextFile.Value.AdditionalFile.Path, externalFileLocation.FilePath);
-                    }
-
-                    return false;
                 }
             }
         }

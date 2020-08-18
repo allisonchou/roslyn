@@ -6,13 +6,12 @@ Imports System.Threading.Tasks
 Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Microsoft.VisualStudio.GraphModel
 Imports Microsoft.VisualStudio.LanguageServices.Implementation.Progression
-Imports Roslyn.Test.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.Progression
 
-    <UseExportProvider, Trait(Traits.Feature, Traits.Features.Progression)>
+    <[UseExportProvider]>
     Public Class ImplementedByGraphQueryTests
-        <WpfFact>
+        <Fact, Trait(Traits.Feature, Traits.Features.Progression)>
         Public Async Function TestImplementedBy1() As Task
             Using testState = ProgressionTestState.Create(
                     <Workspace>
@@ -47,7 +46,7 @@ class Goo2 : Base, IBlah
                         </Project>
                     </Workspace>)
 
-                Dim inputGraph = Await testState.GetGraphWithMarkedSymbolNodeAsync()
+                Dim inputGraph = await testState.GetGraphWithMarkedSymbolNodeAsync()
                 Dim outputContext = Await testState.GetGraphContextAfterQuery(inputGraph, New ImplementedByGraphQuery(), GraphContextDirection.Target)
 
                 AssertSimplifiedGraphIs(

@@ -394,12 +394,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal override ManagedKind GetManagedKind(ref HashSet<DiagnosticInfo> useSiteDiagnostics)
+        internal override ManagedKind ManagedKind
         {
-            // CONSIDER: we could cache this, but it's only expensive for non-special struct types
-            // that are pointed to.  For now, only cache on SourceMemberContainerSymbol since it fits
-            // nicely into the flags variable.
-            return BaseTypeAnalysis.GetManagedKind(this, ref useSiteDiagnostics);
+            get
+            {
+                // CONSIDER: we could cache this, but it's only expensive for non-special struct types
+                // that are pointed to.  For now, only cache on SourceMemberContainerSymbol since it fits
+                // nicely into the flags variable.
+                return BaseTypeAnalysis.GetManagedKind(this);
+            }
         }
 
         /// <summary>
@@ -1220,21 +1223,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private bool DeriveUseSiteDiagnosticFromTypeArguments(ref DiagnosticInfo result)
         {
-            NamedTypeSymbol currentType = this;
-
-            do
+            foreach (TypeWithAnnotations arg in this.TypeArgumentsWithAnnotationsNoUseSiteDiagnostics)
             {
-                foreach (TypeWithAnnotations arg in currentType.TypeArgumentsWithAnnotationsNoUseSiteDiagnostics)
+                if (DeriveUseSiteDiagnosticFromType(ref result, arg, AllowedRequiredModifierType.None))
                 {
-                    if (DeriveUseSiteDiagnosticFromType(ref result, arg, AllowedRequiredModifierType.None))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-
-                currentType = currentType.ContainingType;
             }
-            while (currentType?.IsDefinition == false);
 
             return false;
         }

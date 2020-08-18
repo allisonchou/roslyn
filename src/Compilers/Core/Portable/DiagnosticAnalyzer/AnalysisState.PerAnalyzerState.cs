@@ -23,8 +23,8 @@ namespace Microsoft.CodeAnalysis.Diagnostics
             private readonly Dictionary<ISymbol, AnalyzerStateData> _pendingSymbols = new Dictionary<ISymbol, AnalyzerStateData>();
             private readonly Dictionary<ISymbol, Dictionary<int, DeclarationAnalyzerStateData>> _pendingDeclarations = new Dictionary<ISymbol, Dictionary<int, DeclarationAnalyzerStateData>>();
 
-            private Dictionary<SourceOrAdditionalFile, AnalyzerStateData> _lazyFilesWithAnalysisData = null;
-            private int _pendingSyntaxAnalysisFilesCount = 0;
+            private Dictionary<SyntaxTree, AnalyzerStateData> _lazySyntaxTreesWithAnalysisData = null;
+            private int _pendingSyntaxAnalysisTreesCount = 0;
             private Dictionary<ISymbol, AnalyzerStateData> _lazyPendingSymbolEndAnalyses = null;
 
             private readonly ObjectPool<AnalyzerStateData> _analyzerStateDataPool;
@@ -52,31 +52,31 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 }
             }
 
-            public bool HasPendingSyntaxAnalysis(SourceOrAdditionalFile? fileOpt)
+            public bool HasPendingSyntaxAnalysis(SyntaxTree treeOpt)
             {
                 lock (_gate)
                 {
-                    if (_pendingSyntaxAnalysisFilesCount == 0)
+                    if (_pendingSyntaxAnalysisTreesCount == 0)
                     {
                         return false;
                     }
 
-                    Debug.Assert(_lazyFilesWithAnalysisData != null);
+                    Debug.Assert(_lazySyntaxTreesWithAnalysisData != null);
 
-                    if (!fileOpt.HasValue)
+                    if (treeOpt == null)
                     {
-                        // We have syntax analysis pending for at least one file.
+                        // We have syntax analysis pending for at least one tree.
                         return true;
                     }
 
                     AnalyzerStateData state;
-                    if (!_lazyFilesWithAnalysisData.TryGetValue(fileOpt.Value, out state))
+                    if (!_lazySyntaxTreesWithAnalysisData.TryGetValue(treeOpt, out state))
                     {
-                        // We haven't even started analysis for this file.
+                        // We haven't even started analysis for this tree.
                         return true;
                     }
 
-                    // See if we have completed analysis for this file.
+                    // See if we have completed analysis for this tree.
                     return state.StateKind == StateKind.FullyProcessed;
                 }
             }
@@ -143,15 +143,15 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 return false;
             }
 
-            private bool TryStartSyntaxAnalysis_NoLock(SourceOrAdditionalFile file, out AnalyzerStateData state)
+            private bool TryStartSyntaxAnalysis_NoLock(SyntaxTree tree, out AnalyzerStateData state)
             {
-                if (_pendingSyntaxAnalysisFilesCount == 0)
+                if (_pendingSyntaxAnalysisTreesCount == 0)
                 {
                     state = null;
                     return false;
                 }
 
-                if (_lazyFilesWithAnalysisData.TryGetValue(file, out state))
+                if (_lazySyntaxTreesWithAnalysisData.TryGetValue(tree, out state))
                 {
                     if (state.StateKind != StateKind.ReadyToProcess)
                     {
@@ -166,22 +166,22 @@ namespace Microsoft.CodeAnalysis.Diagnostics
 
                 state.SetStateKind(StateKind.InProcess);
                 Debug.Assert(state.StateKind == StateKind.InProcess);
-                _lazyFilesWithAnalysisData[file] = state;
+                _lazySyntaxTreesWithAnalysisData[tree] = state;
                 return true;
             }
 
-            private void MarkSyntaxAnalysisComplete_NoLock(SourceOrAdditionalFile file)
+            private void MarkSyntaxTreeProcessed_NoLock(SyntaxTree tree)
             {
-                if (_pendingSyntaxAnalysisFilesCount == 0)
+                if (_pendingSyntaxAnalysisTreesCount == 0)
                 {
                     return;
                 }
 
-                Debug.Assert(_lazyFilesWithAnalysisData != null);
+                Debug.Assert(_lazySyntaxTreesWithAnalysisData != null);
 
                 var wasAlreadyFullyProcessed = false;
                 AnalyzerStateData state;
-                if (_lazyFilesWithAnalysisData.TryGetValue(file, out state))
+                if (_lazySyntaxTreesWithAnalysisData.TryGetValue(tree, out state))
                 {
                     if (state.StateKind != StateKind.FullyProcessed)
                     {
@@ -195,10 +195,10 @@ namespace Microsoft.CodeAnalysis.Diagnostics
 
                 if (!wasAlreadyFullyProcessed)
                 {
-                    _pendingSyntaxAnalysisFilesCount--;
+                    _pendingSyntaxAnalysisTreesCount--;
                 }
 
-                _lazyFilesWithAnalysisData[file] = AnalyzerStateData.FullyProcessedInstance;
+                _lazySyntaxTreesWithAnalysisData[tree] = AnalyzerStateData.FullyProcessedInstance;
             }
 
             private Dictionary<int, DeclarationAnalyzerStateData> EnsureDeclarationDataMap_NoLock(ISymbol symbol, Dictionary<int, DeclarationAnalyzerStateData> declarationDataMap)
@@ -408,20 +408,20 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                 }
             }
 
-            public bool TryStartSyntaxAnalysis(SourceOrAdditionalFile tree, out AnalyzerStateData state)
+            public bool TryStartSyntaxAnalysis(SyntaxTree tree, out AnalyzerStateData state)
             {
                 lock (_gate)
                 {
-                    Debug.Assert(_lazyFilesWithAnalysisData != null);
+                    Debug.Assert(_lazySyntaxTreesWithAnalysisData != null);
                     return TryStartSyntaxAnalysis_NoLock(tree, out state);
                 }
             }
 
-            public void MarkSyntaxAnalysisComplete(SourceOrAdditionalFile file)
+            public void MarkSyntaxAnalysisComplete(SyntaxTree tree)
             {
                 lock (_gate)
                 {
-                    MarkSyntaxAnalysisComplete_NoLock(file);
+                    MarkSyntaxTreeProcessed_NoLock(tree);
                 }
             }
 
@@ -461,14 +461,12 @@ namespace Microsoft.CodeAnalysis.Diagnostics
                             return;
                         }
                     }
-                    else if (compilationEvent is CompilationStartedEvent compilationStartedEvent)
+                    else if (compilationEvent is CompilationStartedEvent)
                     {
-                        var fileCount = actionCounts.SyntaxTreeActionsCount > 0 ? compilationEvent.Compilation.SyntaxTrees.Count() : 0;
-                        fileCount += actionCounts.AdditionalFileActionsCount > 0 ? compilationStartedEvent.AdditionalFiles.Length : 0;
-                        if (fileCount > 0)
+                        if (actionCounts.SyntaxTreeActionsCount > 0)
                         {
-                            _lazyFilesWithAnalysisData = new Dictionary<SourceOrAdditionalFile, AnalyzerStateData>();
-                            _pendingSyntaxAnalysisFilesCount = fileCount;
+                            _lazySyntaxTreesWithAnalysisData = new Dictionary<SyntaxTree, AnalyzerStateData>();
+                            _pendingSyntaxAnalysisTreesCount = compilationEvent.Compilation.SyntaxTrees.Count();
                         }
 
                         if (actionCounts.CompilationActionsCount == 0)

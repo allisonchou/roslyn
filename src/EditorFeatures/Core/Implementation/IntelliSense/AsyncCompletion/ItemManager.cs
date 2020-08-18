@@ -307,30 +307,14 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
 
             var chosenItems = filterMethod(matchingItems, filterText);
 
-            int selectedItemIndex;
+            var selectedItemIndex = 0;
             VSCompletionItem uniqueItem = null;
             MatchResult bestOrFirstMatchResult;
 
             if (chosenItems.Length == 0)
             {
-                // We do not have matches: pick the one with longest common prefix or the first item from the list.
-                selectedItemIndex = 0;
-                bestOrFirstMatchResult = itemsInList[0];
-
-                var longestCommonPrefixLength = bestOrFirstMatchResult.RoslynCompletionItem.FilterText.GetCaseInsensitivePrefixLength(filterText);
-
-                for (var i = 1; i < itemsInList.Length; ++i)
-                {
-                    var item = itemsInList[i];
-                    var commonPrefixLength = item.RoslynCompletionItem.FilterText.GetCaseInsensitivePrefixLength(filterText);
-
-                    if (commonPrefixLength > longestCommonPrefixLength)
-                    {
-                        selectedItemIndex = i;
-                        bestOrFirstMatchResult = item;
-                        longestCommonPrefixLength = commonPrefixLength;
-                    }
-                }
+                // We do not have matches: pick the first item from the list.
+                bestOrFirstMatchResult = itemsInList.FirstOrDefault();
             }
             else
             {
@@ -344,7 +328,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
                 // without bringing up the completion list.  An item is unique if it was the
                 // only item to match the text typed so far, and there was at least some text
                 // typed.  i.e.  if we have "Console.$$" we don't want to commit something
-                // like "WriteLine" since no filter text has actually been provided.  However,
+                // like "WriteLine" since no filter text has actually been provided.  HOwever,
                 // if "Console.WriteL$$" is typed, then we do want "WriteLine" to be committed.
                 selectedItemIndex = itemsInList.IndexOf(i => Equals(i.RoslynCompletionItem, bestItem));
                 bestOrFirstMatchResult = itemsInList[selectedItemIndex];
@@ -374,12 +358,18 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
 
             var updateSelectionHint = isHardSelection ? UpdateSelectionHint.Selected : UpdateSelectionHint.SoftSelected;
 
+            // If no items found above, select the first item.
+            if (selectedItemIndex == -1)
+            {
+                selectedItemIndex = 0;
+            }
+
             return new FilteredCompletionModel(
                 GetHighlightedList(itemsInList), selectedItemIndex, filters,
                 updateSelectionHint, centerSelection: true, uniqueItem);
         }
 
-        private static FilteredCompletionModel HandleDeletionTrigger(
+        private FilteredCompletionModel HandleDeletionTrigger(
             CompletionTriggerReason filterTriggerKind,
             ImmutableArray<MatchResult> matchResults,
             string filterText,
@@ -399,7 +389,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
             }
 
             MatchResult? bestMatchResult = null;
-            var moreThanOneMatchWithSamePriority = false;
+            bool moreThanOneMatchWithSamePriority = false;
             foreach (var currentMatchResult in matchingItems)
             {
                 if (bestMatchResult == null)
@@ -457,7 +447,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
             => matchResults.SelectAsArray(matchResult =>
             new CompletionItemWithHighlight(matchResult.VSCompletionItem, matchResult.HighlightedSpans));
 
-        private static FilteredCompletionModel HandleAllItemsFilteredOut(
+        private FilteredCompletionModel HandleAllItemsFilteredOut(
             CompletionTriggerReason triggerReason,
             ImmutableArray<CompletionFilterWithState> filters,
             CompletionRules completionRules)

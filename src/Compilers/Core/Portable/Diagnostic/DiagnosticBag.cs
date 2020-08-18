@@ -261,8 +261,6 @@ namespace Microsoft.CodeAnalysis
             return _lazyBag ?? SpecializedCollections.EmptyEnumerable<Diagnostic>();
         }
 
-        internal int Count => _lazyBag?.Count ?? 0;
-
         public override string ToString()
         {
             if (this.IsEmptyWithoutResolution)

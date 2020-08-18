@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.ProjectSystemShim
 
             protected override CompilationOptions ComputeCompilationOptionsWithHostValues(CompilationOptions compilationOptions, IRuleSetFile? ruleSetFile)
             {
-                IDictionary<string, ReportDiagnostic>? ruleSetSpecificDiagnosticOptions;
+                IDictionary<string, ReportDiagnostic>? ruleSetSpecificDiagnosticOptions = null;
 
                 // Get options from the ruleset file, if any, first. That way project-specific
                 // options can override them.

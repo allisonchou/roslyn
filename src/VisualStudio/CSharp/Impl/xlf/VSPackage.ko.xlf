@@ -33,8 +33,7 @@
         <note>"C#" node help text in profile Import/Export.</note>
       </trans-unit>
       <trans-unit id="306">
-        <source>Display inline parameter name hints;
-Show diagnostics for closed files;
+        <source>Show diagnostics for closed files;
 Colorize regular expression; 
 Highlight related components under cursor; 
 Report invalid regular expressions;
@@ -81,7 +80,7 @@ regex;
 regular expression;
 Use enhanced colors;
 Editor Color Scheme;</source>
-        <target state="needs-review-translation">닫힌 파일에 대한 진단 표시;
+        <target state="translated">닫힌 파일에 대한 진단 표시;
 정규식 색 지정; 
 커서 아래의 관련 구성 요소 강조; 
 잘못된 정규식 보고;

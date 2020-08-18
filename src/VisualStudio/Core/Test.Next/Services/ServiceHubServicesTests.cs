@@ -16,7 +16,8 @@ using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Remote;
-using Microsoft.CodeAnalysis.Remote.Testing;
+using Microsoft.CodeAnalysis.Remote.DebugUtil;
+using Microsoft.CodeAnalysis.Remote.Shared;
 using Microsoft.CodeAnalysis.Serialization;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Text;
@@ -24,6 +25,7 @@ using Microsoft.CodeAnalysis.TodoComments;
 using Microsoft.CodeAnalysis.UnitTests;
 using Nerdbank;
 using Roslyn.Test.Utilities;
+using Roslyn.Test.Utilities.Remote;
 using Roslyn.Utilities;
 using Roslyn.VisualStudio.Next.UnitTests.Mocks;
 using Xunit;
@@ -41,9 +43,6 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Remote
                 return (RemoteWorkspace)primaryWorkspace.Workspace;
             }
         }
-
-        private static AdhocWorkspace CreateWorkspace(Type[] additionalParts = null)
-             => new AdhocWorkspace(FeaturesTestCompositions.Features.AddParts(additionalParts).GetHostServices());
 
         private static Solution WithChangedOptionsFromRemoteWorkspace(Solution solution)
             => solution.WithChangedOptionsFrom(RemoteWorkspace.Options);
@@ -180,6 +179,9 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Remote
                 = new TaskCompletionSource<(DocumentId, ImmutableArray<TodoCommentData>)>();
             public Task<(DocumentId, ImmutableArray<TodoCommentData>)> Data => _dataSource.Task;
 
+            public Task OnDocumentRemovedAsync(DocumentId documentId, CancellationToken cancellationToken)
+                => Task.CompletedTask;
+
             public Task ReportTodoCommentDataAsync(DocumentId documentId, ImmutableArray<TodoCommentData> data, CancellationToken cancellationToken)
             {
                 _dataSource.SetResult((documentId, data));
@@ -264,7 +266,7 @@ class Test { }");
         [Fact, Trait(Traits.Feature, Traits.Features.RemoteHost)]
         public async Task TestUnknownProject()
         {
-            var workspace = CreateWorkspace(new[] { typeof(NoCompilationLanguageServiceFactory) });
+            var workspace = new AdhocWorkspace(TestHostServices.CreateHostServices());
             var solution = workspace.CurrentSolution.AddProject("unknown", "unknown", NoCompilationConstants.LanguageName).Solution;
 
             var client = (InProcRemoteHostClient)await InProcRemoteHostClient.CreateAsync(workspace.Services, runCacheCleanup: false);
@@ -278,8 +280,7 @@ class Test { }");
 
             solution = WithChangedOptionsFromRemoteWorkspace(solution);
 
-            // No serializable remote options affect options checksum, so the checksums should match.
-            Assert.Equal(
+            Assert.NotEqual(
                 await solution.State.GetChecksumAsync(CancellationToken.None),
                 await RemoteWorkspace.CurrentSolution.State.GetChecksumAsync(CancellationToken.None));
 

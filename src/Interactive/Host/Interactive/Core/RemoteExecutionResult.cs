@@ -5,71 +5,39 @@
 #nullable enable
 
 using System;
-using System.Collections.Immutable;
-using System.Linq;
 
 namespace Microsoft.CodeAnalysis.Interactive
 {
+    [Serializable]
     internal readonly struct RemoteExecutionResult
     {
-        internal sealed class Data
-        {
-            public bool Success;
-            public string[] SourcePaths = null!;
-            public string[] ReferencePaths = null!;
-            public string WorkingDirectory = null!;
-            public RemoteInitializationResult.Data? InitializationResult;
-
-            public RemoteExecutionResult Deserialize()
-                => new RemoteExecutionResult(
-                    Success,
-                    SourcePaths.ToImmutableArray(),
-                    ReferencePaths.ToImmutableArray(),
-                    WorkingDirectory,
-                    InitializationResult?.Deserialize());
-        }
-
         public readonly bool Success;
 
         /// <summary>
-        /// New value of source search paths after execution.
+        /// New value of source search paths after execution, or null if not changed since the last execution.
         /// </summary>
-        public readonly ImmutableArray<string> SourcePaths;
+        public readonly string[]? ChangedSourcePaths;
 
         /// <summary>
-        /// New value of reference search paths after execution.
+        /// New value of reference search paths after execution, or null if not changed since the last execution.
         /// </summary>
-        public readonly ImmutableArray<string> ReferencePaths;
+        public readonly string[]? ChangedReferencePaths;
 
         /// <summary>
-        /// New value of working directory in the remote process after execution.
+        /// New value of working directory in the remote process after execution, or null if not changed since the last execution.
         /// </summary>
-        public readonly string WorkingDirectory;
-
-        public readonly RemoteInitializationResult? InitializationResult;
+        public readonly string? ChangedWorkingDirectory;
 
         public RemoteExecutionResult(
             bool success,
-            ImmutableArray<string> sourcePaths,
-            ImmutableArray<string> referencePaths,
-            string workingDirectory,
-            RemoteInitializationResult? initializationResult)
+            string[]? changedSourcePaths = null,
+            string[]? changedReferencePaths = null,
+            string? changedWorkingDirectory = null)
         {
             Success = success;
-            SourcePaths = sourcePaths;
-            ReferencePaths = referencePaths;
-            WorkingDirectory = workingDirectory;
-            InitializationResult = initializationResult;
+            ChangedSourcePaths = changedSourcePaths;
+            ChangedReferencePaths = changedReferencePaths;
+            ChangedWorkingDirectory = changedWorkingDirectory;
         }
-
-        public Data Serialize()
-            => new Data()
-            {
-                Success = Success,
-                SourcePaths = SourcePaths.ToArray(),
-                ReferencePaths = ReferencePaths.ToArray(),
-                WorkingDirectory = WorkingDirectory,
-                InitializationResult = InitializationResult?.Serialize(),
-            };
     }
 }

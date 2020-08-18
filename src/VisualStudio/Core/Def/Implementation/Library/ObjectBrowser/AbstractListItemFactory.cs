@@ -261,7 +261,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
 
             var builder = ImmutableArray.CreateBuilder<ObjectListItem>();
 
-            if (parentListItem is ProjectListItem)
+            if (parentListItem is ProjectListItem parentProjectItem)
             {
                 builder.Add(new FolderListItem(parentListItem.ProjectId, ServicesVSResources.Project_References));
             }
@@ -601,7 +601,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
             return false;
         }
 
-        public ImmutableArray<ObjectListItem> GetProjectListItems(Solution solution, string languageName, uint listFlags)
+        public ImmutableArray<ObjectListItem> GetProjectListItems(Solution solution, string languageName, uint listFlags, CancellationToken cancellationToken)
         {
             var projectIds = solution.ProjectIds;
             if (!projectIds.Any())

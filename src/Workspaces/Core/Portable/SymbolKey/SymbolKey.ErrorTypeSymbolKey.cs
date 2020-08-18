@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
-
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Roslyn.Utilities;
@@ -32,11 +30,8 @@ namespace Microsoft.CodeAnalysis
                         break;
                 }
 
-                var isConstructed = !symbol.Equals(symbol.ConstructedFrom);
                 visitor.WriteInteger(symbol.Arity);
-                visitor.WriteBoolean(isConstructed);
-
-                if (isConstructed)
+                if (!symbol.Equals(symbol.ConstructedFrom))
                 {
                     visitor.WriteSymbolKeyArray(symbol.TypeArguments);
                 }
@@ -62,12 +57,12 @@ namespace Microsoft.CodeAnalysis
                 return builder.ToImmutable();
             }
 
-            public static SymbolKeyResolution Resolve(SymbolKeyReader reader, out string? failureReason)
+            public static SymbolKeyResolution Resolve(SymbolKeyReader reader, out string failureReason)
             {
-                var name = reader.ReadString()!;
+                var name = reader.ReadString();
+
                 var containingSymbolResolution = ResolveContainer(reader, out var containingSymbolFailureReason);
                 var arity = reader.ReadInteger();
-                var isConstructed = reader.ReadBoolean();
 
                 using var typeArguments = reader.ReadSymbolKeyArray<ITypeSymbol>(out var typeArgumentsFailureReason);
 
@@ -91,22 +86,24 @@ namespace Microsoft.CodeAnalysis
 
                 using var result = PooledArrayBuilder<INamedTypeSymbol>.GetInstance();
 
-                var typeArgumentsArray = isConstructed ? typeArguments.Builder.ToArray() : null;
+                var typeArgumentsArray = arity > 0 ? typeArguments.Builder.ToArray() : null;
                 foreach (var container in containingSymbolResolution.OfType<INamespaceOrTypeSymbol>())
                 {
-                    var originalType = reader.Compilation.CreateErrorTypeSymbol(container, name, arity);
-                    var errorType = typeArgumentsArray != null ? originalType.Construct(typeArgumentsArray) : originalType;
-                    result.AddIfNotNull(errorType);
+                    result.AddIfNotNull(Construct(
+                        reader, container, name, arity, typeArgumentsArray));
                 }
 
                 // Always ensure at least one error type was created.
                 if (result.Count == 0)
-                    result.AddIfNotNull(reader.Compilation.CreateErrorTypeSymbol(container: null, name, arity));
+                {
+                    result.AddIfNotNull(Construct(
+                        reader, container: null, name, arity, typeArgumentsArray));
+                }
 
                 return CreateResolution(result, $"({nameof(ErrorTypeSymbolKey)} failed)", out failureReason);
             }
 
-            private static SymbolKeyResolution ResolveContainer(SymbolKeyReader reader, out string? failureReason)
+            private static SymbolKeyResolution ResolveContainer(SymbolKeyReader reader, out string failureReason)
             {
                 var type = reader.ReadInteger();
 
@@ -115,9 +112,7 @@ namespace Microsoft.CodeAnalysis
 
                 if (type == 1)
                 {
-#pragma warning disable IDE0007 // Use implicit type
-                    using PooledArrayBuilder<string> namespaceNames = reader.ReadStringArray()!;
-#pragma warning restore IDE0007 // Use implicit type
+                    using var namespaceNames = reader.ReadStringArray();
                     var currentNamespace = reader.Compilation.GlobalNamespace;
 
                     // have to walk the namespaces in reverse because that's how we encoded them.
@@ -135,6 +130,12 @@ namespace Microsoft.CodeAnalysis
                 }
 
                 throw ExceptionUtilities.UnexpectedValue(type);
+            }
+
+            private static INamedTypeSymbol Construct(SymbolKeyReader reader, INamespaceOrTypeSymbol container, string name, int arity, ITypeSymbol[] typeArguments)
+            {
+                var result = reader.Compilation.CreateErrorTypeSymbol(container, name, arity);
+                return typeArguments != null ? result.Construct(typeArguments) : result;
             }
         }
     }

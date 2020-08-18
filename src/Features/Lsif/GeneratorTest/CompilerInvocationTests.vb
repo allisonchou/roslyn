@@ -8,7 +8,7 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
     <UseExportProvider>
     Public Class CompilerInvocationTests
         <Fact>
-        Public Async Function TestCSharpProject() As Task
+        Public Async Sub TestCSharpProject()
             ' PortableExecutableReference.CreateFromFile implicitly reads the file so the file must exist.
             Dim referencePath = GetType(Object).Assembly.Location
 
@@ -31,10 +31,10 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
             Dim metadataReference = Assert.Single(compilerInvocation.Compilation.References)
 
             Assert.Equal(referencePath, DirectCast(metadataReference, PortableExecutableReference).FilePath)
-        End Function
+        End Sub
 
         <Fact>
-        Public Async Function TestVisualBasicProject() As Task
+        Public Async Sub TestVisualBasicProject()
             ' PortableExecutableReference.CreateFromFile implicitly reads the file so the file must exist.
             Dim referencePath = GetType(Object).Assembly.Location
 
@@ -57,11 +57,11 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
             Dim metadataReference = Assert.Single(compilerInvocation.Compilation.References)
 
             Assert.Equal(referencePath, DirectCast(metadataReference, PortableExecutableReference).FilePath)
-        End Function
+        End Sub
 
         <Theory>
         <CombinatorialData>
-        Public Async Function TestSourceFilePathMappingWithDriveLetters(<CombinatorialValues("F:", "F:\")> from As String, <CombinatorialValues("T:", "T:\")> [to] As String) As Task
+        Public Async Sub TestSourceFilePathMappingWithDriveLetters(<CombinatorialValues("F:", "F:\")> from As String, <CombinatorialValues("T:", "T:\")> [to] As String)
             Dim compilerInvocation = Await Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.CompilerInvocation.CreateFromJsonAsync("
                 {
                     ""tool"": ""csc"",
@@ -78,10 +78,10 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
             Dim syntaxTree = Assert.Single(compilerInvocation.Compilation.SyntaxTrees)
 
             Assert.Equal("T:\SourceFile.cs", syntaxTree.FilePath)
-        End Function
+        End Sub
 
         <Fact>
-        Public Async Function TestSourceFilePathMappingWithSubdirectoriesWithoutTrailingSlashes() As Task
+        Public Async Sub TestSourceFilePathMappingWithSubdirectoriesWithoutTrailingSlashes()
             Dim compilerInvocation = Await Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.CompilerInvocation.CreateFromJsonAsync("
                 {
                     ""tool"": ""csc"",
@@ -98,10 +98,10 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
             Dim syntaxTree = Assert.Single(compilerInvocation.Compilation.SyntaxTrees)
 
             Assert.Equal("T:\Directory\SourceFile.cs", syntaxTree.FilePath)
-        End Function
+        End Sub
 
         <Fact>
-        Public Async Function TestSourceFilePathMappingWithSubdirectoriesWithDoubleSlashesInFilePath() As Task
+        Public Async Sub TestSourceFilePathMappingWithSubdirectoriesWithDoubleSlashesInFilePath()
             Dim compilerInvocation = Await Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.CompilerInvocation.CreateFromJsonAsync("
                 {
                     ""tool"": ""csc"",
@@ -118,10 +118,10 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
             Dim syntaxTree = Assert.Single(compilerInvocation.Compilation.SyntaxTrees)
 
             Assert.Equal("T:\Directory\SourceFile.cs", syntaxTree.FilePath)
-        End Function
+        End Sub
 
         <Fact>
-        Public Async Function TestRuleSetPathMapping() As Task
+        Public Async Sub TestRuleSetPathMapping()
             Const RuleSetContents = "<?xml version=""1.0""?>
 <RuleSet Name=""Name"" ToolsVersion=""10.0"">
   <Rules AnalyzerId=""Microsoft.Analyzers.ManagedCodeAnalysis"" RuleNamespace=""Microsoft.Rules.Managed"">
@@ -148,6 +148,6 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
 
                 Assert.Equal(ReportDiagnostic.Warn, compilerInvocation.Compilation.Options.SpecificDiagnosticOptions("CA1001"))
             End Using
-        End Function
+        End Sub
     End Class
 End Namespace

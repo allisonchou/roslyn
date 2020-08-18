@@ -95,7 +95,6 @@ namespace Microsoft.CodeAnalysis.CSharp.ConvertAnonymousTypeToClass
             Debug.Assert(anonymousType != null);
 
             var position = span.Start;
-            var options = await document.GetOptionsAsync(cancellationToken).ConfigureAwait(false);
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
@@ -140,15 +139,14 @@ namespace Microsoft.CodeAnalysis.CSharp.ConvertAnonymousTypeToClass
             editor.ReplaceNode(container, (currentContainer, _) =>
             {
                 var codeGenService = document.GetLanguageService<ICodeGenerationService>();
-                var codeGenOptions = new CodeGenerationOptions(
+                var options = new CodeGenerationOptions(
                     generateMembers: true,
                     sortMembers: false,
                     autoInsertionLocation: false,
-                    options: options,
                     parseOptions: root.SyntaxTree.Options);
 
                 return codeGenService.AddNamedType(
-                    currentContainer, namedTypeSymbol, codeGenOptions, cancellationToken);
+                    currentContainer, namedTypeSymbol, options, cancellationToken);
             });
 
             var updatedDocument = document.WithSyntaxRoot(editor.GetChangedRoot());

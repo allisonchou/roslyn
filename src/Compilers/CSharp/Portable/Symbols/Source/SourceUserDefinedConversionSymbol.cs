@@ -3,12 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -45,10 +43,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 containingType,
                 location,
                 syntax,
-                MakeDeclarationModifiers(syntax, location, diagnostics),
-                hasBody: syntax.HasAnyBody(),
-                isExpressionBodied: syntax.Body == null && syntax.ExpressionBody != null,
-                isIterator: SyntaxFacts.HasYieldOperations(syntax.Body),
                 diagnostics)
         {
             CheckForBlockAndExpressionBody(
@@ -60,39 +54,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal ConversionOperatorDeclarationSyntax GetSyntax()
+        internal new ConversionOperatorDeclarationSyntax GetSyntax()
         {
             Debug.Assert(syntaxReferenceOpt != null);
             return (ConversionOperatorDeclarationSyntax)syntaxReferenceOpt.GetSyntax();
         }
 
-        protected override int GetParameterCountFromSyntax()
-        {
-            return GetSyntax().ParameterList.ParameterCount;
-        }
-
-        protected override Location ReturnTypeLocation
+        protected override ParameterListSyntax ParameterListSyntax
         {
             get
             {
-                return GetSyntax().Type.Location;
+                return GetSyntax().ParameterList;
+            }
+        }
+
+        protected override TypeSyntax ReturnTypeSyntax
+        {
+            get
+            {
+                return GetSyntax().Type;
             }
         }
 
         internal override bool GenerateDebugInfo
         {
             get { return true; }
-        }
-
-        internal sealed override OneOrMany<SyntaxList<AttributeListSyntax>> GetAttributeDeclarations()
-        {
-            return OneOrMany.Create(this.GetSyntax().AttributeLists);
-        }
-
-        protected override (TypeWithAnnotations ReturnType, ImmutableArray<ParameterSymbol> Parameters) MakeParametersAndBindReturnType(DiagnosticBag diagnostics)
-        {
-            ConversionOperatorDeclarationSyntax declarationSyntax = GetSyntax();
-            return MakeParametersAndBindReturnType(declarationSyntax, declarationSyntax.Type, diagnostics);
         }
     }
 }

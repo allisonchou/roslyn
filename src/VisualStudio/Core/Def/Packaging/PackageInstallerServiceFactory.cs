@@ -250,6 +250,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Packaging
                 var dteProject = _workspace.TryGetDTEProject(projectId);
                 if (dteProject != null)
                 {
+                    var description = string.Format(ServicesVSResources.Install_0, packageName);
+
                     var undoManager = _editorAdaptersFactoryService.TryGetUndoManager(
                         workspace, documentId, cancellationToken);
 
@@ -501,7 +503,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Packaging
             this.AssertIsForeground();
 
             // Remove anything we have associated with this project.
-            _projectToInstalledPackageAndVersion.TryRemove(projectId, out _);
+            _projectToInstalledPackageAndVersion.TryRemove(projectId, out var projectState);
 
             var project = solution.GetProject(projectId);
             if (project == null)

@@ -34,7 +34,8 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
 
             bool ISupportsNavigation.TryNavigateTo(bool isPreview)
                 => DefinitionBucket.DefinitionItem.TryNavigateTo(
-                    Presenter._workspace, showInPreviewTab: isPreview, activateTab: !isPreview); // Only activate the tab if not opening in preview
+                    Presenter._workspace,
+                    isPreview ? NavigationBehavior.PreviewWithoutFocus : NavigationBehavior.Normal);
 
             protected override IList<Inline> CreateLineTextInlines()
                 => DefinitionBucket.DefinitionItem.DisplayParts

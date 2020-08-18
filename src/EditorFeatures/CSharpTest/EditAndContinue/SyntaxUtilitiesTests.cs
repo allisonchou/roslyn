@@ -13,7 +13,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.EditAndContinue
 {
     public class SyntaxUtilitiesTests
     {
-        private static void VerifySyntaxMap(string oldSource, string newSource)
+        private void VerifySyntaxMap(string oldSource, string newSource)
         {
             var oldRoot = SyntaxFactory.ParseSyntaxTree(oldSource).GetRoot();
             var newRoot = SyntaxFactory.ParseSyntaxTree(newSource).GetRoot();

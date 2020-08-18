@@ -57,6 +57,7 @@ namespace Microsoft.CodeAnalysis.Text.Shared.Extensions
 
         public static bool TryGetPosition(this ITextSnapshot snapshot, int lineNumber, int columnIndex, out SnapshotPoint position)
         {
+            var result = 0;
             position = new SnapshotPoint();
 
             if (lineNumber < 0 || lineNumber >= snapshot.LineCount)
@@ -70,7 +71,7 @@ namespace Microsoft.CodeAnalysis.Text.Shared.Extensions
                 return false;
             }
 
-            var result = line.Start.Position + columnIndex;
+            result = line.Start.Position + columnIndex;
             position = new SnapshotPoint(snapshot, result);
             return true;
         }

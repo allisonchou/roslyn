@@ -3,10 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
@@ -22,7 +20,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             string name = OperatorFacts.OperatorNameFromDeclaration(syntax);
 
             return new SourceUserDefinedOperatorSymbol(
-                containingType, name, location, syntax, diagnostics);
+                containingType, name, location, syntax, diagnostics,
+                syntax.Body == null && syntax.ExpressionBody != null);
         }
 
         // NOTE: no need to call WithUnsafeRegionIfNecessary, since the signature
@@ -33,17 +32,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             string name,
             Location location,
             OperatorDeclarationSyntax syntax,
-            DiagnosticBag diagnostics) :
+            DiagnosticBag diagnostics,
+            bool isExpressionBodied) :
             base(
                 MethodKind.UserDefinedOperator,
                 name,
                 containingType,
                 location,
                 syntax,
-                MakeDeclarationModifiers(syntax, location, diagnostics),
-                hasBody: syntax.HasAnyBody(),
-                isExpressionBodied: syntax.Body == null && syntax.ExpressionBody != null,
-                isIterator: SyntaxFacts.HasYieldOperations(syntax.Body),
                 diagnostics)
         {
             CheckForBlockAndExpressionBody(
@@ -55,39 +51,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal OperatorDeclarationSyntax GetSyntax()
+        internal new OperatorDeclarationSyntax GetSyntax()
         {
             Debug.Assert(syntaxReferenceOpt != null);
             return (OperatorDeclarationSyntax)syntaxReferenceOpt.GetSyntax();
         }
 
-        protected override int GetParameterCountFromSyntax()
-        {
-            return GetSyntax().ParameterList.ParameterCount;
-        }
-
-        protected override Location ReturnTypeLocation
+        protected override ParameterListSyntax ParameterListSyntax
         {
             get
             {
-                return GetSyntax().ReturnType.Location;
+                return GetSyntax().ParameterList;
+            }
+        }
+
+        protected override TypeSyntax ReturnTypeSyntax
+        {
+            get
+            {
+                return GetSyntax().ReturnType;
             }
         }
 
         internal override bool GenerateDebugInfo
         {
             get { return true; }
-        }
-
-        internal sealed override OneOrMany<SyntaxList<AttributeListSyntax>> GetAttributeDeclarations()
-        {
-            return OneOrMany.Create(this.GetSyntax().AttributeLists);
-        }
-
-        protected override (TypeWithAnnotations ReturnType, ImmutableArray<ParameterSymbol> Parameters) MakeParametersAndBindReturnType(DiagnosticBag diagnostics)
-        {
-            OperatorDeclarationSyntax declarationSyntax = GetSyntax();
-            return MakeParametersAndBindReturnType(declarationSyntax, declarationSyntax.ReturnType, diagnostics);
         }
     }
 }

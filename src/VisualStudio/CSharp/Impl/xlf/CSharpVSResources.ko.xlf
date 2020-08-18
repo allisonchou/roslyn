@@ -32,11 +32,6 @@
         <target state="translated">무시 항목</target>
         <note />
       </trans-unit>
-      <trans-unit id="Format_document">
-        <source>Format document</source>
-        <target state="new">Format document</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Format_document_settings">
         <source>Format Document Settings (Experiment) </source>
         <target state="translated">문서 서식 설정(실험)</target>
@@ -76,11 +71,6 @@
         <source>Prefer 'is null' for reference equality checks</source>
         <target state="translated">참조 같음 검사에 대해 'is null' 선호</target>
         <note>'is null' is a C# string and should not be localized.</note>
-      </trans-unit>
-      <trans-unit id="Prefer_pattern_matching">
-        <source>Prefer pattern matching</source>
-        <target state="new">Prefer pattern matching</target>
-        <note />
       </trans-unit>
       <trans-unit id="Prefer_switch_expression">
         <source>Prefer switch expression</source>

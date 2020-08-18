@@ -15,67 +15,49 @@ using System.Threading.Tasks;
 using Moq;
 using Xunit;
 using System.Collections.Concurrent;
-using System.Collections.Immutable;
 
 namespace Microsoft.CodeAnalysis.CompilerServer.UnitTests
 {
-    internal static class ProtocolUtil
+    internal readonly struct ServerStats
     {
-        internal static readonly BuildRequest EmptyCSharpBuildRequest = new BuildRequest(
-            BuildProtocolConstants.ProtocolVersion,
-            RequestLanguage.CSharpCompile,
-            BuildProtocolConstants.GetCommitHash(),
-            ImmutableArray<BuildRequest.Argument>.Empty);
+        internal readonly int Connections;
+        internal readonly int CompletedConnections;
 
-        internal static readonly BuildRequest EmptyBasicBuildRequest = new BuildRequest(
-            BuildProtocolConstants.ProtocolVersion,
-            RequestLanguage.VisualBasicCompile,
-            BuildProtocolConstants.GetCommitHash(),
-            ImmutableArray<BuildRequest.Argument>.Empty);
-
-        internal static readonly BuildResponse EmptyBuildResponse = new CompletedBuildResponse(
-            returnCode: 0,
-            utf8output: false,
-            output: string.Empty);
-
-        internal static BuildRequest CreateEmptyCSharpWithKeepAlive(TimeSpan keepAlive) => BuildRequest.Create(
-            RequestLanguage.CSharpCompile,
-            Array.Empty<string>(),
-            compilerHash: BuildProtocolConstants.GetCommitHash(),
-            keepAlive: keepAlive.TotalSeconds.ToString());
-
+        internal ServerStats(int connections, int completedConnections)
+        {
+            Connections = connections;
+            CompletedConnections = completedConnections;
+        }
     }
 
     internal sealed class ServerData : IDisposable
     {
         internal CancellationTokenSource CancellationTokenSource { get; }
-        internal Task<TestableDiagnosticListener> ServerTask { get; }
+        internal Task<ServerStats> ServerTask { get; }
+        internal BlockingCollection<CompletionReason> ConnectionCompletionCollection { get; }
+        internal Task ListenTask { get; }
         internal string PipeName { get; }
 
-        internal ServerData(CancellationTokenSource cancellationTokenSource, string pipeName, Task<TestableDiagnosticListener> serverTask)
+        internal ServerData(CancellationTokenSource cancellationTokenSource, string pipeName, Task<ServerStats> serverTask, Task listenTask, BlockingCollection<CompletionReason> connectionCompletionCollection)
         {
             CancellationTokenSource = cancellationTokenSource;
             PipeName = pipeName;
             ServerTask = serverTask;
+            ListenTask = listenTask;
+            ConnectionCompletionCollection = connectionCompletionCollection;
         }
 
-        internal async Task<BuildResponse> SendAsync(BuildRequest request, CancellationToken cancellationToken = default)
-        {
-            using var client = await BuildServerConnection.TryConnectToServerAsync(PipeName, Timeout.Infinite, cancellationToken).ConfigureAwait(false);
-            await request.WriteAsync(client).ConfigureAwait(false);
-            return await BuildResponse.ReadAsync(client).ConfigureAwait(false);
-        }
-
-        internal async Task<int> SendShutdownAsync(CancellationToken cancellationToken = default)
-        {
-            var response = await SendAsync(BuildRequest.CreateShutdown(), cancellationToken).ConfigureAwait(false);
-            return ((ShutdownBuildResponse)response).ServerProcessId;
-        }
-
-        internal async Task<TestableDiagnosticListener> Complete()
+        internal async Task<ServerStats> Complete()
         {
             CancellationTokenSource.Cancel();
             return await ServerTask;
+        }
+
+        internal async Task Verify(int connections, int completed)
+        {
+            var stats = await Complete().ConfigureAwait(false);
+            Assert.Equal(connections, stats.Connections);
+            Assert.Equal(completed, stats.CompletedConnections);
         }
 
         public void Dispose()
@@ -86,7 +68,6 @@ namespace Microsoft.CodeAnalysis.CompilerServer.UnitTests
             }
 
             ServerTask.Wait();
-            Assert.True(NamedPipeTestUtil.IsPipeFullyClosed(PipeName));
         }
     }
 
@@ -104,34 +85,46 @@ namespace Microsoft.CodeAnalysis.CompilerServer.UnitTests
                 tempDir: tempDir);
         }
 
-        internal static string GetPipeName() => Guid.NewGuid().ToString().Substring(0, 10);
-
         internal static async Task<ServerData> CreateServer(
             string pipeName = null,
             ICompilerServerHost compilerServerHost = null,
-            IClientConnectionHost clientConnectionHost = null,
-            TimeSpan? keepAlive = null)
+            bool failingServer = false,
+            string tempPath = null)
         {
             // The total pipe path must be < 92 characters on Unix, so trim this down to 10 chars
-            pipeName ??= GetPipeName();
-            compilerServerHost ??= BuildServerController.CreateCompilerServerHost();
-            clientConnectionHost ??= BuildServerController.CreateClientConnectionHost(pipeName);
-            keepAlive ??= TimeSpan.FromMilliseconds(-1);
+            pipeName = pipeName ?? Guid.NewGuid().ToString().Substring(0, 10);
+            compilerServerHost = compilerServerHost ?? BuildServerController.CreateCompilerServerHost();
+            tempPath = tempPath ?? Path.GetTempPath();
+            var clientConnectionHost = BuildServerController.CreateClientConnectionHostForServerHost(compilerServerHost, pipeName);
 
-            var listener = new TestableDiagnosticListener();
+            if (failingServer)
+            {
+                clientConnectionHost = new FailingClientConnectionHost(clientConnectionHost);
+            }
+
+            var serverStatsSource = new TaskCompletionSource<ServerStats>();
             var serverListenSource = new TaskCompletionSource<bool>();
             var cts = new CancellationTokenSource();
             var mutexName = BuildServerConnection.GetServerMutexName(pipeName);
+            var listener = new TestableDiagnosticListener();
             var task = Task.Run(() =>
             {
-                BuildServerController.CreateAndRunServer(
-                    pipeName,
-                    compilerServerHost,
-                    clientConnectionHost,
-                    listener,
-                    keepAlive: keepAlive,
-                    cancellationToken: cts.Token);
-                return listener;
+                listener.Listening += (sender, e) => { serverListenSource.TrySetResult(true); };
+                try
+                {
+                    BuildServerController.CreateAndRunServer(
+                        pipeName,
+                        tempPath,
+                        clientConnectionHost,
+                        listener,
+                        keepAlive: TimeSpan.FromMilliseconds(-1),
+                        cancellationToken: cts.Token);
+                }
+                finally
+                {
+                    var serverStats = new ServerStats(connections: listener.ConnectionCount, completedConnections: listener.CompletedCount);
+                    serverStatsSource.SetResult(serverStats);
+                }
             });
 
             // The contract of this function is that it will return once the server has started.  Spin here until
@@ -141,7 +134,35 @@ namespace Microsoft.CodeAnalysis.CompilerServer.UnitTests
                 await Task.Yield();
             }
 
-            return new ServerData(cts, pipeName, task);
+            if (task.IsFaulted)
+            {
+                throw task.Exception;
+            }
+
+            return new ServerData(cts, pipeName, serverStatsSource.Task, serverListenSource.Task, listener.ConnectionCompletedCollection);
+        }
+
+        /// <summary>
+        /// Create a compiler server that fails all connections.
+        /// </summary>
+        internal static Task<ServerData> CreateServerFailsConnection(string pipeName = null)
+        {
+            return CreateServer(pipeName, failingServer: true);
+        }
+
+        internal static async Task<BuildResponse> Send(string pipeName, BuildRequest request)
+        {
+            using (var client = await BuildServerConnection.TryConnectToServerAsync(pipeName, Timeout.Infinite, cancellationToken: default).ConfigureAwait(false))
+            {
+                await request.WriteAsync(client).ConfigureAwait(false);
+                return await BuildResponse.ReadAsync(client).ConfigureAwait(false);
+            }
+        }
+
+        internal static async Task<int> SendShutdown(string pipeName)
+        {
+            var response = await Send(pipeName, BuildRequest.CreateShutdown());
+            return ((ShutdownBuildResponse)response).ServerProcessId;
         }
 
         internal static BuildClient CreateBuildClient(

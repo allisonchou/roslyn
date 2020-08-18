@@ -159,7 +159,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
             BuildNamespaceDeclaration(namespaceSymbol, options);
 
             AddEndDeclaration();
-            BuildMemberOf(namespaceSymbol.ContainingAssembly);
+            BuildMemberOf(namespaceSymbol.ContainingAssembly, options);
         }
 
         private void BuildType(TypeListItem typeListItem, _VSOBJDESCOPTIONS options)
@@ -186,9 +186,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
             }
 
             AddEndDeclaration();
-            BuildMemberOf(symbol.ContainingNamespace);
+            BuildMemberOf(symbol.ContainingNamespace, options);
 
-            BuildXmlDocumentation(symbol, compilation);
+            BuildXmlDocumentation(symbol, compilation, options);
         }
 
         private void BuildMember(MemberListItem memberListItem, _VSOBJDESCOPTIONS options)
@@ -229,9 +229,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
             }
 
             AddEndDeclaration();
-            BuildMemberOf(symbol.ContainingType);
+            BuildMemberOf(symbol.ContainingType, options);
 
-            BuildXmlDocumentation(symbol, compilation);
+            BuildXmlDocumentation(symbol, compilation, options);
         }
 
         protected abstract void BuildNamespaceDeclaration(INamespaceSymbol namespaceSymbol, _VSOBJDESCOPTIONS options);
@@ -242,7 +242,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
         protected abstract void BuildPropertyDeclaration(IPropertySymbol propertySymbol, _VSOBJDESCOPTIONS options);
         protected abstract void BuildEventDeclaration(IEventSymbol eventSymbol, _VSOBJDESCOPTIONS options);
 
-        private void BuildMemberOf(ISymbol containingSymbol)
+        private void BuildMemberOf(ISymbol containingSymbol, _VSOBJDESCOPTIONS options)
         {
             if (containingSymbol is INamespaceSymbol &&
                 ((INamespaceSymbol)containingSymbol).IsGlobalNamespace)
@@ -283,7 +283,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
             AddEndDeclaration();
         }
 
-        private void BuildXmlDocumentation(ISymbol symbol, Compilation compilation)
+        private void BuildXmlDocumentation(ISymbol symbol, Compilation compilation, _VSOBJDESCOPTIONS options)
         {
             var documentationComment = symbol.GetDocumentationComment(compilation, expandIncludes: true, expandInheritdoc: true, cancellationToken: CancellationToken.None);
             if (documentationComment == null)
@@ -436,6 +436,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Library.ObjectB
                                 AddText(formattingService.Format(exceptionText, compilation));
                             }
                         }
+
+                        emittedDocs = true;
                     }
                 }
             }

@@ -28,8 +28,10 @@ namespace Microsoft.CodeAnalysis.AddMissingImports
             return new CSharpAddMissingImportsRefactoringProvider(pasteTrackingService);
         }
 
-        protected override void InitializeWorkspace(TestWorkspace workspace, TestParameters parameters)
+        protected override TestWorkspace CreateWorkspaceFromFile(string initialMarkup, TestParameters parameters)
         {
+            var workspace = TestWorkspace.CreateCSharp(initialMarkup);
+
             // Treat the span being tested as the pasted span
             var hostDocument = workspace.Documents.First();
             var pastedTextSpan = hostDocument.SelectedSpans.FirstOrDefault();
@@ -43,6 +45,8 @@ namespace Microsoft.CodeAnalysis.AddMissingImports
                 pasteTrackingService.RegisterPastedTextSpan(hostDocument.GetTextBuffer(), default);
                 pasteTrackingService.RegisterPastedTextSpan(hostDocument.GetTextBuffer(), pastedTextSpan);
             }
+
+            return workspace;
         }
 
         private Task TestInRegularAndScriptAsync(

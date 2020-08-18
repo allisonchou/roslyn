@@ -7,182 +7,152 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Cci;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
-    /// <summary>
-    /// If a virtual "clone" method is present in the base record, the synthesized "clone" method overrides it
-    /// and the return type of the method is the current containing type if the "covariant returns" feature is
-    /// supported and the override return type otherwise. An error is produced if the base record clone method
-    /// is sealed. If a virtual "clone" method is not present in the base record, the return type of the clone
-    /// method is the containing type and the method is virtual, unless the record is sealed or abstract.
-    /// If the containing record is abstract, the synthesized clone method is also abstract.
-    /// If the "clone" method is not abstract, it returns the result of a call to a copy constructor.
-    /// </summary>
-    internal sealed class SynthesizedRecordClone : SynthesizedRecordOrdinaryMethod
+    internal sealed class SynthesizedRecordClone : SynthesizedInstanceMethodSymbol
     {
-        public SynthesizedRecordClone(
-            SourceMemberContainerTypeSymbol containingType,
-            int memberOffset,
-            DiagnosticBag diagnostics)
-            : base(containingType, WellKnownMemberNames.CloneMethodName, hasBody: !containingType.IsAbstract, memberOffset, diagnostics)
-        {
-        }
+        public override TypeWithAnnotations ReturnTypeWithAnnotations { get; }
+        public override NamedTypeSymbol ContainingType { get; }
+        public override bool IsOverride { get; }
 
-        protected override DeclarationModifiers MakeDeclarationModifiers(DeclarationModifiers allowedModifiers, DiagnosticBag diagnostics)
+        public SynthesizedRecordClone(NamedTypeSymbol containingType)
         {
-            DeclarationModifiers result = DeclarationModifiers.Public;
-
-            if (VirtualCloneInBase() is object)
+            ContainingType = containingType;
+            var baseType = containingType.BaseTypeNoUseSiteDiagnostics;
+            if (FindValidCloneMethod(baseType) is { } baseClone)
             {
-                result |= DeclarationModifiers.Override;
+                // Use covariant returns when available
+                ReturnTypeWithAnnotations = baseClone.ReturnTypeWithAnnotations;
+                IsOverride = true;
             }
             else
             {
-                result |= ContainingType.IsSealed ? DeclarationModifiers.None : DeclarationModifiers.Virtual;
+                ReturnTypeWithAnnotations = TypeWithAnnotations.Create(isNullableEnabled: true, containingType);
+                IsOverride = false;
             }
-
-            if (ContainingType.IsAbstract)
-            {
-                result &= ~DeclarationModifiers.Virtual;
-                result |= DeclarationModifiers.Abstract;
-            }
-
-            Debug.Assert((result & ~allowedModifiers) == 0);
-#if DEBUG
-            Debug.Assert(modifiersAreValid(result));
-#endif 
-            return result;
-
-#if DEBUG
-            static bool modifiersAreValid(DeclarationModifiers modifiers)
-            {
-                if ((modifiers & DeclarationModifiers.AccessibilityMask) != DeclarationModifiers.Public)
-                {
-                    return false;
-                }
-
-                modifiers &= ~DeclarationModifiers.AccessibilityMask;
-
-                switch (modifiers)
-                {
-                    case DeclarationModifiers.None:
-                        return true;
-                    case DeclarationModifiers.Abstract:
-                        return true;
-                    case DeclarationModifiers.Override:
-                        return true;
-                    case DeclarationModifiers.Abstract | DeclarationModifiers.Override:
-                        return true;
-                    case DeclarationModifiers.Virtual:
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-#endif 
         }
 
-        private MethodSymbol? VirtualCloneInBase()
-        {
-            NamedTypeSymbol baseType = ContainingType.BaseTypeNoUseSiteDiagnostics;
+        public override string Name => WellKnownMemberNames.CloneMethodName;
 
-            if (!baseType.IsObjectType())
-            {
-                HashSet<DiagnosticInfo>? ignoredUseSiteDiagnostics = null; // This is reported when we bind bases
-                return FindValidCloneMethod(baseType, ref ignoredUseSiteDiagnostics);
-            }
+        public override MethodKind MethodKind => MethodKind.Ordinary;
 
-            return null;
-        }
+        public override int Arity => 0;
 
-        protected override (TypeWithAnnotations ReturnType, ImmutableArray<ParameterSymbol> Parameters, bool IsVararg, ImmutableArray<TypeParameterConstraintClause> DeclaredConstraintsForOverrideOrImplementation) MakeParametersAndBindReturnType(DiagnosticBag diagnostics)
-        {
-            return (ReturnType: VirtualCloneInBase() is { } baseClone ?
-                                     baseClone.ReturnTypeWithAnnotations : // Use covariant returns when available
-                                     TypeWithAnnotations.Create(isNullableEnabled: true, ContainingType),
-                    Parameters: ImmutableArray<ParameterSymbol>.Empty,
-                    IsVararg: false,
-                    DeclaredConstraintsForOverrideOrImplementation: ImmutableArray<TypeParameterConstraintClause>.Empty);
-        }
+        public override bool IsExtensionMethod => false;
 
-        protected override int GetParameterCountFromSyntax() => 0;
+        public override bool HidesBaseMethodsByName => false;
+
+        public override bool IsVararg => false;
+
+        public override bool ReturnsVoid => false;
+
+        public override bool IsAsync => false;
+
+        public override RefKind RefKind => RefKind.None;
+
+        public override ImmutableArray<ParameterSymbol> Parameters => ImmutableArray<ParameterSymbol>.Empty;
+
+        public override FlowAnalysisAnnotations ReturnTypeFlowAnalysisAnnotations => FlowAnalysisAnnotations.None;
+
+        public override ImmutableHashSet<string> ReturnNotNullIfParameterNotNull => ImmutableHashSet<string>.Empty;
+
+        public override ImmutableArray<TypeWithAnnotations> TypeArgumentsWithAnnotations
+            => ImmutableArray<TypeWithAnnotations>.Empty;
+
+        public override ImmutableArray<TypeParameterSymbol> TypeParameters => ImmutableArray<TypeParameterSymbol>.Empty;
+
+        public override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations => ImmutableArray<MethodSymbol>.Empty;
+
+        public override ImmutableArray<CustomModifier> RefCustomModifiers => ImmutableArray<CustomModifier>.Empty;
+
+        public override Symbol? AssociatedSymbol => null;
+
+        public override Symbol ContainingSymbol => ContainingType;
+
+        public override ImmutableArray<Location> Locations => ContainingType.Locations;
+
+        public override Accessibility DeclaredAccessibility => Accessibility.Public;
+
+        public override bool IsStatic => false;
+
+        public override bool IsVirtual => !IsOverride && !IsAbstract;
+
+        public override bool IsAbstract => ContainingType.IsAbstract;
+
+        public override bool IsSealed => false;
+
+        public override bool IsExtern => false;
+
+        internal override bool HasSpecialName => true;
+
+        internal override MethodImplAttributes ImplementationAttributes => MethodImplAttributes.Managed;
+
+        internal override bool HasDeclarativeSecurity => false;
+
+        internal override MarshalPseudoCustomAttributeData? ReturnValueMarshallingInformation => null;
+
+        internal override bool RequiresSecurityObject => false;
+
+        internal override CallingConvention CallingConvention => CallingConvention.HasThis;
+
+        internal override bool GenerateDebugInfo => false;
+
+        public override DllImportData? GetDllImportData() => null;
+
+        internal override ImmutableArray<string> GetAppliedConditionalSymbols()
+            => ImmutableArray<string>.Empty;
+
+        internal override IEnumerable<SecurityAttribute> GetSecurityInformation()
+            => Array.Empty<SecurityAttribute>();
+
+        internal override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false) => !IsOverride;
+
+        internal override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false) => true;
+
+        internal override bool SynthesizesLoweredBoundBody => true;
 
         internal override void GenerateMethodBody(TypeCompilationState compilationState, DiagnosticBag diagnostics)
         {
-            Debug.Assert(!IsAbstract);
-
             var F = new SyntheticBoundNodeFactory(this, ContainingType.GetNonNullSyntaxNode(), compilationState, diagnostics);
 
-            try
+            var members = ContainingType.GetMembers(WellKnownMemberNames.InstanceConstructorName);
+            foreach (var member in members)
             {
-                if (ReturnType.IsErrorType())
+                var ctor = (MethodSymbol)member;
+                if (ctor.ParameterCount == 1 &&
+                    ctor.Parameters[0].Type.Equals(ContainingType, TypeCompareKind.ConsiderEverything))
                 {
-                    F.CloseMethod(F.ThrowNull());
+                    F.CloseMethod(F.Return(F.New(ctor, F.This())));
                     return;
                 }
-
-                var members = ContainingType.InstanceConstructors;
-                foreach (var member in members)
-                {
-                    var ctor = (MethodSymbol)member;
-                    if (ctor.ParameterCount == 1 && ctor.Parameters[0].RefKind == RefKind.None &&
-                        ctor.Parameters[0].Type.Equals(ContainingType, TypeCompareKind.AllIgnoreOptions))
-                    {
-                        F.CloseMethod(F.Return(F.New(ctor, F.This())));
-                        return;
-                    }
-                }
-
-                throw ExceptionUtilities.Unreachable;
             }
-            catch (SyntheticBoundNodeFactory.MissingPredefinedMember ex)
-            {
-                diagnostics.Add(ex.Diagnostic);
-                F.CloseMethod(F.ThrowNull());
-            }
+
+            throw ExceptionUtilities.Unreachable;
         }
 
-        // Note: this method was replicated in SymbolDisplayVisitor.FindValidCloneMethod
-        internal static MethodSymbol? FindValidCloneMethod(TypeSymbol containingType, ref HashSet<DiagnosticInfo>? useSiteDiagnostics)
+        internal static MethodSymbol? FindValidCloneMethod(NamedTypeSymbol containingType)
         {
-            MethodSymbol? candidate = null;
-
-            foreach (var member in containingType.GetMembers(WellKnownMemberNames.CloneMethodName))
+            for (; !(containingType is null); containingType = containingType.BaseTypeNoUseSiteDiagnostics)
             {
-                if (member is MethodSymbol
+                foreach (var member in containingType.GetMembers(WellKnownMemberNames.CloneMethodName))
                 {
-                    DeclaredAccessibility: Accessibility.Public,
-                    IsStatic: false,
-                    ParameterCount: 0,
-                    Arity: 0
-                } method)
-                {
-                    if (candidate is object)
+                    if (member is MethodSymbol
                     {
-                        // An ambiguity case, can come from metadata, treat as an error for simplicity.
-                        return null;
+                        DeclaredAccessibility: Accessibility.Public,
+                        IsStatic: false,
+                        ParameterCount: 0,
+                        Arity: 0
+                    } method && (method.IsOverride || method.IsVirtual || method.IsAbstract))
+                    {
+                        return method;
                     }
-
-                    candidate = method;
                 }
             }
-
-            if (candidate is null ||
-                !(containingType.IsSealed || candidate.IsOverride || candidate.IsVirtual || candidate.IsAbstract) ||
-                !containingType.IsEqualToOrDerivedFrom(
-                    candidate.ReturnType,
-                    TypeCompareKind.AllIgnoreOptions,
-                    ref useSiteDiagnostics))
-            {
-                return null;
-            }
-
-            return candidate;
+            return null;
         }
     }
 }

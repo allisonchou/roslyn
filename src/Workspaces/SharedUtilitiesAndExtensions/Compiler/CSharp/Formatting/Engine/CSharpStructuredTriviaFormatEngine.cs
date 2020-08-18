@@ -6,10 +6,8 @@
 
 using System;
 using System.Threading;
-using Microsoft.CodeAnalysis.CSharp.LanguageServices;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.LanguageServices;
 
 namespace Microsoft.CodeAnalysis.CSharp.Formatting
 {
@@ -41,8 +39,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Formatting
                    token2)
         {
         }
-
-        internal override ISyntaxFacts SyntaxFacts => CSharpSyntaxFacts.Instance;
 
         protected override AbstractTriviaDataFactory CreateTriviaFactory()
             => new TriviaDataFactory(this.TreeData, this.Options);

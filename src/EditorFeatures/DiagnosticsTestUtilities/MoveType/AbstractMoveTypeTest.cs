@@ -10,10 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CodeRefactorings.MoveType;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions;
-using Microsoft.CodeAnalysis.Editor.UnitTests.Diagnostics;
-using Microsoft.CodeAnalysis.Test.Utilities;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.UnitTests;
 using Roslyn.Test.Utilities;
@@ -23,14 +20,8 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.MoveType
 {
     public abstract class AbstractMoveTypeTest : AbstractCodeActionTest
     {
-        private readonly string RenameFileCodeActionTitle = FeaturesResources.Rename_file_to_0;
-        private readonly string RenameTypeCodeActionTitle = FeaturesResources.Rename_type_to_0;
-
-        // TODO: Requires WPF due to IInlineRenameService dependency (https://github.com/dotnet/roslyn/issues/46153)
-        protected override TestComposition GetComposition()
-            => EditorTestCompositions.EditorFeaturesWpf
-                .AddExcludedPartTypes(typeof(IDiagnosticUpdateSourceRegistrationService))
-                .AddParts(typeof(MockDiagnosticUpdateSourceRegistrationService));
+        private string RenameFileCodeActionTitle = FeaturesResources.Rename_file_to_0;
+        private string RenameTypeCodeActionTitle = FeaturesResources.Rename_type_to_0;
 
         protected override CodeRefactoringProvider CreateCodeRefactoringProvider(Workspace workspace, TestParameters parameters)
             => new MoveTypeCodeRefactoringProvider();
@@ -156,28 +147,29 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.MoveType
             var testOptions = new TestParameters(index: index);
             if (expectedCodeAction)
             {
-                using var workspace = CreateWorkspaceFromOptions(originalCode, testOptions);
+                using (var workspace = CreateWorkspaceFromFile(originalCode, testOptions))
+                {
+                    onAfterWorkspaceCreated?.Invoke(workspace);
 
-                onAfterWorkspaceCreated?.Invoke(workspace);
+                    // replace with default values on null.
+                    destinationDocumentContainers = destinationDocumentContainers.NullToEmpty();
 
-                // replace with default values on null.
-                destinationDocumentContainers = destinationDocumentContainers.NullToEmpty();
+                    var sourceDocumentId = workspace.Documents[0].Id;
 
-                var sourceDocumentId = workspace.Documents[0].Id;
+                    // Verify the newly added document and its text
+                    var oldSolutionAndNewSolution = await TestAddDocumentAsync(
+                        testOptions, workspace, destinationDocumentText,
+                        expectedDocumentName, destinationDocumentContainers);
 
-                // Verify the newly added document and its text
-                var oldSolutionAndNewSolution = await TestAddDocumentAsync(
-                    testOptions, workspace, destinationDocumentText,
-                    expectedDocumentName, destinationDocumentContainers);
+                    // Verify source document's text after moving type.
+                    var oldSolution = oldSolutionAndNewSolution.Item1;
+                    var newSolution = oldSolutionAndNewSolution.Item2;
+                    var changedDocumentIds = SolutionUtilities.GetChangedDocuments(oldSolution, newSolution);
+                    Assert.True(changedDocumentIds.Contains(sourceDocumentId), "source document was not changed.");
 
-                // Verify source document's text after moving type.
-                var oldSolution = oldSolutionAndNewSolution.Item1;
-                var newSolution = oldSolutionAndNewSolution.Item2;
-                var changedDocumentIds = SolutionUtilities.GetChangedDocuments(oldSolution, newSolution);
-                Assert.True(changedDocumentIds.Contains(sourceDocumentId), "source document was not changed.");
-
-                var modifiedSourceDocument = newSolution.GetDocument(sourceDocumentId);
-                Assert.Equal(expectedSourceTextAfterRefactoring, (await modifiedSourceDocument.GetTextAsync()).ToString());
+                    var modifiedSourceDocument = newSolution.GetDocument(sourceDocumentId);
+                    Assert.Equal(expectedSourceTextAfterRefactoring, (await modifiedSourceDocument.GetTextAsync()).ToString());
+                }
             }
             else
             {

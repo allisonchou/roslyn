@@ -114,7 +114,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Experimentation
                 return;
             }
 
-            var vsShell = _serviceProvider.GetService<SVsShell, IVsShell>();
+            var vsShell = _serviceProvider.GetService<IVsShell, SVsShell>();
             var hr = vsShell.IsPackageInstalled(ReSharperPackageGuid, out var extensionEnabled);
             if (ErrorHandler.Failed(hr))
             {
@@ -127,7 +127,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Experimentation
             if (_resharperExtensionInstalledAndEnabled)
             {
                 // We need to monitor for suspend/resume commands, so create and install the command target and the modal callback.
-                var priorityCommandTargetRegistrar = _serviceProvider.GetService<SVsRegisterPriorityCommandTarget, IVsRegisterPriorityCommandTarget>();
+                var priorityCommandTargetRegistrar = _serviceProvider.GetService<IVsRegisterPriorityCommandTarget, SVsRegisterPriorityCommandTarget>();
                 hr = priorityCommandTargetRegistrar.RegisterPriorityCommandTarget(
                     dwReserved: 0 /* from docs must be 0 */,
                     pCmdTrgt: this,
@@ -171,7 +171,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Experimentation
             ReSharperStatus currentStatus;
             try
             {
-                currentStatus = await IsReSharperRunningAsync(cancellationToken)
+                currentStatus = await IsReSharperRunningAsync(lastStatus, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException)
@@ -260,7 +260,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Experimentation
         /// <summary>
         /// Returns true if ReSharper is installed, enabled, and not suspended.  
         /// </summary>
-        private async ValueTask<ReSharperStatus> IsReSharperRunningAsync(CancellationToken cancellationToken)
+        private async ValueTask<ReSharperStatus> IsReSharperRunningAsync(ReSharperStatus lastStatus, CancellationToken cancellationToken)
         {
             // Quick exit if resharper is either uninstalled or not enabled
             if (!_resharperExtensionInstalledAndEnabled)
@@ -335,7 +335,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Experimentation
 
                 await ThreadingContext.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-                _oleCommandTarget = _serviceProvider.GetService<SUIHostCommandDispatcher, IOleCommandTarget>();
+                _oleCommandTarget = _serviceProvider.GetService<IOleCommandTarget, SUIHostCommandDispatcher>();
             }
         }
 
@@ -345,7 +345,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Experimentation
 
             if (_uiShell == null)
             {
-                _uiShell = _serviceProvider.GetService<SVsUIShell, IVsUIShell>();
+                _uiShell = _serviceProvider.GetService<IVsUIShell, SVsUIShell>();
             }
 
             ErrorHandler.ThrowOnFailure(_uiShell.PostExecCommand(
@@ -432,7 +432,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Experimentation
 
             if (_priorityCommandTargetCookie != VSConstants.VSCOOKIE_NIL)
             {
-                var priorityCommandTargetRegistrar = _serviceProvider.GetService<SVsRegisterPriorityCommandTarget, IVsRegisterPriorityCommandTarget>();
+                var priorityCommandTargetRegistrar = _serviceProvider.GetService<IVsRegisterPriorityCommandTarget, SVsRegisterPriorityCommandTarget>();
                 var cookie = _priorityCommandTargetCookie;
                 _priorityCommandTargetCookie = VSConstants.VSCOOKIE_NIL;
                 var hr = priorityCommandTargetRegistrar.UnregisterPriorityCommandTarget(cookie);

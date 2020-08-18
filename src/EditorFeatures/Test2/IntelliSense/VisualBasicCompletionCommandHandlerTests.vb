@@ -3262,7 +3262,7 @@ Class C
 
         End Function
 
-        <ExportLanguageService(GetType(ISnippetInfoService), LanguageNames.VisualBasic, ServiceLayer.Test), [Shared], PartNotDiscoverable>
+        <ExportLanguageService(GetType(ISnippetInfoService), LanguageNames.VisualBasic), System.Composition.Shared>
         Friend Class MockSnippetInfoService
             Implements ISnippetInfoService
 

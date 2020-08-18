@@ -15,13 +15,13 @@ namespace Microsoft.CodeAnalysis.Host.Mef
 {
     public class MefHostServices : HostServices, IMefHostExportProvider
     {
-        internal delegate MefHostServices CreationHook(IEnumerable<Assembly> assemblies);
+        internal delegate MefHostServices CreationHook(IEnumerable<Assembly> assemblies, bool requestingDefaultHost);
 
         /// <summary>
         /// This delegate allows test code to override the behavior of <see cref="Create(IEnumerable{Assembly})"/>.
         /// </summary>
         /// <seealso cref="TestAccessor.HookServiceCreation"/>
-        private static CreationHook s_creationHook;
+        private static CreationHook s_CreationHook;
 
         private readonly CompositionContext _compositionContext;
 
@@ -45,9 +45,12 @@ namespace Microsoft.CodeAnalysis.Host.Mef
                 throw new ArgumentNullException(nameof(assemblies));
             }
 
-            if (s_creationHook != null)
+            if (s_CreationHook != null)
             {
-                return s_creationHook(assemblies);
+                var requestingDefaultAssemblies =
+                    assemblies is ImmutableArray<Assembly> array
+                    && array == DefaultAssemblies;
+                return s_CreationHook(assemblies, requestingDefaultAssemblies);
             }
 
             var compositionConfiguration = new ContainerConfiguration().WithAssemblies(assemblies.Distinct());
@@ -83,7 +86,7 @@ namespace Microsoft.CodeAnalysis.Host.Mef
             {
                 if (s_defaultHost == null)
                 {
-                    var host = Create(DefaultAssemblies);
+                    var host = MefHostServices.Create(MefHostServices.DefaultAssemblies);
                     Interlocked.CompareExchange(ref s_defaultHost, host, null);
                 }
 
@@ -135,7 +138,7 @@ namespace Microsoft.CodeAnalysis.Host.Mef
             /// </summary>
             internal static void HookServiceCreation(CreationHook hook)
             {
-                s_creationHook = hook;
+                s_CreationHook = hook;
 
                 // The existing host, if any, is not retained past this call.
                 s_defaultHost = null;

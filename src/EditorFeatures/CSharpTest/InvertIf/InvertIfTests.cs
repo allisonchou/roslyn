@@ -24,7 +24,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.InvertIf
         protected override CodeRefactoringProvider CreateCodeRefactoringProvider(Workspace workspace, TestParameters parameters)
             => new CSharpInvertIfCodeRefactoringProvider();
 
-        private static string CreateTreeText(string initial)
+        private string CreateTreeText(string initial)
         {
             return
 @"class A

@@ -27,12 +27,13 @@ class Goo { }
                              "Goo",
                              "System",
                              "Microsoft",
-                             "FxResources")
+                             "FxResources",
+                             "Windows")
         End Sub
 
 #End Region
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestDotNetNameFromLanguageSpecific1()
             Dim code =
 <code>
@@ -54,7 +55,7 @@ namespace N
                 End Sub)
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestDotNetNameFromLanguageSpecific2()
             TestRootCodeModelWithCodeFile(<code></code>,
                 Sub(rootCodeModel)
@@ -63,7 +64,7 @@ namespace N
                 End Sub)
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestDotNetNameFromLanguageSpecificWithAssemblyQualifiedName()
             TestRootCodeModelWithCodeFile(<code></code>,
                 Sub(rootCodeModel)
@@ -96,7 +97,7 @@ class Goo { }
 
 #Region "CreateCodeTypeRef"
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestCreateCodeTypeRef_Int32()
             TestCreateCodeTypeRef("System.Int32",
                                   New CodeTypeRefData With {
@@ -107,7 +108,7 @@ class Goo { }
                                   })
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestCreateCodeTypeRef_System_Text_StringBuilder()
             TestCreateCodeTypeRef("System.Text.StringBuilder",
                                   New CodeTypeRefData With {
@@ -118,7 +119,7 @@ class Goo { }
                                   })
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestCreateCodeTypeRef_NullableInteger()
             TestCreateCodeTypeRef("int?",
                                   New CodeTypeRefData With {
@@ -129,7 +130,7 @@ class Goo { }
                                   })
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestCreateCodeTypeRef_ListOfInt()
             TestCreateCodeTypeRef("System.Collections.Generic.List<int>",
                                   New CodeTypeRefData With {

@@ -4,7 +4,6 @@
 
 Imports Microsoft.CodeAnalysis.CodeRefactorings
 Imports Microsoft.CodeAnalysis.Editing
-Imports Microsoft.CodeAnalysis.Editor.UnitTests
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.CodeActions
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 Imports Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.CodeRefactorings
@@ -23,20 +22,24 @@ Namespace Microsoft.CodeAnalysis.AddMissingImports
             Return New VisualBasicAddMissingImportsRefactoringProvider(pasteTrackingService)
         End Function
 
-        Protected Overrides Sub InitializeWorkspace(workspace As TestWorkspace, parameters As TestParameters)
+        Protected Overrides Function CreateWorkspaceFromFile(initialMarkup As String, parameters As TestParameters) As TestWorkspace
+            Dim Workspace = TestWorkspace.CreateVisualBasic(initialMarkup)
+
             ' Treat the span being tested as the pasted span
-            Dim hostDocument = workspace.Documents.First()
+            Dim hostDocument = Workspace.Documents.First()
             Dim pastedTextSpan = hostDocument.SelectedSpans.FirstOrDefault()
 
             If Not pastedTextSpan.IsEmpty Then
-                Dim PasteTrackingService = workspace.ExportProvider.GetExportedValue(Of PasteTrackingService)()
+                Dim PasteTrackingService = Workspace.ExportProvider.GetExportedValue(Of PasteTrackingService)()
 
                 ' This tests the paste tracking service's resiliancy to failing when multiple pasted spans are
                 ' registered consecutively And that the last registered span wins.
                 PasteTrackingService.RegisterPastedTextSpan(hostDocument.GetTextBuffer(), Nothing)
                 PasteTrackingService.RegisterPastedTextSpan(hostDocument.GetTextBuffer(), pastedTextSpan)
             End If
-        End Sub
+
+            Return Workspace
+        End Function
 
         Private Overloads Function TestInRegularAndScriptAsync(
             initialMarkup As String, expectedMarkup As String,
@@ -458,7 +461,7 @@ End Namespace
         End Function
 
         <WorkItem(39155, "https://github.com/dotnet/roslyn/issues/39155")>
-        <WpfFact(Skip:="https://github.com/dotnet/roslyn/issues/46291")>
+        <WpfFact>
         Public Async Function AddMissingImports_Extension_Await() As Task
             Dim code = "
 Imports System.Runtime.CompilerServices
@@ -524,7 +527,7 @@ End Namespace
         End Function
 
         <WorkItem(39155, "https://github.com/dotnet/roslyn/issues/39155")>
-        <WpfFact(Skip:="https://github.com/dotnet/roslyn/issues/46291")>
+        <WpfFact>
         Public Async Function AddMissingImports_Extension_Await_Overload() As Task
             Dim code = "
 Imports System.Runtime.CompilerServices

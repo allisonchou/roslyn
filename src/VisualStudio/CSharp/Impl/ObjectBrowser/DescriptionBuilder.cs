@@ -394,6 +394,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.ObjectBrowser
                 }
 
                 AddText("new()");
+                isFirst = false;
             }
         }
 

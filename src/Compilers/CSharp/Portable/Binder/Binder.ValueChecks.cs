@@ -2717,29 +2717,19 @@ moreArguments:
                     }
                     return true;
 
-                case BoundKind.UnconvertedConditionalOperator:
-                    {
-                        var conditional = (BoundUnconvertedConditionalOperator)expr;
-                        return
-                            CheckValEscape(conditional.Consequence.Syntax, conditional.Consequence, escapeFrom, escapeTo, checkingReceiver: false, diagnostics: diagnostics) &&
-                            CheckValEscape(conditional.Alternative.Syntax, conditional.Alternative, escapeFrom, escapeTo, checkingReceiver: false, diagnostics: diagnostics);
-                    }
-
                 case BoundKind.ConditionalOperator:
+                    var conditional = (BoundConditionalOperator)expr;
+
+                    var consValid = CheckValEscape(conditional.Consequence.Syntax, conditional.Consequence, escapeFrom, escapeTo, checkingReceiver: false, diagnostics: diagnostics);
+
+                    if (!consValid || conditional.IsRef)
                     {
-                        var conditional = (BoundConditionalOperator)expr;
-
-                        var consValid = CheckValEscape(conditional.Consequence.Syntax, conditional.Consequence, escapeFrom, escapeTo, checkingReceiver: false, diagnostics: diagnostics);
-
-                        if (!consValid || conditional.IsRef)
-                        {
-                            // ref conditional defers to one operand. 
-                            // the other one is the same or we will be reporting errors anyways.
-                            return consValid;
-                        }
-
-                        return CheckValEscape(conditional.Alternative.Syntax, conditional.Alternative, escapeFrom, escapeTo, checkingReceiver: false, diagnostics: diagnostics);
+                        // ref conditional defers to one operand. 
+                        // the other one is the same or we will be reporting errors anyways.
+                        return consValid;
                     }
+
+                    return CheckValEscape(conditional.Alternative.Syntax, conditional.Alternative, escapeFrom, escapeTo, checkingReceiver: false, diagnostics: diagnostics);
 
                 case BoundKind.NullCoalescingOperator:
                     var coalescingOp = (BoundNullCoalescingOperator)expr;
@@ -3360,10 +3350,11 @@ moreArguments:
             }
 
             // while readonly fields have home it is not valid to refer to it when not constructing.
-            if (!TypeSymbol.Equals(field.ContainingType, method.ContainingType, TypeCompareKind.AllIgnoreOptions))
+            if (!TypeSymbol.Equals(field.ContainingType, method.ContainingType, TypeCompareKind.ConsiderEverything2))
             {
                 return false;
             }
+
 
             if (field.IsStatic)
             {
@@ -3371,7 +3362,7 @@ moreArguments:
             }
             else
             {
-                return (method.MethodKind == MethodKind.Constructor || method.IsInitOnly) &&
+                return method.MethodKind == MethodKind.Constructor &&
                     fieldAccess.ReceiverOpt.Kind == BoundKind.ThisReference;
             }
         }

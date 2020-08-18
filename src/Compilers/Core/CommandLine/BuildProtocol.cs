@@ -73,34 +73,27 @@ namespace Microsoft.CodeAnalysis.CommandLine
         }
 
         public static BuildRequest Create(RequestLanguage language,
+                                          string workingDirectory,
+                                          string tempDirectory,
+                                          string compilerHash,
                                           IList<string> args,
-                                          string? workingDirectory = null,
-                                          string? tempDirectory = null,
-                                          string? compilerHash = null,
                                           string? keepAlive = null,
                                           string? libDirectory = null)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(compilerHash), "CompilerHash is required to send request to the build server");
 
-            Log($@"
-Creating BuildRequest
-  Working directory: {workingDirectory}
-  Temp directory: {tempDirectory}
-  Lib directory: {libDirectory ?? null}
-  Compiler hash: {compilerHash}");
+            Log("Creating BuildRequest");
+            Log($"Working directory: {workingDirectory}");
+            Log($"Temp directory: {tempDirectory}");
+            Log($"Lib directory: {libDirectory ?? "null"}");
+            Log($"Compiler hash: {compilerHash}");
 
             var requestLength = args.Count + 1 + (libDirectory == null ? 0 : 1);
             var requestArgs = new List<Argument>(requestLength);
 
-            if (workingDirectory != null)
-            {
-                requestArgs.Add(new Argument(ArgumentId.CurrentDirectory, 0, workingDirectory));
-            }
 
-            if (tempDirectory != null)
-            {
-                requestArgs.Add(new Argument(ArgumentId.TempDirectory, 0, tempDirectory));
-            }
+            requestArgs.Add(new Argument(ArgumentId.CurrentDirectory, 0, workingDirectory));
+            requestArgs.Add(new Argument(ArgumentId.TempDirectory, 0, tempDirectory));
 
             if (keepAlive != null)
             {
@@ -115,6 +108,7 @@ Creating BuildRequest
             for (int i = 0; i < args.Count; ++i)
             {
                 var arg = args[i];
+                Log($"argument[{i}] = {arg}");
                 requestArgs.Add(new Argument(ArgumentId.CommandLineArgument, i, arg));
             }
 
@@ -124,7 +118,7 @@ Creating BuildRequest
         public static BuildRequest CreateShutdown()
         {
             var requestArgs = new[] { new Argument(ArgumentId.Shutdown, argumentIndex: 0, value: "") };
-            return new BuildRequest(BuildProtocolConstants.ProtocolVersion, RequestLanguage.CSharpCompile, GetCommitHash() ?? "", requestArgs);
+            return new BuildRequest(BuildProtocolConstants.ProtocolVersion, RequestLanguage.CSharpCompile, GetCommitHash(), requestArgs);
         }
 
         /// <summary>
@@ -133,17 +127,19 @@ Creating BuildRequest
         /// The total request size must be less than 1MB.
         /// </summary>
         /// <returns>null if the Request was too large, the Request otherwise.</returns>
-        public static async Task<BuildRequest> ReadAsync(Stream inStream, CancellationToken cancellationToken)
+        public static async Task<BuildRequest?> ReadAsync(Stream inStream, CancellationToken cancellationToken)
         {
             // Read the length of the request
             var lengthBuffer = new byte[4];
+            Log("Reading length of request");
             await ReadAllAsync(inStream, lengthBuffer, 4, cancellationToken).ConfigureAwait(false);
             var length = BitConverter.ToInt32(lengthBuffer, 0);
 
             // Back out if the request is > 1MB
             if (length > 0x100000)
             {
-                throw new ArgumentException("Request is over 1MB in length");
+                Log("Request is over 1MB in length, cancelling read.");
+                return null;
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -154,6 +150,7 @@ Creating BuildRequest
 
             cancellationToken.ThrowIfCancellationRequested();
 
+            Log("Parsing request");
             // Parse the request into the Request data structure.
             using (var reader = new BinaryReader(new MemoryStream(requestBuffer), Encoding.Unicode))
             {
@@ -185,6 +182,8 @@ Creating BuildRequest
             using (var memoryStream = new MemoryStream())
             using (var writer = new BinaryWriter(memoryStream, Encoding.Unicode))
             {
+                // Format the request.
+                Log("Formatting request");
                 writer.Write(ProtocolVersion);
                 writer.Write((uint)Language);
                 writer.Write(CompilerHash);
@@ -204,12 +203,17 @@ Creating BuildRequest
                 // Back out if the request is > 1 MB
                 if (memoryStream.Length > 0x100000)
                 {
-                    throw new ArgumentOutOfRangeException("Request is over 1MB in length");
+                    Log("Request is over 1MB in length, cancelling write");
+                    throw new ArgumentOutOfRangeException();
                 }
 
+                // Send the request to the server
+                Log("Writing length of request.");
                 await outStream.WriteAsync(BitConverter.GetBytes(length), 0, 4,
                                            cancellationToken).ConfigureAwait(false);
 
+                Log("Writing request of size {0}", length);
+                // Write the request
                 memoryStream.Position = 0;
                 await memoryStream.CopyToAsync(outStream, bufferSize: length, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
@@ -307,6 +311,8 @@ Creating BuildRequest
             using (var memoryStream = new MemoryStream())
             using (var writer = new BinaryWriter(memoryStream, Encoding.Unicode))
             {
+                // Format the response
+                Log("Formatting Response");
                 writer.Write((int)Type);
 
                 AddResponseBody(writer);
@@ -319,6 +325,7 @@ Creating BuildRequest
                 // Write the length of the response
                 int length = checked((int)memoryStream.Length);
 
+                Log("Writing response length");
                 // There is no way to know the number of bytes written to
                 // the pipe stream. We just have to assume all of them are written.
                 await outStream.WriteAsync(BitConverter.GetBytes(length),
@@ -326,6 +333,8 @@ Creating BuildRequest
                                            4,
                                            cancellationToken).ConfigureAwait(false);
 
+                // Write the response
+                Log("Writing response of size {0}", length);
                 memoryStream.Position = 0;
                 await memoryStream.CopyToAsync(outStream, bufferSize: length, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
@@ -341,12 +350,14 @@ Creating BuildRequest
         /// <returns></returns>
         public static async Task<BuildResponse> ReadAsync(Stream stream, CancellationToken cancellationToken = default(CancellationToken))
         {
+            Log("Reading response length");
             // Read the response length
             var lengthBuffer = new byte[4];
             await ReadAllAsync(stream, lengthBuffer, 4, cancellationToken).ConfigureAwait(false);
             var length = BitConverter.ToUInt32(lengthBuffer, 0);
 
             // Read the response
+            Log("Reading response of length {0}", length);
             var responseBuffer = new byte[length];
             await ReadAllAsync(stream,
                                responseBuffer,
@@ -370,7 +381,7 @@ Creating BuildRequest
                     case ResponseType.Shutdown:
                         return ShutdownBuildResponse.Create(reader);
                     case ResponseType.Rejected:
-                        return RejectedBuildResponse.Create(reader);
+                        return new RejectedBuildResponse();
                     default:
                         throw new InvalidOperationException("Received invalid response type from server.");
                 }
@@ -494,30 +505,13 @@ Creating BuildRequest
 
     internal sealed class RejectedBuildResponse : BuildResponse
     {
-        public string Reason;
-
         public override ResponseType Type => ResponseType.Rejected;
-
-        public RejectedBuildResponse(string reason)
-        {
-            Reason = reason;
-        }
 
         /// <summary>
         /// AnalyzerInconsistency has no body.
         /// </summary>
         /// <param name="writer"></param>
-        protected override void AddResponseBody(BinaryWriter writer)
-        {
-            WriteLengthPrefixedString(writer, Reason);
-        }
-
-        public static RejectedBuildResponse Create(BinaryReader reader)
-        {
-            var reason = ReadLengthPrefixedString(reader);
-            Debug.Assert(reason is object);
-            return new RejectedBuildResponse(reason);
-        }
+        protected override void AddResponseBody(BinaryWriter writer) { }
     }
 
     // The id numbers below are just random. It's useful to use id numbers
@@ -598,13 +592,14 @@ Creating BuildRequest
         /// Reads the value of <see cref="CommitHashAttribute.Hash"/> of the assembly <see cref="BuildRequest"/> is defined in
         /// </summary>
         /// <returns>The hash value of the current assembly or an empty string</returns>
-        public static string? GetCommitHash()
+        public static string GetCommitHash()
         {
             var hashAttributes = typeof(BuildRequest).Assembly.GetCustomAttributes<CommitHashAttribute>();
             var hashAttributeCount = hashAttributes.Count();
             if (hashAttributeCount != 1)
             {
-                return null;
+                Log($"Error reading CommitHashAttribute. Exactly 1 attribute is required, found {hashAttributeCount}");
+                return string.Empty;
             }
             return hashAttributes.Single().Hash;
         }
@@ -621,16 +616,21 @@ Creating BuildRequest
             int totalBytesRead = 0;
             do
             {
+                Log("Attempting to read {0} bytes from the stream",
+                    count - totalBytesRead);
                 int bytesRead = await stream.ReadAsync(buffer,
                                                        totalBytesRead,
                                                        count - totalBytesRead,
                                                        cancellationToken).ConfigureAwait(false);
                 if (bytesRead == 0)
                 {
+                    Log("Unexpected -- read 0 bytes from the stream.");
                     throw new EndOfStreamException("Reached end of stream before end of read.");
                 }
+                Log("Read {0} bytes", bytesRead);
                 totalBytesRead += bytesRead;
             } while (totalBytesRead < count);
+            Log("Finished read");
         }
     }
 }

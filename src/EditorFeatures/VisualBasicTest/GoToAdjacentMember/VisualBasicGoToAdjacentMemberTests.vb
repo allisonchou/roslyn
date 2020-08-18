@@ -191,7 +191,7 @@ End Class"
             Await AssertNavigatedAsync(code, next:=True)
         End Function
 
-        Public Shared Operator +(left As VisualBasicGoToAdjacentMemberTests, right As VisualBasicGoToAdjacentMemberTests) As VisualBasicGoToAdjacentMemberTests
+        Shared Operator +(left As VisualBasicGoToAdjacentMemberTests, right As VisualBasicGoToAdjacentMemberTests) As VisualBasicGoToAdjacentMemberTests
             Throw New System.NotImplementedException()
         End Operator
 

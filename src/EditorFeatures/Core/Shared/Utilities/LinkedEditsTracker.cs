@@ -52,13 +52,13 @@ namespace Microsoft.CodeAnalysis.Editor.Shared.Utilities
             AddSpans(newTrackingSpans);
         }
 
-        public static bool MyOwnChanges(TextContentChangedEventArgs args)
+        public bool MyOwnChanges(TextContentChangedEventArgs args)
             => args.EditTag == s_propagateSpansEditTag;
 
         public bool TryGetTextChanged(TextContentChangedEventArgs args, out string replacementText)
         {
             // make sure I am not called with my own changes
-            Contract.ThrowIfTrue(MyOwnChanges(args));
+            Contract.ThrowIfTrue(this.MyOwnChanges(args));
 
             // initialize out parameter
             replacementText = null;

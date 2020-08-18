@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -12,8 +13,12 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using EnvDTE80;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Debugging;
+using Microsoft.CodeAnalysis.EditAndContinue;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
+using Microsoft.VisualStudio.CodingConventions;
 using Microsoft.VisualStudio.IntegrationTest.Utilities.Input;
+using Microsoft.VisualStudio.LanguageServices;
 using Microsoft.VisualStudio.ProjectSystem.Properties;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -116,7 +121,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
                 CloseSolution(saveExistingSolutionIfExists);
             }
 
-            var solutionPath = IntegrationHelper.CreateTemporaryPath();
+            string solutionPath = IntegrationHelper.CreateTemporaryPath();
             var solutionFileName = Path.ChangeExtension(solutionName, ".sln");
             IntegrationHelper.DeleteDirectoryRecursively(solutionPath);
             Directory.CreateDirectory(solutionPath);
@@ -647,7 +652,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
                 File.Create(filePath).Dispose();
             }
 
-            _ = project.ProjectItems.AddFromFile(filePath);
+            var projectItem = project.ProjectItems.AddFromFile(filePath);
 
             if (open)
             {
@@ -703,18 +708,24 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
             return File.ReadAllText(filePath);
         }
 
-        public void BuildSolution()
+        public void BuildSolution(bool waitForBuildToFinish)
         {
             var buildOutputWindowPane = GetBuildOutputWindowPane();
             buildOutputWindowPane.Clear();
             ExecuteCommand(WellKnownCommandNames.Build_BuildSolution);
-            WaitForBuildToFinish();
+            WaitForBuildToFinish(buildOutputWindowPane);
         }
 
         public void ClearBuildOutputWindowPane()
         {
             var buildOutputWindowPane = GetBuildOutputWindowPane();
             buildOutputWindowPane.Clear();
+        }
+
+        public void WaitForBuildToFinish()
+        {
+            var buildOutputWindowPane = GetBuildOutputWindowPane();
+            WaitForBuildToFinish(buildOutputWindowPane);
         }
 
         private EnvDTE.OutputWindowPane GetBuildOutputWindowPane()
@@ -724,7 +735,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
             return outputWindow.OutputWindowPanes.Item("Build");
         }
 
-        public void WaitForBuildToFinish()
+        private void WaitForBuildToFinish(EnvDTE.OutputWindowPane buildOutputWindowPane)
         {
             var buildManager = GetGlobalService<SVsSolutionBuildManager, IVsSolutionBuildManager2>();
             using (var semaphore = new SemaphoreSlim(1))
@@ -747,7 +758,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
         internal sealed class UpdateSolutionEvents : IVsUpdateSolutionEvents, IVsUpdateSolutionEvents2, IDisposable
         {
             private uint cookie;
-            private readonly IVsSolutionBuildManager2 solutionBuildManager;
+            private IVsSolutionBuildManager2 solutionBuildManager;
 
             internal delegate void UpdateSolutionDoneEvent(bool succeeded, bool modified, bool canceled);
             internal delegate void UpdateSolutionBeginEvent(ref bool cancel);
@@ -803,7 +814,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
 
             int IVsUpdateSolutionEvents.OnActiveProjectCfgChange(IVsHierarchy pIVsHierarchy)
             {
-                return OnActiveProjectCfgChange();
+                return OnActiveProjectCfgChange(pIVsHierarchy);
             }
 
             int IVsUpdateSolutionEvents2.UpdateSolution_Begin(ref int pfCancelUpdate)
@@ -836,7 +847,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
 
             int IVsUpdateSolutionEvents2.OnActiveProjectCfgChange(IVsHierarchy pIVsHierarchy)
             {
-                return OnActiveProjectCfgChange();
+                return OnActiveProjectCfgChange(pIVsHierarchy);
             }
 
             int IVsUpdateSolutionEvents2.UpdateProjectCfg_Begin(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, ref int pfCancel)
@@ -862,7 +873,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
                 return 0;
             }
 
-            private int OnActiveProjectCfgChange()
+            private int OnActiveProjectCfgChange(IVsHierarchy pIVsHierarchy)
             {
                 OnActiveProjectConfigurationChange?.Invoke();
                 return 0;
@@ -1030,7 +1041,7 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
         {
             var projects = _solution.Projects;
             EnvDTE.Project project = null;
-            for (var i = 1; i <= projects.Count; i++)
+            for (int i = 1; i <= projects.Count; i++)
             {
                 project = projects.Item(i);
                 if (string.Compare(project.Name, projectName, StringComparison.Ordinal) == 0)
@@ -1132,6 +1143,44 @@ namespace Microsoft.VisualStudio.IntegrationTest.Utilities.InProcess
             }
 
             return null;
+        }
+
+        private CodingConventionsChangedWatcher _codingConventionsChangedWatcher;
+
+        public void BeginWatchForCodingConventionsChange(string projectName, string relativeFilePath)
+        {
+            var filePath = GetAbsolutePathForProjectRelativeFilePath(projectName, relativeFilePath);
+            _codingConventionsChangedWatcher = new CodingConventionsChangedWatcher(filePath);
+        }
+
+        public void EndWaitForCodingConventionsChange(TimeSpan timeout)
+        {
+            var watcher = Interlocked.Exchange(ref _codingConventionsChangedWatcher, null);
+            if (watcher is null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            watcher.Changed.Wait(timeout);
+        }
+
+        private class CodingConventionsChangedWatcher
+        {
+            private readonly TaskCompletionSource<object> _taskCompletionSource = new TaskCompletionSource<object>();
+            private readonly ICodingConventionContext _codingConventionContext;
+
+            public CodingConventionsChangedWatcher(string filePath)
+            {
+                var codingConventionsManager = GetComponentModelService<ICodingConventionsManager>();
+                _codingConventionContext = codingConventionsManager.GetConventionContextAsync(filePath, CancellationToken.None).Result;
+                _codingConventionContext.CodingConventionsChangedAsync += (sender, e) =>
+                {
+                    _taskCompletionSource.SetResult(null);
+                    return Task.CompletedTask;
+                };
+            }
+
+            public Task Changed => _taskCompletionSource.Task;
         }
     }
 }

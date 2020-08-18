@@ -9,7 +9,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Host;
-using Roslyn.Test.Utilities;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
@@ -242,7 +241,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
             this.AdditionalDocuments = additionalDocuments ?? SpecializedCollections.EmptyEnumerable<TestHostDocument>();
             this.AnalyzerConfigDocuments = analyzerConfigDocuments ?? SpecializedCollections.EmptyEnumerable<TestHostDocument>();
             ProjectReferences = projectReferences != null ? projectReferences.Select(p => new ProjectReference(p.Id)) : SpecializedCollections.EmptyEnumerable<ProjectReference>();
-            _metadataReferences = metadataReferences ?? new MetadataReference[] { TestMetadata.Net451.mscorlib };
+            _metadataReferences = metadataReferences ?? new MetadataReference[] { TestReferences.NetFx.v4_0_30319.mscorlib };
             _analyzerReferences = analyzerReferences ?? SpecializedCollections.EmptyEnumerable<AnalyzerReference>();
             _assemblyName = assemblyName ?? "TestProject";
             _version = VersionStamp.Create();
@@ -274,7 +273,7 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
             }
         }
 
-        internal void SetSolution(TestHostSolution _)
+        internal void SetSolution(TestHostSolution solution)
         {
             // set up back pointer to this project.
             if (this.Documents != null)

@@ -128,7 +128,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                                                               ((CSharpCompilationOptions)options).NullableContextOptions,
                                                               options.GeneralDiagnosticOption,
                                                               options.SpecificDiagnosticOptions,
-                                                              options.SyntaxTreeOptionsProvider,
                                                               out hasPragmaSuppression);
         }
 

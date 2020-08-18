@@ -4190,7 +4190,7 @@ class C
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsConvertQueryToForEach)]
         public async Task EnumerableFunctionDoesNotUseLocalFunctionName()
         {
-            var source = @"
+            string source = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4204,7 +4204,7 @@ class Query
         void enumerable() { }
     }
 }";
-            var output = @"
+            string output = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4232,7 +4232,7 @@ class Query
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsConvertQueryToForEach)]
         public async Task EnumerableFunctionCanUseLocalFunctionParameterName()
         {
-            var source = @"
+            string source = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4246,7 +4246,7 @@ class Query
         void M(IEnumerable<int> enumerable) { }
     }
 }";
-            var output = @"
+            string output = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4274,7 +4274,7 @@ class Query
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsConvertQueryToForEach)]
         public async Task EnumerableFunctionDoesNotUseLambdaParameterNameWithCSharpLessThan8()
         {
-            var source = @"
+            string source = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4288,7 +4288,7 @@ class Query
         Action<int> myLambda = enumerable => { };
     }
 }";
-            var output = @"
+            string output = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4316,7 +4316,7 @@ class Query
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsConvertQueryToForEach)]
         public async Task EnumerableFunctionCanUseLambdaParameterNameInCSharp8()
         {
-            var source = @"
+            string source = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4330,7 +4330,7 @@ class Query
         Action<int> myLambda = enumerable => { };
     }
 }";
-            var output = @"
+            string output = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4362,7 +4362,7 @@ class Query
         [WorkItem(35180, "https://github.com/dotnet/roslyn/issues/35180")]
         public async Task DeclarationSelection()
         {
-            var source = @"
+            string source = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4374,7 +4374,7 @@ class Query
         var r = [|from i in c select i+1;|]
     }
 }";
-            var output = @"
+            string output = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4401,7 +4401,7 @@ class Query
         [WorkItem(35180, "https://github.com/dotnet/roslyn/issues/35180")]
         public async Task LocalAssignmentSelection()
         {
-            var source = @"
+            string source = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -4414,7 +4414,7 @@ class Query
         [|r = from i in c select i+1;|]
     }
 }";
-            var output = @"
+            string output = @"
 using System;
 using System.Collections.Generic;
 using System.Linq;

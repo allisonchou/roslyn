@@ -12,7 +12,7 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
     <UseExportProvider>
     Public NotInheritable Class OutputFormatTests
         <Fact>
-        Public Async Function TestLineModeOutput() As Task
+        Public Async Sub TestLineModeOutput()
             Dim stringWriter = New StringWriter()
             Dim jsonWriter = New LineModeLsifJsonWriter(stringWriter)
 
@@ -34,10 +34,10 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
 {""outV"":1,""inVs"":[3],""id"":7,""type"":""edge"",""label"":""contains""}
 {""kind"":""end"",""scope"":""project"",""data"":1,""id"":8,""type"":""vertex"",""label"":""$event""}
 ", stringWriter.ToString())
-        End Function
+        End Sub
 
         <Fact>
-        Public Async Function TestJsonModeOutput() As Task
+        Public Async Sub TestJsonModeOutput()
             Dim stringWriter = New StringWriter()
             Using jsonWriter = New JsonModeLsifJsonWriter(stringWriter)
 
@@ -115,6 +115,6 @@ Namespace Microsoft.CodeAnalysis.LanguageServerIndexFormat.Generator.UnitTests
     ""label"": ""$event""
   }
 ]", stringWriter.ToString())
-        End Function
+        End Sub
     End Class
 End Namespace

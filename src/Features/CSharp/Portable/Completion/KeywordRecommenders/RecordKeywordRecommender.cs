@@ -32,13 +32,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders
 
         protected override bool IsValidContext(int position, CSharpSyntaxContext context, CancellationToken cancellationToken)
         {
+            var syntaxTree = context.SyntaxTree;
             return
                 context.IsGlobalStatementContext ||
                 context.IsTypeDeclarationContext(
                     validModifiers: s_validModifiers,
                     validTypeDeclarations: SyntaxKindSet.ClassInterfaceStructRecordTypeDeclarations,
                     canBePartial: true,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken) ||
+                syntaxTree.IsTypeParameterConstraintStartContext(position, context.LeftToken);
         }
     }
 }

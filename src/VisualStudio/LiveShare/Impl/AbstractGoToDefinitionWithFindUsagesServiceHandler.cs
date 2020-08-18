@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +15,6 @@ using Microsoft.CodeAnalysis.Editor.FindUsages;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.LanguageServer;
 using Microsoft.CodeAnalysis.MetadataAsSource;
-using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Shell;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -51,18 +49,19 @@ namespace Microsoft.VisualStudio.LanguageServices.LiveShare
             var locations = await GetDefinitionsWithFindUsagesServiceAsync(document, position, cancellationToken).ConfigureAwait(false);
 
             // No definition found - see if we can get metadata as source but that's only applicable for C#\VB.
-            if ((locations.Length == 0) && document.SupportsSemanticModel && this._metadataAsSourceService != null)
+            if ((locations.Count == 0) && document.SupportsSemanticModel && this._metadataAsSourceService != null)
             {
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(document, position, cancellationToken).ConfigureAwait(false);
-                if (symbol?.Locations.FirstOrDefault()?.IsInMetadata == true)
+                if (symbol?.Locations.FirstOrDefault().IsInMetadata == true)
                 {
                     var declarationFile = await this._metadataAsSourceService.GetGeneratedFileAsync(document.Project, symbol, false, cancellationToken).ConfigureAwait(false);
 
                     var linePosSpan = declarationFile.IdentifierLocation.GetLineSpan().Span;
-                    return new LSP.Location[]
+                    locations.Add(new LSP.Location
                     {
-                        new LSP.Location { Uri = new Uri(declarationFile.FilePath), Range = ProtocolConversions.LinePositionToRange(linePosSpan) }
-                    };
+                        Uri = new Uri(declarationFile.FilePath),
+                        Range = ProtocolConversions.LinePositionToRange(linePosSpan)
+                    });
                 }
             }
 
@@ -73,7 +72,7 @@ namespace Microsoft.VisualStudio.LanguageServices.LiveShare
         ///  Using the find usages service is more expensive than using the definitions service because a lot of unnecessary information is computed. However,
         ///  TypeScript doesn't provide an <see cref="IGoToDefinitionService"/> implementation that will return definitions so we must use <see cref="IFindUsagesService"/>.
         /// </summary>
-        private async Task<ImmutableArray<LSP.Location>> GetDefinitionsWithFindUsagesServiceAsync(Document document, int pos, CancellationToken cancellationToken)
+        private async Task<List<LSP.Location>> GetDefinitionsWithFindUsagesServiceAsync(Document document, int pos, CancellationToken cancellationToken)
         {
             var findUsagesService = document.Project.LanguageServices.GetRequiredService<IFindUsagesService>();
 
@@ -84,7 +83,7 @@ namespace Microsoft.VisualStudio.LanguageServices.LiveShare
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await findUsagesService.FindReferencesAsync(document, pos, context).ConfigureAwait(false);
 
-            using var _ = ArrayBuilder<LSP.Location>.GetInstance(out var locations);
+            var locations = new List<LSP.Location>();
 
             var definitions = context.GetDefinitions();
             if (definitions != null)
@@ -93,12 +92,12 @@ namespace Microsoft.VisualStudio.LanguageServices.LiveShare
                 {
                     foreach (var docSpan in definition.SourceSpans)
                     {
-                        locations.AddIfNotNull(await ProtocolConversions.DocumentSpanToLocationAsync(docSpan, cancellationToken).ConfigureAwait(false));
+                        locations.Add(await ProtocolConversions.DocumentSpanToLocationAsync(docSpan, cancellationToken).ConfigureAwait(false));
                     }
                 }
             }
 
-            return locations.ToImmutable();
+            return locations;
         }
     }
 }

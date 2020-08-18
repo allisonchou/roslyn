@@ -22,6 +22,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Preview
             {
             }
 
+            public void UnregisterTextContainer(SourceTextContainer container)
+            {
+            }
+
             public void CloseDocument(TextDocument document, SourceText text)
             {
                 switch (document.Kind)

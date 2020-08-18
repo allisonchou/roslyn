@@ -22,7 +22,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.AliasAmbiguousType
         protected override ImmutableArray<CodeAction> MassageActions(ImmutableArray<CodeAction> actions)
             => FlattenActions(actions);
 
-        private static string GetAmbiguousDefinition(string typeDefinion)
+        private string GetAmbiguousDefinition(string typeDefinion)
             => $@"
 namespace N1
 {{

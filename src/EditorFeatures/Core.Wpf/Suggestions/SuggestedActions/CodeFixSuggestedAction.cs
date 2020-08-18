@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.Editor.Shared.Utilities;
-using Microsoft.CodeAnalysis.UnifiedSuggestions.UnifiedSuggestedActions;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -16,9 +15,9 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Suggestions
     /// <summary>
     /// Represents light bulb menu item for code fixes.
     /// </summary>
-    internal sealed class CodeFixSuggestedAction : SuggestedActionWithNestedFlavors, ICodeFixSuggestedAction, ITelemetryDiagnosticID<string>
+    internal sealed class CodeFixSuggestedAction : SuggestedActionWithNestedFlavors, ITelemetryDiagnosticID<string>
     {
-        public CodeFix CodeFix { get; }
+        private readonly CodeFix _fix;
 
         public CodeFixSuggestedAction(
             IThreadingContext threadingContext,
@@ -32,13 +31,13 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Suggestions
             : base(threadingContext, sourceProvider, workspace, subjectBuffer,
                    provider, action, fixAllFlavors)
         {
-            CodeFix = fix;
+            _fix = fix;
         }
 
         public string GetDiagnosticID()
-            => CodeFix.PrimaryDiagnostic.GetTelemetryDiagnosticID();
+            => _fix.PrimaryDiagnostic.GetTelemetryDiagnosticID();
 
         protected override DiagnosticData GetDiagnostic()
-            => CodeFix.GetPrimaryDiagnosticData();
+            => _fix.GetPrimaryDiagnosticData();
     }
 }

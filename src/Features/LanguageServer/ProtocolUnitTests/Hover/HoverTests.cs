@@ -5,8 +5,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.PooledObjects;
-using Microsoft.VisualStudio.Text.Adornments;
 using Roslyn.Test.Utilities;
 using Xunit;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -33,9 +31,10 @@ namespace Microsoft.CodeAnalysis.LanguageServer.UnitTests.Hover
             using var workspace = CreateTestWorkspace(markup, out var locations);
             var expectedLocation = locations["caret"].Single();
 
-            var results = await RunGetHoverAsync(workspace.CurrentSolution, expectedLocation).ConfigureAwait(false);
+            var expected = CreateHover(expectedLocation, $"string A.Method(int i)\r\n A great method\r\n\r\n{FeaturesResources.Returns_colon}\r\n  a string");
 
-            VerifyContent(results, $"string A.Method(int i)|A great method|{FeaturesResources.Returns_colon}|  |a string");
+            var results = await RunGetHoverAsync(workspace.CurrentSolution, expectedLocation).ConfigureAwait(false);
+            AssertJsonEquals(expected, results);
         }
 
         [Fact]
@@ -56,9 +55,10 @@ namespace Microsoft.CodeAnalysis.LanguageServer.UnitTests.Hover
 }";
             using var workspace = CreateTestWorkspace(markup, out var locations);
             var expectedLocation = locations["caret"].Single();
+            var expected = CreateHover(expectedLocation, $"string A.Method(int i)\r\n A great method\r\n\r\n{FeaturesResources.Exceptions_colon}\r\n  System.NullReferenceException");
 
             var results = await RunGetHoverAsync(workspace.CurrentSolution, expectedLocation).ConfigureAwait(false);
-            VerifyContent(results, $"string A.Method(int i)|A great method|{FeaturesResources.Exceptions_colon}|  System.NullReferenceException");
+            AssertJsonEquals(expected, results);
         }
 
         [Fact]
@@ -79,9 +79,10 @@ namespace Microsoft.CodeAnalysis.LanguageServer.UnitTests.Hover
 }";
             using var workspace = CreateTestWorkspace(markup, out var locations);
             var expectedLocation = locations["caret"].Single();
+            var expected = CreateHover(expectedLocation, "string A.Method(int i)\r\n A great method\r\n\r\nRemarks are cool too.");
 
             var results = await RunGetHoverAsync(workspace.CurrentSolution, expectedLocation).ConfigureAwait(false);
-            VerifyContent(results, "string A.Method(int i)|A great method|Remarks are cool too.");
+            AssertJsonEquals(expected, results);
         }
 
         [Fact]
@@ -107,9 +108,10 @@ namespace Microsoft.CodeAnalysis.LanguageServer.UnitTests.Hover
 }";
             using var workspace = CreateTestWorkspace(markup, out var locations);
             var expectedLocation = locations["caret"].Single();
+            var expected = CreateHover(expectedLocation, "string A.Method(int i)\r\n A great method\r\n\r\n• Item 1.\r\n• Item 2.");
 
             var results = await RunGetHoverAsync(workspace.CurrentSolution, expectedLocation).ConfigureAwait(false);
-            VerifyContent(results, "string A.Method(int i)|A great method|• |Item 1.|• |Item 2.");
+            AssertJsonEquals(expected, results);
         }
 
         [Fact]
@@ -185,37 +187,24 @@ $@"<Workspace>
                 var result = await RunGetHoverAsync(workspace.CurrentSolution, location, project.Id);
 
                 var expectedConstant = project.Name == "Net472" ? "Target in net472" : "Target in netcoreapp3.1";
-                VerifyContent(result, $"({FeaturesResources.constant}) string WithConstant.Target = \"{expectedConstant}\"");
+                var expectedHover = CreateHover(location, $"({FeaturesResources.constant}) string WithConstant.Target = \"{expectedConstant}\"");
+                AssertJsonEquals(expectedHover, result);
             }
         }
 
-        private static async Task<LSP.VSHover> RunGetHoverAsync(Solution solution, LSP.Location caret, ProjectId projectContext = null)
-            => (LSP.VSHover)await GetLanguageServer(solution).ExecuteRequestAsync<LSP.TextDocumentPositionParams, LSP.Hover>(LSP.Methods.TextDocumentHoverName,
+        private static async Task<LSP.Hover> RunGetHoverAsync(Solution solution, LSP.Location caret, ProjectId projectContext = null)
+            => await GetLanguageServer(solution).ExecuteRequestAsync<LSP.TextDocumentPositionParams, LSP.Hover>(LSP.Methods.TextDocumentHoverName,
                 CreateTextDocumentPositionParams(caret, projectContext), new LSP.ClientCapabilities(), null, CancellationToken.None);
 
-        private void VerifyContent(LSP.VSHover result, string expectedContent)
-        {
-            var containerElement = (ContainerElement)result.RawContent;
-            using var _ = ArrayBuilder<ClassifiedTextElement>.GetInstance(out var classifiedTextElements);
-            GetClassifiedTextElements(containerElement, classifiedTextElements);
-            Assert.False(classifiedTextElements.SelectMany(classifiedTextElements => classifiedTextElements.Runs).Any(run => run.NavigationAction != null));
-            var content = string.Join("|", classifiedTextElements.Select(cte => string.Join(string.Empty, cte.Runs.Select(ctr => ctr.Text))));
-            Assert.Equal(expectedContent, content);
-        }
-
-        private void GetClassifiedTextElements(ContainerElement container, ArrayBuilder<ClassifiedTextElement> classifiedTextElements)
-        {
-            foreach (var element in container.Elements)
+        private static LSP.Hover CreateHover(LSP.Location location, string text)
+            => new LSP.Hover()
             {
-                if (element is ClassifiedTextElement classifiedTextElement)
+                Contents = new LSP.MarkupContent()
                 {
-                    classifiedTextElements.Add(classifiedTextElement);
-                }
-                else if (element is ContainerElement containerElement)
-                {
-                    GetClassifiedTextElements(containerElement, classifiedTextElements);
-                }
-            }
-        }
+                    Kind = LSP.MarkupKind.Markdown,
+                    Value = text
+                },
+                Range = location.Range
+            };
     }
 }

@@ -45,7 +45,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.AutomaticEndConstructCorrect
                     Return False
                 End If
 
-                If LinkedEditsTracker.MyOwnChanges(e) Then
+                If Me._linkedSession.MyOwnChanges(e) Then
                     Return True
                 End If
 

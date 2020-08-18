@@ -226,7 +226,7 @@ namespace Microsoft.CodeAnalysis.Editor.Tagging
                     : new TagSpanIntervalTree<TTag>(snapshot.TextBuffer, _dataSource.SpanTrackingMode);
             }
 
-            private static bool TryStealTagsFromRelatedTagSource(TextContentChangedEventArgs e)
+            private bool TryStealTagsFromRelatedTagSource(TextContentChangedEventArgs e)
             {
                 // see bug 778731
 #if INTERACTIVE
@@ -364,7 +364,7 @@ namespace Microsoft.CodeAnalysis.Editor.Tagging
             }
 
             [Conditional("DEBUG")]
-            private static void CheckSnapshot(ITextSnapshot snapshot)
+            private void CheckSnapshot(ITextSnapshot snapshot)
             {
                 var container = snapshot.TextBuffer.AsTextContainer();
                 if (Workspace.TryGetWorkspace(container, out _))

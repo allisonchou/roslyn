@@ -16,7 +16,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Roslyn.Utilities;
 using Microsoft.CodeAnalysis.CommandLine;
-using Microsoft.Build.Tasks;
 
 namespace Microsoft.CodeAnalysis.BuildTasks
 {
@@ -316,12 +315,6 @@ namespace Microsoft.CodeAnalysis.BuildTasks
             get { return (string?)_store[nameof(SharedCompilationId)]; }
         }
 
-        public bool SkipAnalyzers
-        {
-            set { _store[nameof(SkipAnalyzers)] = value; }
-            get { return _store.GetOrDefault(nameof(SkipAnalyzers), false); }
-        }
-
         public bool SkipCompilerExecution
         {
             set { _store[nameof(SkipCompilerExecution)] = value; }
@@ -533,7 +526,6 @@ namespace Microsoft.CodeAnalysis.BuildTasks
                     }
                     else
                     {
-                        CompilerServerLogger.LogError($"Server compilation failed, falling back to {pathToTool}");
                         Log.LogMessage(ErrorString.SharedCompilationFallback, pathToTool);
 
                         ExitCode = base.ExecuteTool(pathToTool, responseFileCommands, commandLineCommands);
@@ -546,9 +538,8 @@ namespace Microsoft.CodeAnalysis.BuildTasks
             }
             catch (Exception e)
             {
-                var util = new TaskLoggingHelper(this);
-                util.LogErrorWithCodeFromResources("Compiler_UnexpectedException");
-                util.LogErrorFromException(e, showStackTrace: true, showDetail: true, file: null);
+                Log.LogErrorWithCodeFromResources("Compiler_UnexpectedException");
+                LogErrorOutput(e.ToString());
                 ExitCode = -1;
             }
 
@@ -632,7 +623,7 @@ namespace Microsoft.CodeAnalysis.BuildTasks
 
                     if (LogStandardErrorAsError)
                     {
-                        LogErrorMultiline(completedResponse.ErrorOutput);
+                        LogErrorOutput(completedResponse.ErrorOutput);
                     }
                     else
                     {
@@ -642,31 +633,29 @@ namespace Microsoft.CodeAnalysis.BuildTasks
                     return completedResponse.ReturnCode;
 
                 case BuildResponse.ResponseType.MismatchedVersion:
-                    LogError("Roslyn compiler server reports different protocol version than build task.");
+                    LogErrorOutput("Roslyn compiler server reports different protocol version than build task.");
                     return base.ExecuteTool(pathToTool, responseFileCommands, commandLineCommands);
 
                 case BuildResponse.ResponseType.IncorrectHash:
-                    LogError("Roslyn compiler server reports different hash version than build task.");
+                    LogErrorOutput("Roslyn compiler server reports different hash version than build task.");
                     return base.ExecuteTool(pathToTool, responseFileCommands, commandLineCommands);
 
                 case BuildResponse.ResponseType.Rejected:
                 case BuildResponse.ResponseType.AnalyzerInconsistency:
-                    CompilerServerLogger.LogError($"Server rejected request {response.Type}");
                     return base.ExecuteTool(pathToTool, responseFileCommands, commandLineCommands);
 
                 default:
-                    LogError($"Received an unrecognized response from the server: {response.Type}");
+                    LogErrorOutput($"Received an unrecognized response from the server: {response.Type}");
                     return base.ExecuteTool(pathToTool, responseFileCommands, commandLineCommands);
             }
         }
 
-        internal void LogError(string message)
+        private void LogErrorOutput(string output)
         {
-            CompilerServerLogger.LogError(message);
-            Log.LogError(message);
+            LogErrorOutput(output, Log);
         }
 
-        private void LogErrorMultiline(string output)
+        internal static void LogErrorOutput(string output, TaskLoggingHelper log)
         {
             string[] lines = output.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string line in lines)
@@ -674,7 +663,7 @@ namespace Microsoft.CodeAnalysis.BuildTasks
                 string trimmedMessage = line.Trim();
                 if (trimmedMessage != "")
                 {
-                    Log.LogError(trimmedMessage);
+                    log.LogError(trimmedMessage);
                 }
             }
         }
@@ -836,7 +825,6 @@ namespace Microsoft.CodeAnalysis.BuildTasks
             commandLine.AppendSwitchWithSplitting("/instrument:", Instrument, ",", ';', ',');
             commandLine.AppendSwitchIfNotNull("/sourcelink:", SourceLink);
             commandLine.AppendSwitchIfNotNull("/langversion:", LangVersion);
-            commandLine.AppendPlusOrMinusSwitch("/skipanalyzers", _store, nameof(SkipAnalyzers));
 
             AddFeatures(commandLine, Features);
             AddEmbeddedFilesToCommandLine(commandLine);

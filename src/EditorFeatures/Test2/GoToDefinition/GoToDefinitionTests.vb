@@ -15,11 +15,12 @@ Imports Microsoft.VisualStudio.Text
 Namespace Microsoft.CodeAnalysis.Editor.UnitTests.GoToDefinition
     <[UseExportProvider]>
     Public Class GoToDefinitionTests
-        Friend Shared Sub Test(
+        Friend Sub Test(
                 workspaceDefinition As XElement,
                 expectedResult As Boolean,
                 executeOnDocument As Func(Of Document, Integer, IThreadingContext, IStreamingFindUsagesPresenter, Boolean))
-            Using workspace = TestWorkspace.Create(workspaceDefinition, composition:=GoToTestHelpers.Composition)
+            Using workspace = TestWorkspace.Create(
+                    workspaceDefinition, exportProvider:=GoToTestHelpers.ExportProviderFactory.CreateExportProvider())
                 Dim solution = workspace.CurrentSolution
                 Dim cursorDocument = workspace.Documents.First(Function(d) d.CursorPosition.HasValue)
                 Dim cursorPosition = cursorDocument.CursorPosition.Value
@@ -104,7 +105,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.GoToDefinition
             End Using
         End Sub
 
-        Private Shared Sub Test(workspaceDefinition As XElement, Optional expectedResult As Boolean = True)
+        Private Sub Test(workspaceDefinition As XElement, Optional expectedResult As Boolean = True)
             Test(workspaceDefinition, expectedResult,
                 Function(document, cursorPosition, threadingContext, presenter)
                     Dim lazyPresenter = New Lazy(Of IStreamingFindUsagesPresenter)(Function() presenter)
@@ -1035,7 +1036,7 @@ class Foo : IFoo1, IFoo2
 #End Region
 
 #Region "CSharp TupleTests"
-        Private ReadOnly tuple2 As XCData =
+        Dim tuple2 As XCData =
         <![CDATA[
 namespace System
 {
@@ -2545,7 +2546,7 @@ End Namespace
 
 #Region "CSharp Query expressions Tests"
 
-        Private Shared Function GetExpressionPatternDefinition(highlight As String, Optional index As Integer = 0) As String
+        Private Function GetExpressionPatternDefinition(highlight As String, Optional index As Integer = 0) As String
             Dim definition As String =
 "
 using System;

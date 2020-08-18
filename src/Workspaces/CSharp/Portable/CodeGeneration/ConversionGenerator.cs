@@ -18,11 +18,13 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
         internal static TypeDeclarationSyntax AddConversionTo(
             TypeDeclarationSyntax destination,
             IMethodSymbol method,
+            Workspace workspace,
             CodeGenerationOptions options,
             IList<bool> availableIndices)
         {
             var methodDeclaration = GenerateConversionDeclaration(
-                method, options, destination?.SyntaxTree.Options ?? options.ParseOptions);
+                method, workspace, options,
+                destination?.SyntaxTree.Options ?? options.ParseOptions);
 
             var members = Insert(destination.Members, methodDeclaration, options, availableIndices, after: LastOperator);
 
@@ -31,16 +33,18 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
 
         internal static ConversionOperatorDeclarationSyntax GenerateConversionDeclaration(
             IMethodSymbol method,
+            Workspace workspace,
             CodeGenerationOptions options,
             ParseOptions parseOptions)
         {
-            var declaration = GenerateConversionDeclarationWorker(method, options, parseOptions);
+            var declaration = GenerateConversionDeclarationWorker(method, workspace, options, parseOptions);
             return AddFormatterAndCodeGeneratorAnnotationsTo(AddAnnotationsTo(method,
                 ConditionallyAddDocumentationCommentTo(declaration, method, options)));
         }
 
         private static ConversionOperatorDeclarationSyntax GenerateConversionDeclarationWorker(
             IMethodSymbol method,
+            Workspace workspace,
             CodeGenerationOptions options,
             ParseOptions parseOptions)
         {
@@ -66,20 +70,20 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
                 body: hasNoBody ? null : StatementGenerator.GenerateBlock(method),
                 semicolonToken: hasNoBody ? SyntaxFactory.Token(SyntaxKind.SemicolonToken) : new SyntaxToken());
 
-            declaration = UseExpressionBodyIfDesired(options, declaration, parseOptions);
+            declaration = UseExpressionBodyIfDesired(workspace, declaration, parseOptions);
 
             return declaration;
         }
 
         private static ConversionOperatorDeclarationSyntax UseExpressionBodyIfDesired(
-            CodeGenerationOptions options, ConversionOperatorDeclarationSyntax declaration, ParseOptions parseOptions)
+            Workspace workspace, ConversionOperatorDeclarationSyntax declaration, ParseOptions options)
         {
             if (declaration.ExpressionBody == null)
             {
-                var expressionBodyPreference = options.Options.GetOption(CSharpCodeStyleOptions.PreferExpressionBodiedOperators).Value;
+                var expressionBodyPreference = workspace.Options.GetOption(CSharpCodeStyleOptions.PreferExpressionBodiedOperators).Value;
 
                 if (declaration.Body.TryConvertToArrowExpressionBody(
-                        declaration.Kind(), parseOptions, expressionBodyPreference,
+                        declaration.Kind(), options, expressionBodyPreference,
                         out var expressionBody, out var semicolonToken))
                 {
                     return declaration.WithBody(null)

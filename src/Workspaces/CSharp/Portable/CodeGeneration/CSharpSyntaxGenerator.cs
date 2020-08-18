@@ -2230,22 +2230,6 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
                     }
                     goto default;
 
-                case SyntaxKind.MethodDeclaration:
-                    var method = (MethodDeclarationSyntax)declaration;
-                    if (method.ExpressionBody != null)
-                    {
-                        return method.ExpressionBody.Expression;
-                    }
-                    goto default;
-
-                case SyntaxKind.LocalFunctionStatement:
-                    var local = (LocalFunctionStatementSyntax)declaration;
-                    if (local.ExpressionBody != null)
-                    {
-                        return local.ExpressionBody.Expression;
-                    }
-                    goto default;
-
                 default:
                     return GetEqualsValue(declaration)?.Value;
             }
@@ -2279,22 +2263,6 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
                     if (id.ExpressionBody != null)
                     {
                         return ReplaceWithTrivia(id, id.ExpressionBody.Expression, expr);
-                    }
-                    goto default;
-
-                case SyntaxKind.MethodDeclaration:
-                    var method = (MethodDeclarationSyntax)declaration;
-                    if (method.ExpressionBody != null)
-                    {
-                        return ReplaceWithTrivia(method, method.ExpressionBody.Expression, expr);
-                    }
-                    goto default;
-
-                case SyntaxKind.LocalFunctionStatement:
-                    var local = (LocalFunctionStatementSyntax)declaration;
-                    if (local.ExpressionBody != null)
-                    {
-                        return ReplaceWithTrivia(local, local.ExpressionBody.Expression, expr);
                     }
                     goto default;
 
@@ -2494,8 +2462,14 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
             return WithAccessorList(declaration, newList);
         }
 
-        internal static AccessorListSyntax GetAccessorList(SyntaxNode declaration)
-            => (declaration as BasePropertyDeclarationSyntax)?.AccessorList;
+        private static AccessorListSyntax GetAccessorList(SyntaxNode declaration)
+            => declaration.Kind() switch
+            {
+                SyntaxKind.PropertyDeclaration => ((PropertyDeclarationSyntax)declaration).AccessorList,
+                SyntaxKind.IndexerDeclaration => ((IndexerDeclarationSyntax)declaration).AccessorList,
+                SyntaxKind.EventDeclaration => ((EventDeclarationSyntax)declaration).AccessorList,
+                _ => null,
+            };
 
         private static bool CanHaveAccessors(SyntaxNode declaration)
             => declaration.Kind() switch
@@ -2507,9 +2481,11 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
             };
 
         private static SyntaxNode WithAccessorList(SyntaxNode declaration, AccessorListSyntax accessorList)
-            => declaration switch
+            => declaration.Kind() switch
             {
-                BasePropertyDeclarationSyntax baseProperty => baseProperty.WithAccessorList(accessorList),
+                SyntaxKind.PropertyDeclaration => ((PropertyDeclarationSyntax)declaration).WithAccessorList(accessorList),
+                SyntaxKind.IndexerDeclaration => ((PropertyDeclarationSyntax)declaration).WithAccessorList(accessorList),
+                SyntaxKind.EventDeclaration => ((EventDeclarationSyntax)declaration).WithAccessorList(accessorList),
                 _ => declaration,
             };
 

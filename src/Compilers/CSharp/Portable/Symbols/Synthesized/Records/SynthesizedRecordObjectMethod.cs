@@ -4,8 +4,6 @@
 
 #nullable enable
 
-using System.Diagnostics;
-
 namespace Microsoft.CodeAnalysis.CSharp.Symbols
 {
     /// <summary>
@@ -14,53 +12,29 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     internal abstract class SynthesizedRecordObjectMethod : SynthesizedRecordOrdinaryMethod
     {
         protected SynthesizedRecordObjectMethod(SourceMemberContainerTypeSymbol containingType, string name, int memberOffset, DiagnosticBag diagnostics)
-            : base(containingType, name, hasBody: true, memberOffset, diagnostics)
+            : base(containingType, name, memberOffset, diagnostics)
         {
-        }
-
-        protected sealed override DeclarationModifiers MakeDeclarationModifiers(DeclarationModifiers allowedModifiers, DiagnosticBag diagnostics)
-        {
-            const DeclarationModifiers result = DeclarationModifiers.Public | DeclarationModifiers.Override;
-            Debug.Assert((result & ~allowedModifiers) == 0);
-            return result;
         }
 
         protected sealed override void MethodChecks(DiagnosticBag diagnostics)
         {
             base.MethodChecks(diagnostics);
-            VerifyOverridesMethodFromObject(this, ReturnType.SpecialType, diagnostics);
-        }
 
-        /// <summary>
-        /// Returns true if reported an error
-        /// </summary>
-        internal static bool VerifyOverridesMethodFromObject(MethodSymbol overriding, SpecialType returnSpecialType, DiagnosticBag diagnostics)
-        {
-            bool reportAnError = false;
+            var overridden = OverriddenMethod?.OriginalDefinition;
 
-            if (!overriding.IsOverride)
+            if (overridden is null || (overridden is SynthesizedRecordObjEquals && overridden.DeclaringCompilation == DeclaringCompilation))
             {
-                reportAnError = true;
-            }
-            else
-            {
-                var overridden = overriding.OverriddenMethod?.OriginalDefinition;
-
-                if (overridden is object && !(overridden.ContainingType is SourceMemberContainerTypeSymbol { IsRecord: true } && overridden.ContainingModule == overriding.ContainingModule))
-                {
-                    MethodSymbol leastOverridden = overriding.GetLeastOverriddenMethod(accessingTypeOpt: null);
-
-                    reportAnError = leastOverridden.ReturnType.Equals(overriding.ReturnType, TypeCompareKind.AllIgnoreOptions) &&
-                                    (leastOverridden.ContainingType.SpecialType != SpecialType.System_Object || returnSpecialType != leastOverridden.ReturnType.SpecialType);
-                }
+                return;
             }
 
-            if (reportAnError)
-            {
-                diagnostics.Add(ErrorCode.ERR_DoesNotOverrideMethodFromObject, overriding.Locations[0], overriding);
-            }
+            MethodSymbol leastOverridden = GetLeastOverriddenMethod(accessingTypeOpt: null);
 
-            return reportAnError;
+            if (leastOverridden is object &&
+                leastOverridden.ReturnType.SpecialType == ReturnType.SpecialType &&
+                leastOverridden.ContainingType.SpecialType != SpecialType.System_Object)
+            {
+                diagnostics.Add(ErrorCode.ERR_DoesNotOverrideMethodFromObject, Locations[0], this);
+            }
         }
     }
 }

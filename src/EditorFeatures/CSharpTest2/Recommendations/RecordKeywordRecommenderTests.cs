@@ -309,14 +309,14 @@ using Bar;"));
         [Fact, Trait(Traits.Feature, Traits.Features.KeywordRecommending)]
         public async Task TestAfterClassTypeParameterConstraint()
         {
-            await VerifyAbsenceAsync(
+            await VerifyKeywordAsync(
 @"class C<T> where T : $$");
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.KeywordRecommending)]
         public async Task TestAfterClassTypeParameterConstraint2()
         {
-            await VerifyAbsenceAsync(
+            await VerifyKeywordAsync(
 @"class C<T>
     where T : $$
     where U : U");
@@ -325,7 +325,7 @@ using Bar;"));
         [Fact, Trait(Traits.Feature, Traits.Features.KeywordRecommending)]
         public async Task TestAfterMethodTypeParameterConstraint()
         {
-            await VerifyAbsenceAsync(
+            await VerifyKeywordAsync(
 @"class C {
     void Goo<T>()
       where T : $$");
@@ -334,7 +334,7 @@ using Bar;"));
         [Fact, Trait(Traits.Feature, Traits.Features.KeywordRecommending)]
         public async Task TestAfterMethodTypeParameterConstraint2()
         {
-            await VerifyAbsenceAsync(
+            await VerifyKeywordAsync(
 @"class C {
     void Goo<T>()
       where T : $$

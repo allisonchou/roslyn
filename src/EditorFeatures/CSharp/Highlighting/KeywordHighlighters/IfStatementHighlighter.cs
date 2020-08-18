@@ -35,7 +35,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.KeywordHighlighting
             }
         }
 
-        private static void ComputeSpans(
+        private void ComputeSpans(
             IfStatementSyntax ifStatement, List<TextSpan> highlights)
         {
             highlights.Add(ifStatement.IfKeyword.Span);

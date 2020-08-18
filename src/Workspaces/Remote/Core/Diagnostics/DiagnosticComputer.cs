@@ -4,19 +4,14 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Diagnostics.Telemetry;
 using Microsoft.CodeAnalysis.Host;
-using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Workspaces.Diagnostics;
 using Roslyn.Utilities;
 
@@ -24,55 +19,29 @@ namespace Microsoft.CodeAnalysis.Remote.Diagnostics
 {
     internal class DiagnosticComputer
     {
-        /// <summary>
-        /// Cache of <see cref="CompilationWithAnalyzers"/> and a map from analyzer IDs to <see cref="DiagnosticAnalyzer"/>s
-        /// for all analyzers for each project.
-        /// The <see cref="CompilationWithAnalyzers"/> instance is shared between all the following document analyses modes for the project:
-        ///  1. Span-based analysis for active document (lightbulb)
-        ///  2. Background analysis for active and open documents.
-        ///  
-        /// NOTE: We do not re-use this cache for project analysis as it leads to significant memory increase in the OOP process,
-        /// and CWT does not seem to drop entries until ForceGC happens.
-        /// </summary>
-        private static readonly ConditionalWeakTable<Project, CompilationWithAnalyzersCacheEntry> s_compilationWithAnalyzersCache
-            = new ConditionalWeakTable<Project, CompilationWithAnalyzersCacheEntry>();
-
-        private readonly TextDocument? _document;
         private readonly Project _project;
-        private readonly TextSpan? _span;
-        private readonly AnalysisKind? _analysisKind;
         private readonly IPerformanceTrackerService? _performanceTracker;
         private readonly DiagnosticAnalyzerInfoCache _analyzerInfoCache;
 
-        public DiagnosticComputer(
-            DocumentId? documentId,
-            Project project,
-            TextSpan? span,
-            AnalysisKind? analysisKind,
-            DiagnosticAnalyzerInfoCache analyzerInfoCache)
+        public DiagnosticComputer(Project project, DiagnosticAnalyzerInfoCache analyzerInfoCache)
         {
-            _document = documentId != null ? project.Solution.GetRequiredTextDocument(documentId) : null;
             _project = project;
-            _span = span;
-            _analysisKind = analysisKind;
             _analyzerInfoCache = analyzerInfoCache;
 
-            // We only track performance from primary branch. All forked branch we don't care such as preview.
+            // we only track performance from primary branch. all forked branch we don't care such as preview.
             _performanceTracker = project.IsFromPrimaryBranch() ? project.Solution.Workspace.Services.GetService<IPerformanceTrackerService>() : null;
         }
 
         public async Task<DiagnosticAnalysisResultMap<string, DiagnosticAnalysisResultBuilder>> GetDiagnosticsAsync(
             IEnumerable<string> analyzerIds,
             bool reportSuppressedDiagnostics,
-            bool logPerformanceInfo,
-            bool getTelemetryInfo,
+            bool logAnalyzerExecutionTime,
             CancellationToken cancellationToken)
         {
-            var (compilationWithAnalyzers, analyzerToIdMap) = await GetOrCreateCompilationWithAnalyzersAsync(
-                _project, isDocumentAnalysis: _document != null, cancellationToken).ConfigureAwait(false);
+            var analyzerMap = CreateAnalyzerMap(_project);
+            var analyzers = GetAnalyzers(analyzerMap, analyzerIds);
 
-            var analyzers = GetAnalyzers(analyzerToIdMap, analyzerIds);
-            if (analyzers.IsEmpty)
+            if (analyzers.Length == 0)
             {
                 return DiagnosticAnalysisResultMap<string, DiagnosticAnalysisResultBuilder>.Empty;
             }
@@ -80,77 +49,55 @@ namespace Microsoft.CodeAnalysis.Remote.Diagnostics
             var cacheService = _project.Solution.Workspace.Services.GetRequiredService<IProjectCacheService>();
             using var cache = cacheService.EnableCaching(_project.Id);
             var skippedAnalyzersInfo = _project.GetSkippedAnalyzersInfo(_analyzerInfoCache);
-            return await AnalyzeAsync(compilationWithAnalyzers, analyzerToIdMap, analyzers, skippedAnalyzersInfo,
-                reportSuppressedDiagnostics, logPerformanceInfo, getTelemetryInfo, cancellationToken).ConfigureAwait(false);
+            return await AnalyzeAsync(analyzerMap, analyzers, skippedAnalyzersInfo, reportSuppressedDiagnostics, logAnalyzerExecutionTime, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<DiagnosticAnalysisResultMap<string, DiagnosticAnalysisResultBuilder>> AnalyzeAsync(
-            CompilationWithAnalyzers compilationWithAnalyzers,
-            BidirectionalMap<string, DiagnosticAnalyzer> analyzerToIdMap,
+            BidirectionalMap<string, DiagnosticAnalyzer> analyzerMap,
             ImmutableArray<DiagnosticAnalyzer> analyzers,
             SkippedHostAnalyzersInfo skippedAnalyzersInfo,
             bool reportSuppressedDiagnostics,
-            bool logPerformanceInfo,
-            bool getTelemetryInfo,
+            bool logAnalyzerExecutionTime,
             CancellationToken cancellationToken)
         {
-            var documentAnalysisScope = _document != null
-                ? new DocumentAnalysisScope(_document, _span, analyzers, _analysisKind!.Value)
-                : null;
+            // flag that controls concurrency
+            var useConcurrent = true;
 
-            var (analysisResult, additionalPragmaSuppressionDiagnostics) = await compilationWithAnalyzers.GetAnalysisResultAsync(
-                documentAnalysisScope, _project, _analyzerInfoCache, cancellationToken).ConfigureAwait(false);
+            // get original compilation
+            var compilation = await _project.GetRequiredCompilationAsync(cancellationToken).ConfigureAwait(false);
 
-            // Record performance if tracker is available
-            if (logPerformanceInfo && _performanceTracker != null)
+            // fork compilation with concurrent build. this is okay since WithAnalyzers will fork compilation
+            // anyway to attach event queue. this should make compiling compilation concurrent and make things
+            // faster
+            compilation = compilation.WithOptions(compilation.Options.WithConcurrentBuild(useConcurrent));
+
+            // TODO: can we support analyzerExceptionFilter in remote host? 
+            //       right now, host doesn't support watson, we might try to use new NonFatal watson API?
+            var analyzerOptions = new CompilationWithAnalyzersOptions(
+                options: new WorkspaceAnalyzerOptions(_project.AnalyzerOptions, _project.Solution),
+                onAnalyzerException: null,
+                analyzerExceptionFilter: null,
+                concurrentAnalysis: useConcurrent,
+                logAnalyzerExecutionTime: logAnalyzerExecutionTime,
+                reportSuppressedDiagnostics: reportSuppressedDiagnostics);
+
+            var analyzerDriver = compilation.WithAnalyzers(analyzers, analyzerOptions);
+
+            // PERF: Run all analyzers at once using the new GetAnalysisResultAsync API.
+            var analysisResult = await analyzerDriver.GetAnalysisResultAsync(cancellationToken).ConfigureAwait(false);
+
+            // record performance if tracker is available
+            if (_performanceTracker != null)
             {
                 // +1 to include project itself
-                var unitCount = documentAnalysisScope != null ? 1 : _project.DocumentIds.Count + 1;
-                _performanceTracker.AddSnapshot(analysisResult.AnalyzerTelemetryInfo.ToAnalyzerPerformanceInfo(_analyzerInfoCache), unitCount);
+                _performanceTracker.AddSnapshot(analysisResult.AnalyzerTelemetryInfo.ToAnalyzerPerformanceInfo(_analyzerInfoCache), _project.DocumentIds.Count + 1);
             }
 
-            var builderMap = await analysisResult.ToResultBuilderMapAsync(
-                additionalPragmaSuppressionDiagnostics, documentAnalysisScope,
-                _project, VersionStamp.Default, compilationWithAnalyzers.Compilation,
-                analyzers, skippedAnalyzersInfo, reportSuppressedDiagnostics, cancellationToken).ConfigureAwait(false);
+            var builderMap = analysisResult.ToResultBuilderMap(_project, VersionStamp.Default, compilation, analysisResult.Analyzers, skippedAnalyzersInfo, cancellationToken);
 
-            var result = builderMap.ToImmutableDictionary(kv => GetAnalyzerId(analyzerToIdMap, kv.Key), kv => kv.Value);
-            var telemetry = getTelemetryInfo
-                ? GetTelemetryInfo(analysisResult, analyzers, analyzerToIdMap)
-                : ImmutableDictionary<string, AnalyzerTelemetryInfo>.Empty;
-            return DiagnosticAnalysisResultMap.Create(result, telemetry);
-
-            static ImmutableDictionary<string, AnalyzerTelemetryInfo> GetTelemetryInfo(
-                AnalysisResult analysisResult,
-                ImmutableArray<DiagnosticAnalyzer> analyzers,
-                BidirectionalMap<string, DiagnosticAnalyzer> analyzerToIdMap)
-            {
-                Func<DiagnosticAnalyzer, bool> shouldInclude;
-                if (analyzers.Length < analysisResult.AnalyzerTelemetryInfo.Count)
-                {
-                    // Filter the telemetry info to the executed analyzers.
-                    using var _ = PooledHashSet<DiagnosticAnalyzer>.GetInstance(out var analyzersSet);
-                    analyzersSet.AddRange(analyzers);
-
-                    shouldInclude = analyzer => analyzersSet.Contains(analyzer);
-                }
-                else
-                {
-                    shouldInclude = _ => true;
-                }
-
-                var telemetryBuilder = ImmutableDictionary.CreateBuilder<string, AnalyzerTelemetryInfo>();
-                foreach (var (analyzer, analyzerTelemetry) in analysisResult.AnalyzerTelemetryInfo)
-                {
-                    if (shouldInclude(analyzer))
-                    {
-                        var analyzerId = GetAnalyzerId(analyzerToIdMap, analyzer);
-                        telemetryBuilder.Add(analyzerId, analyzerTelemetry);
-                    }
-                }
-
-                return telemetryBuilder.ToImmutable();
-            }
+            return DiagnosticAnalysisResultMap.Create(
+                builderMap.ToImmutableDictionary(kv => GetAnalyzerId(analyzerMap, kv.Key), kv => kv.Value),
+                analysisResult.AnalyzerTelemetryInfo.ToImmutableDictionary(kv => GetAnalyzerId(analyzerMap, kv.Key), kv => kv.Value));
         }
 
         private static string GetAnalyzerId(BidirectionalMap<string, DiagnosticAnalyzer> analyzerMap, DiagnosticAnalyzer analyzer)
@@ -177,102 +124,28 @@ namespace Microsoft.CodeAnalysis.Remote.Diagnostics
             return builder.ToImmutable();
         }
 
-        private static async Task<(CompilationWithAnalyzers compilationWithAnalyzers, BidirectionalMap<string, DiagnosticAnalyzer> analyzerToIdMap)> GetOrCreateCompilationWithAnalyzersAsync(
-            Project project,
-            bool isDocumentAnalysis,
-            CancellationToken cancellationToken)
+        private static BidirectionalMap<string, DiagnosticAnalyzer> CreateAnalyzerMap(Project project)
         {
-            var cacheEntry = await GetOrCreateCacheEntryAsync().ConfigureAwait(false);
-            return (cacheEntry.CompilationWithAnalyzers, cacheEntry.AnalyzerToIdMap);
-
-            async Task<CompilationWithAnalyzersCacheEntry> GetOrCreateCacheEntryAsync()
-            {
-                if (!isDocumentAnalysis)
-                {
-                    // Only use cache for document analysis.
-                    return await CreateCompilationWithAnalyzersCacheEntryAsync(project, cancellationToken).ConfigureAwait(false);
-                }
-
-                if (s_compilationWithAnalyzersCache.TryGetValue(project, out var data))
-                {
-                    return data;
-                }
-
-                data = await CreateCompilationWithAnalyzersCacheEntryAsync(project, cancellationToken).ConfigureAwait(false);
-                return s_compilationWithAnalyzersCache.GetValue(project, _ => data);
-            }
-        }
-
-        private static async Task<CompilationWithAnalyzersCacheEntry> CreateCompilationWithAnalyzersCacheEntryAsync(Project project, CancellationToken cancellationToken)
-        {
-            // We could consider creating a service so that we don't do this repeatedly if this shows up as perf cost
+            // we could consider creating a service so that we don't do this repeatedly if this shows up as perf cost
             using var pooledObject = SharedPools.Default<HashSet<object>>().GetPooledObject();
             using var pooledMap = SharedPools.Default<Dictionary<string, DiagnosticAnalyzer>>().GetPooledObject();
             var referenceSet = pooledObject.Object;
-            var analyzerMapBuilder = pooledMap.Object;
+            var analyzerMap = pooledMap.Object;
 
-            // This follows what we do in DiagnosticAnalyzerInfoCache.CheckAnalyzerReferenceIdentity
-            using var _ = ArrayBuilder<DiagnosticAnalyzer>.GetInstance(out var analyzerBuilder);
+            // this follow what we do in DiagnosticAnalyzerInfoCache.CheckAnalyzerReferenceIdentity
             foreach (var reference in project.Solution.AnalyzerReferences.Concat(project.AnalyzerReferences))
             {
                 if (!referenceSet.Add(reference.Id))
                 {
+                    // already exist
                     continue;
                 }
 
-                var analyzers = reference.GetAnalyzers(project.Language);
-                analyzerBuilder.AddRange(analyzers);
-                analyzerMapBuilder.AppendAnalyzerMap(analyzers);
+                analyzerMap.AppendAnalyzerMap(reference.GetAnalyzers(project.Language));
             }
 
-            var compilationWithAnalyzers = await CreateCompilationWithAnalyzerAsync(
-                project, analyzerBuilder.ToImmutable(), cancellationToken).ConfigureAwait(false);
-            var analyzerToIdMap = new BidirectionalMap<string, DiagnosticAnalyzer>(analyzerMapBuilder);
-
-            return new CompilationWithAnalyzersCacheEntry(compilationWithAnalyzers, analyzerToIdMap);
-
-            static async Task<CompilationWithAnalyzers> CreateCompilationWithAnalyzerAsync(
-                Project project,
-                ImmutableArray<DiagnosticAnalyzer> analyzers,
-                CancellationToken cancellationToken)
-            {
-                // Always run analyzers concurrently in OOP
-                const bool concurrentAnalysis = true;
-
-                // Get original compilation
-                var compilation = await project.GetRequiredCompilationAsync(cancellationToken).ConfigureAwait(false);
-
-                // Fork compilation with concurrent build. this is okay since WithAnalyzers will fork compilation
-                // anyway to attach event queue. This should make compiling compilation concurrent and make things
-                // faster
-                compilation = compilation.WithOptions(compilation.Options.WithConcurrentBuild(concurrentAnalysis));
-
-                // Run analyzers concurrently, with performance logging and reporting suppressed diagnostics.
-                // This allows all client requests with or without performance data and/or suppressed diagnostics to be satisfied.
-                // TODO: can we support analyzerExceptionFilter in remote host? 
-                //       right now, host doesn't support watson, we might try to use new NonFatal watson API?
-                var analyzerOptions = new CompilationWithAnalyzersOptions(
-                    options: new WorkspaceAnalyzerOptions(project.AnalyzerOptions, project.Solution),
-                    onAnalyzerException: null,
-                    analyzerExceptionFilter: null,
-                    concurrentAnalysis: concurrentAnalysis,
-                    logAnalyzerExecutionTime: true,
-                    reportSuppressedDiagnostics: true);
-
-                return compilation.WithAnalyzers(analyzers, analyzerOptions);
-            }
-        }
-
-        private sealed class CompilationWithAnalyzersCacheEntry
-        {
-            public CompilationWithAnalyzers CompilationWithAnalyzers { get; }
-            public BidirectionalMap<string, DiagnosticAnalyzer> AnalyzerToIdMap { get; }
-
-            public CompilationWithAnalyzersCacheEntry(CompilationWithAnalyzers compilationWithAnalyzers, BidirectionalMap<string, DiagnosticAnalyzer> analyzerToIdMap)
-            {
-                CompilationWithAnalyzers = compilationWithAnalyzers;
-                AnalyzerToIdMap = analyzerToIdMap;
-            }
+            // convert regular map to bidirectional map
+            return new BidirectionalMap<string, DiagnosticAnalyzer>(analyzerMap);
         }
     }
 }

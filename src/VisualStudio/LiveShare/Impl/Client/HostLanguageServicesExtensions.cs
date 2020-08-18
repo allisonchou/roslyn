@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.LanguageServices.LiveShare.Client
         public static HostLanguageServices GetOriginalLanguageServices(this HostLanguageServices languageServices)
         {
             var language = languageServices.Language;
-            string originalLanguage;
+            var originalLanguage = language;
 
             switch (language)
             {

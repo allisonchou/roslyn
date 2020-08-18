@@ -308,7 +308,7 @@ Module E
     End Sub
 End Module
 ]]></file>
-</compilation>, {TestMetadata.Net40.SystemCore})
+</compilation>, {SystemCoreRef})
 
             Dim tree = compilation.SyntaxTrees.Single()
             Dim semanticModel = compilation.GetSemanticModel(tree)

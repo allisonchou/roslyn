@@ -4,7 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Editor;
 using Microsoft.CodeAnalysis.Editor.Xaml;
 using Microsoft.CodeAnalysis.Host.Mef;
@@ -18,6 +22,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
+using Roslyn.Utilities;
 
 namespace Microsoft.VisualStudio.LanguageServices.Xaml
 {
@@ -29,12 +34,11 @@ namespace Microsoft.VisualStudio.LanguageServices.Xaml
     {
         private readonly System.IServiceProvider _serviceProvider;
         private readonly VisualStudioProjectFactory _visualStudioProjectFactory;
+        private readonly VisualStudioWorkspaceImpl _vsWorkspace;
         private readonly IVsEditorAdaptersFactoryService _editorAdaptersFactory;
         private readonly Lazy<RunningDocumentTable> _rdt;
         private readonly IVsSolution _vsSolution;
-#pragma warning disable IDE0052 // Remove unread private members - stores the AdviseSolutionEvents cookie.
-        private readonly uint? _solutionEventsCookie;
-#pragma warning restore IDE0052 // Remove unread private members
+        private uint? _solutionEventsCookie;
         private uint? _rdtEventsCookie;
         private readonly Dictionary<IVsHierarchy, VisualStudioProject> _xamlProjects = new Dictionary<IVsHierarchy, VisualStudioProject>();
 
@@ -44,10 +48,12 @@ namespace Microsoft.VisualStudio.LanguageServices.Xaml
             [Import(typeof(SVsServiceProvider))] System.IServiceProvider services,
             IVsEditorAdaptersFactoryService editorAdaptersFactoryService,
             IXamlDocumentAnalyzerService analyzerService,
+            VisualStudioWorkspaceImpl vsWorkspace,
             VisualStudioProjectFactory visualStudioProjectFactory)
         {
             _serviceProvider = services;
             _editorAdaptersFactory = editorAdaptersFactoryService;
+            _vsWorkspace = vsWorkspace;
             _visualStudioProjectFactory = visualStudioProjectFactory;
             _rdt = new Lazy<RunningDocumentTable>(() => new RunningDocumentTable(_serviceProvider));
             _vsSolution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
@@ -74,20 +80,21 @@ namespace Microsoft.VisualStudio.LanguageServices.Xaml
                 return;
             }
 
-            var userData = textLines as IVsUserData;
+            IVsUserData userData = textLines as IVsUserData;
             if (userData == null)
             {
                 return;
             }
 
-            var monikerGuid = typeof(IVsUserData).GUID;
+            Guid monikerGuid = typeof(IVsUserData).GUID;
             if (ErrorHandler.Failed(userData.GetData(ref monikerGuid, out var monikerObj)))
             {
                 return;
             }
 
-            var filePath = monikerObj as string;
-            _rdt.Value.FindDocument(filePath, out var hierarchy, out _, out _);
+            string filePath = monikerObj as string;
+
+            _rdt.Value.FindDocument(filePath, out var hierarchy, out var itemId, out var docCookie);
             if (hierarchy == null)
             {
                 return;
@@ -125,7 +132,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Xaml
 
         private void OnProjectClosing(IVsHierarchy hierarchy)
         {
-            if (_xamlProjects.TryGetValue(hierarchy, out var project))
+            if (_xamlProjects.TryGetValue(hierarchy, out VisualStudioProject project))
             {
                 project.RemoveFromWorkspace();
                 _xamlProjects.Remove(hierarchy);
@@ -144,7 +151,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Xaml
             }
 
             // If the moniker change only involves a non-XAML project then ignore it.
-            if (!_xamlProjects.TryGetValue(hierarchy, out var project))
+            if (!_xamlProjects.TryGetValue(hierarchy, out VisualStudioProject project))
             {
                 return;
             }
@@ -169,8 +176,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Xaml
 
         private void OnDocumentClosed(uint docCookie)
         {
-            var info = _rdt.Value.GetDocumentInfo(docCookie);
-            if (info.Hierarchy != null && _xamlProjects.TryGetValue(info.Hierarchy, out var project))
+            RunningDocumentInfo info = _rdt.Value.GetDocumentInfo(docCookie);
+            if (info.Hierarchy != null && _xamlProjects.TryGetValue(info.Hierarchy, out VisualStudioProject project))
             {
                 if (project.ContainsSourceFile(info.Moniker))
                 {

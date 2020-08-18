@@ -6,7 +6,6 @@ Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Microsoft.CodeAnalysis.VisualBasic
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Imports Roslyn.Test.Utilities
-Imports Roslyn.Test.Utilities.TestMetadata
 
 Namespace Microsoft.CodeAnalysis.VisualBasic.UnitTests.Semantics
 
@@ -3486,7 +3485,7 @@ End Module
     </file>
 </compilation>
 
-            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, {Net40.SystemCore})
+            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, {SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -5318,7 +5317,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -5419,7 +5418,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -6070,7 +6069,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -6735,7 +6734,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -7876,7 +7875,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -9530,7 +9529,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -10710,7 +10709,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -12534,7 +12533,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -12829,7 +12828,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation, <expected></expected>)
         End Sub
@@ -12874,7 +12873,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation, <expected></expected>)
         End Sub
@@ -12919,7 +12918,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation, <expected></expected>)
         End Sub
@@ -12955,7 +12954,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -13960,7 +13959,7 @@ End Class
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -14009,7 +14008,7 @@ Imports System.Linq
             End Sub
         End Module
     </file>
-    </compilation>, additionalRefs:={Net40.SystemCore})
+    </compilation>, additionalRefs:={SystemCoreRef})
 
             AssertTheseEmitDiagnostics(compilation,
 <expected>
@@ -14071,7 +14070,7 @@ Class CI003
 End Class
     </file>
     </compilation>,
-            expectedOutput:="CI003.Count", references:={Net451.SystemCore})
+            expectedOutput:="CI003.Count", references:={TestReferences.NetFx.v4_0_30319.System_Core})
 
             verifier.VerifyDiagnostics()
         End Sub
@@ -14125,7 +14124,7 @@ End Class
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore,
+                                                                                         additionalRefs:={SystemCoreRef,
                                                                                                           SystemXmlRef,
                                                                                                           SystemXmlLinqRef})
 
@@ -14232,7 +14231,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -14323,7 +14322,7 @@ End Module
 </compilation>
 
             Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntime(compilationDef,
-                                                                                         additionalRefs:={Net40.SystemCore})
+                                                                                         additionalRefs:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -14351,7 +14350,7 @@ Module M
     End Sub
 End Module
     </file>
-    </compilation>, references:={Net40.SystemCore}).AssertTheseDiagnostics(
+    </compilation>, references:={SystemCoreRef}).AssertTheseDiagnostics(
     <expected>
 BC31396: 'ArgIterator' cannot be made nullable, and cannot be used as the data type of an array element, field, anonymous type member, type argument, 'ByRef' parameter, or return statement.
         Dim c1 As System.ArgIterator()() = Nothing
@@ -14438,7 +14437,7 @@ End Module
     </file>
 </compilation>
 
-            Dim verifier = CompileAndVerify(compilationDef, references:={Net40.SystemCore},
+            Dim verifier = CompileAndVerify(compilationDef, references:={SystemCoreRef},
                              expectedOutput:=
             <![CDATA[
 0
@@ -14505,7 +14504,7 @@ End Module
     </file>
 </compilation>
 
-            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore})
+            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -14531,7 +14530,7 @@ End Module
     </file>
 </compilation>
 
-            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore}, options:=TestOptions.ReleaseExe)
+            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef}, options:=TestOptions.ReleaseExe)
 
             CompileAndVerify(compilation,
                                 expectedOutput:=
@@ -14559,7 +14558,7 @@ End Module
     </file>
 </compilation>
 
-            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore}, options:=TestOptions.ReleaseExe)
+            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef}, options:=TestOptions.ReleaseExe)
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -14591,7 +14590,7 @@ End Module
     </file>
 </compilation>
 
-            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore})
+            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef})
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -14895,7 +14894,7 @@ End Module
     </file>
 </compilation>
 
-            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore}, options:=TestOptions.ReleaseExe)
+            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef}, options:=TestOptions.ReleaseExe)
 
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
@@ -14961,7 +14960,7 @@ End Module
     ]]></file>
 </compilation>
 
-            Dim compilation = CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore}, options:=TestOptions.ReleaseExe)
+            Dim compilation = CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef}, options:=TestOptions.ReleaseExe)
 
             CompileAndVerify(compilation,
                              expectedOutput:=
@@ -14998,7 +14997,7 @@ End Module
     </file>
 </compilation>
 
-            CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore}, options:=TestOptions.ReleaseDll).AssertNoDiagnostics()
+            CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef}, options:=TestOptions.ReleaseDll).AssertNoDiagnostics()
 
         End Sub
 
@@ -15051,7 +15050,7 @@ Class C
     </file>
 </compilation>
 
-            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={Net40.SystemCore}, options:=TestOptions.ReleaseDll)
+            Dim compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(compilationDef, references:={SystemCoreRef}, options:=TestOptions.ReleaseDll)
             CompilationUtils.AssertTheseDiagnostics(compilation,
 <expected>
 BC30451: 'Whi' is not declared. It may be inaccessible due to its protection level.

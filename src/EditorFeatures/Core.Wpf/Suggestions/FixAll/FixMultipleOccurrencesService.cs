@@ -63,7 +63,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Suggestions
                 waitDialogMessage, cancellationToken);
         }
 
-        private static Solution GetFixedSolution(
+        private Solution GetFixedSolution(
             FixAllState fixAllState,
             Workspace workspace,
             string title,

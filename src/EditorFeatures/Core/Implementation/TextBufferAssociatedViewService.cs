@@ -123,7 +123,7 @@ namespace Microsoft.CodeAnalysis.Editor
         }
 
         [Conditional("DEBUG")]
-        private static void DebugRegisterView_NoLock(ITextView textView)
+        private void DebugRegisterView_NoLock(ITextView textView)
         {
 #if DEBUG
             if (s_registeredViews.Add(textView))
@@ -134,7 +134,7 @@ namespace Microsoft.CodeAnalysis.Editor
         }
 
 #if DEBUG
-        private static void OnTextViewClose(object sender, EventArgs e)
+        private void OnTextViewClose(object sender, EventArgs e)
         {
             var view = sender as ITextView;
 

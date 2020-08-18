@@ -13,16 +13,14 @@ namespace Microsoft.CodeAnalysis.Completion.Providers
         public readonly string Name;
         public readonly Glyph Glyph;
         public readonly string ContainingNamespace;
-        public readonly int AdditionalOverloadCount;
 
-        public SerializableImportCompletionItem(string symbolKeyData, string name, int arity, Glyph glyph, string containingNamespace, int additionalOverloadCount)
+        public SerializableImportCompletionItem(string symbolKeyData, string name, int arity, Glyph glyph, string containingNamespace)
         {
             SymbolKeyData = symbolKeyData;
             Arity = arity;
             Name = name;
             Glyph = glyph;
             ContainingNamespace = containingNamespace;
-            AdditionalOverloadCount = additionalOverloadCount;
         }
     }
 }

@@ -7,7 +7,6 @@ Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Microsoft.CodeAnalysis.VisualBasic.Symbols.Metadata.PE
 Imports Microsoft.CodeAnalysis.VisualBasic.Symbols
 Imports Roslyn.Test.Utilities
-Imports Roslyn.Test.Utilities.TestMetadata
 
 Namespace Microsoft.CodeAnalysis.VisualBasic.UnitTests
 
@@ -726,7 +725,7 @@ Class C3
 End Class 
     </file>
 </compilation>,
-{Net451.mscorlib, C1, C2})
+{TestReferences.NetFx.v4_0_30319.mscorlib, C1, C2})
 
             Dim expectedErrors = <errors>
 BC30916: Type 'C1' is not supported because it either directly or indirectly inherits from itself.
@@ -752,7 +751,7 @@ BC30916: Type 'C1' is not supported because it either directly or indirectly inh
             End Class 
                 </file>
 </compilation>,
-{Net451.mscorlib, C1, C2})
+{TestReferences.NetFx.v4_0_30319.mscorlib, C1, C2})
 
             Dim expectedErrors = <errors>
             BC30916: Type 'C1' is not supported because it either directly or indirectly inherits from itself.
@@ -770,7 +769,7 @@ Class C4
 End Class 
     </file>
 </compilation>,
-{Net451.mscorlib, C1, C2, C3})
+{TestReferences.NetFx.v4_0_30319.mscorlib, C1, C2, C3})
 
             expectedErrors = <errors>
 BC30916: Type 'C3' is not supported because it either directly or indirectly inherits from itself.
@@ -796,7 +795,7 @@ Interface I4
 End Interface
     </file>
 </compilation>,
-{Net451.mscorlib, C1, C2})
+{TestReferences.NetFx.v4_0_30319.mscorlib, C1, C2})
 
             Dim expectedErrors = <errors>
 BC30916: Type 'I1' is not supported because it either directly or indirectly inherits from itself.
@@ -828,7 +827,7 @@ Public Class ClassB
 End Class
     </file>
 </compilation>,
-{Net451.mscorlib, ClassAv1})
+{TestReferences.NetFx.v4_0_30319.mscorlib, ClassAv1})
 
             Dim global1 = Comp.GlobalNamespace
             Dim B1 = global1.GetTypeMembers("ClassB", 0).Single()
@@ -848,7 +847,7 @@ Public Class ClassC
 End Class
     </file>
 </compilation>,
-New MetadataReference() {Net451.mscorlib, ClassAv2, New VisualBasicCompilationReference(Comp)})
+New MetadataReference() {TestReferences.NetFx.v4_0_30319.mscorlib, ClassAv2, New VisualBasicCompilationReference(Comp)})
 
 
             Dim [global] = Comp2.GlobalNamespace
@@ -886,7 +885,7 @@ BC30916: Type 'ClassB' is not supported because it either directly or indirectly
     </file>
 </compilation>,
             {
-                Net451.mscorlib,
+                TestReferences.NetFx.v4_0_30319.mscorlib,
                 ClassAv1,
                 ClassBv1
             })
@@ -910,7 +909,7 @@ Public Class ClassC
 End Class
     </file>
 </compilation>,
-New MetadataReference() {Net451.mscorlib, ClassAv2, New VisualBasicCompilationReference(Comp)})
+New MetadataReference() {TestReferences.NetFx.v4_0_30319.mscorlib, ClassAv2, New VisualBasicCompilationReference(Comp)})
 
             Dim [global] = Comp2.GlobalNamespace
             Dim B2 = [global].GetTypeMembers("ClassB", 0).Single()
@@ -953,7 +952,7 @@ Public Class ClassB
 End Class
     </file>
 </compilation>,
-{Net451.mscorlib, ClassAv2})
+{TestReferences.NetFx.v4_0_30319.mscorlib, ClassAv2})
 
 
             Dim global1 = Comp.GlobalNamespace
@@ -986,7 +985,7 @@ Public Class ClassC
 End Class
     </file>
 </compilation>,
-New MetadataReference() {Net451.mscorlib, ClassAv1, New VisualBasicCompilationReference(Comp)})
+New MetadataReference() {TestReferences.NetFx.v4_0_30319.mscorlib, ClassAv1, New VisualBasicCompilationReference(Comp)})
 
             Dim [global] = Comp2.GlobalNamespace
             Dim A2 = [global].GetTypeMembers("ClassA", 0).Single()
@@ -1015,7 +1014,7 @@ New MetadataReference() {Net451.mscorlib, ClassAv1, New VisualBasicCompilationRe
     </file>
 </compilation>,
             {
-                Net451.mscorlib,
+                TestReferences.NetFx.v4_0_30319.mscorlib,
                 ClassAv2,
                 ClassBv1
             })
@@ -1048,7 +1047,7 @@ End Class
     </file>
 </compilation>,
             {
-                Net451.mscorlib,
+                TestReferences.NetFx.v4_0_30319.mscorlib,
                 ClassAv1,
                 New VisualBasicCompilationReference(Comp)
             })
@@ -1084,7 +1083,7 @@ Public Class ClassB
 End Class
     </file>
     </compilation>,
-    {Net451.mscorlib, ClassAv2})
+    {TestReferences.NetFx.v4_0_30319.mscorlib, ClassAv2})
 
 
             Dim global1 = Comp.GlobalNamespace
@@ -1117,7 +1116,7 @@ Public Class ClassC
 End Class
     </file>
     </compilation>,
-    New MetadataReference() {Net451.mscorlib, ClassAv1, New VisualBasicCompilationReference(Comp)})
+    New MetadataReference() {TestReferences.NetFx.v4_0_30319.mscorlib, ClassAv1, New VisualBasicCompilationReference(Comp)})
 
             Dim [global] = Comp2.GlobalNamespace
             Dim A2 = [global].GetTypeMembers("ClassA", 0).Single()

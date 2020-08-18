@@ -341,18 +341,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         AttributeLocation IAttributeTargetSymbol.DefaultAttributeLocation => AttributeLocation.Parameter;
 
-        AttributeLocation IAttributeTargetSymbol.AllowedAttributeLocations
-        {
-            get
-            {
-                if (SynthesizedRecordPropertySymbol.HaveCorrespondingSynthesizedRecordPropertySymbol(this))
-                {
-                    return AttributeLocation.Parameter | AttributeLocation.Property | AttributeLocation.Field;
-                }
-
-                return AttributeLocation.Parameter;
-            }
-        }
+        AttributeLocation IAttributeTargetSymbol.AllowedAttributeLocations => AttributeLocation.Parameter;
 
         /// <summary>
         /// Symbol to copy bound attributes from, or null if the attributes are not shared among multiple source parameter symbols.

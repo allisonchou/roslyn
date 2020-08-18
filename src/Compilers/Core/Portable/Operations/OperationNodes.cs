@@ -699,8 +699,8 @@ namespace Microsoft.CodeAnalysis.Operations
 
     internal sealed partial class ConstantPatternOperation : BaseConstantPatternOperation, IConstantPatternOperation
     {
-        public ConstantPatternOperation(ITypeSymbol inputType, ITypeSymbol narrowedType, IOperation value, SemanticModel semanticModel, SyntaxNode syntax, bool isImplicit) :
-            this(value, inputType, narrowedType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
+        public ConstantPatternOperation(ITypeSymbol inputType, IOperation value, SemanticModel semanticModel, SyntaxNode syntax, bool isImplicit) :
+            this(value, inputType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
         { }
     }
 
@@ -708,14 +708,13 @@ namespace Microsoft.CodeAnalysis.Operations
     {
         public DeclarationPatternOperation(
             ITypeSymbol inputType,
-            ITypeSymbol narrowedType,
             ITypeSymbol matchedType,
             ISymbol declaredSymbol,
             bool matchesNull,
             SemanticModel semanticModel,
             SyntaxNode syntax,
             bool isImplicit)
-            : this(matchedType, matchesNull, declaredSymbol, inputType, narrowedType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
+            : this(matchedType, matchesNull, declaredSymbol, inputType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
         { }
     }
 
@@ -723,7 +722,6 @@ namespace Microsoft.CodeAnalysis.Operations
     {
         public RecursivePatternOperation(
             ITypeSymbol inputType,
-            ITypeSymbol narrowedType,
             ITypeSymbol matchedType,
             ISymbol deconstructSymbol,
             ImmutableArray<IPatternOperation> deconstructionSubpatterns,
@@ -731,18 +729,18 @@ namespace Microsoft.CodeAnalysis.Operations
             ISymbol declaredSymbol, SemanticModel semanticModel,
             SyntaxNode syntax,
             bool isImplicit) :
-            this(matchedType, deconstructSymbol, deconstructionSubpatterns, propertySubpatterns, declaredSymbol, inputType, narrowedType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
+            this(matchedType, deconstructSymbol, deconstructionSubpatterns, propertySubpatterns, declaredSymbol, inputType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
         { }
     }
 
     internal sealed partial class PropertySubpatternOperation : BasePropertySubpatternOperation
     {
         public PropertySubpatternOperation(
-            IOperation member,
-            IPatternOperation pattern,
             SemanticModel semanticModel,
             SyntaxNode syntax,
-            bool isImplicit) :
+            bool isImplicit,
+            IOperation member,
+            IPatternOperation pattern) :
             this(member, pattern, semanticModel, syntax, type: null, constantValue: null, isImplicit)
         { }
     }
@@ -973,8 +971,8 @@ namespace Microsoft.CodeAnalysis.Operations
 
     internal sealed partial class DiscardPatternOperation : BasePatternOperation, IDiscardPatternOperation
     {
-        public DiscardPatternOperation(ITypeSymbol inputType, ITypeSymbol narrowedType, SemanticModel semanticModel, SyntaxNode syntax, bool isImplicit) :
-            this(inputType, narrowedType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
+        public DiscardPatternOperation(ITypeSymbol inputType, SemanticModel semanticModel, SyntaxNode syntax, bool isImplicit) :
+            this(inputType, semanticModel, syntax, type: null, constantValue: null, isImplicit)
         { }
 
     }

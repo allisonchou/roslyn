@@ -58,6 +58,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.NavigationBar
             codeWindow.GetPrimaryView(out var pTextView);
             StartTrackingView(pTextView);
 
+            pTextView = null;
             codeWindow.GetSecondaryView(out pTextView);
             StartTrackingView(pTextView);
         }

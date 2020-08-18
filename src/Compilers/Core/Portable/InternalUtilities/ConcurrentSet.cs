@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -177,13 +178,7 @@ namespace Roslyn.Utilities
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            // PERF: Do not use dictionary.Keys here because that creates a snapshot
-            // of the collection resulting in a List<T> allocation.
-            // Instead, enumerate the set and copy over the elements.
-            foreach (var element in this)
-            {
-                array[arrayIndex++] = element;
-            }
+            throw new NotImplementedException();
         }
     }
 }

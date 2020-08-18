@@ -131,8 +131,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             End Using
 
             Dim root = DirectCast(node.CreateRed(Nothing, 0), CompilationUnitSyntax)
-            ' Diagnostic options are obsolete, but preserved for compat
-#Disable Warning BC40000
             Dim tree = New ParsedSyntaxTree(
                 newText,
                 newText.Encoding,
@@ -142,7 +140,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 root,
                 isMyTemplate:=False,
                 DiagnosticOptions)
-#Enable Warning BC40000
 
             tree.VerifySource(changes)
             Return tree
@@ -157,7 +154,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
         ''' <summary>
         ''' Creates a new syntax tree from a syntax node.
         ''' </summary>
-        ''' <param name="diagnosticOptions">An obsolete parameter. Diagnostic options should now be passed with <see cref="CompilationOptions.SyntaxTreeOptionsProvider"/></param>
         Public Shared Function Create(root As VisualBasicSyntaxNode,
                                       Optional options As VisualBasicParseOptions = Nothing,
                                       Optional path As String = "",
@@ -201,7 +197,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
                 cloneRoot:=False)
         End Function
 
-        ''' <param name="diagnosticOptions">An obsolete parameter. Diagnostic options should now be passed with <see cref="CompilationOptions.SyntaxTreeOptionsProvider"/></param>
         Public Shared Function ParseText(text As String,
                                          Optional options As VisualBasicParseOptions = Nothing,
                                          Optional path As String = "",

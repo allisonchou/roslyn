@@ -150,7 +150,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.BraceMatching
             return (leftOfPosition: null, rightOfPosition);
         }
 
-        private static void AddBraces(
+        private void AddBraces(
             TaggerContext<BraceHighlightTag> context,
             ITextSnapshot snapshot,
             BraceMatchingResult? braces)

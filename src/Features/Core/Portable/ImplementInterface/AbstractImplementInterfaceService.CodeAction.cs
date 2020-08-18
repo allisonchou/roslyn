@@ -206,8 +206,7 @@ namespace Microsoft.CodeAnalysis.ImplementInterface
                     new CodeGenerationOptions(
                         contextLocation: classOrStructDecl.GetLocation(),
                         autoInsertionLocation: groupMembers,
-                        sortMembers: groupMembers,
-                        options: await document.GetOptionsAsync(cancellationToken).ConfigureAwait(false)),
+                        sortMembers: groupMembers),
                     cancellationToken).ConfigureAwait(false);
             }
 

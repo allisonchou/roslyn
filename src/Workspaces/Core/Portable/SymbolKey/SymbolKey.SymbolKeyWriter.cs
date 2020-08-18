@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -51,13 +49,13 @@ namespace Microsoft.CodeAnalysis
             TypeParameterOrdinal = '@',
         }
 
-        private class SymbolKeyWriter : SymbolVisitor, IDisposable
+        private class SymbolKeyWriter : SymbolVisitor<object>, IDisposable
         {
             private static readonly ObjectPool<SymbolKeyWriter> s_writerPool = SharedPools.Default<SymbolKeyWriter>();
 
             private readonly Action<ISymbol> _writeSymbolKey;
-            private readonly Action<string?> _writeString;
-            private readonly Action<Location?> _writeLocation;
+            private readonly Action<string> _writeString;
+            private readonly Action<Location> _writeLocation;
             private readonly Action<bool> _writeBoolean;
             private readonly Action<IParameterSymbol> _writeParameterType;
             private readonly Action<IParameterSymbol> _writeRefKind;
@@ -126,7 +124,7 @@ namespace Microsoft.CodeAnalysis
                 _stringBuilder.Append(')');
             }
 
-            internal void WriteSymbolKey(ISymbol? symbol)
+            internal void WriteSymbolKey(ISymbol symbol)
             {
                 WriteSpace();
 
@@ -223,7 +221,7 @@ namespace Microsoft.CodeAnalysis
             internal void WriteBoolean(bool value)
                 => WriteInteger(value ? 1 : 0);
 
-            internal void WriteString(string? value)
+            internal void WriteString(string value)
             {
                 // Strings are quoted, with all embedded quotes being doubled to escape them.
                 WriteSpace();
@@ -239,7 +237,7 @@ namespace Microsoft.CodeAnalysis
                 }
             }
 
-            internal void WriteLocation(Location? location)
+            internal void WriteLocation(Location location)
             {
                 WriteSpace();
                 if (location == null)
@@ -253,7 +251,7 @@ namespace Microsoft.CodeAnalysis
                              location.Kind == LocationKind.MetadataFile);
 
                 WriteInteger((int)location.Kind);
-                if (location.IsInSource)
+                if (location.Kind == LocationKind.SourceFile)
                 {
                     WriteString(location.SourceTree.FilePath);
                     WriteInteger(location.SourceSpan.Start);
@@ -261,7 +259,7 @@ namespace Microsoft.CodeAnalysis
                 }
                 else if (location.Kind == LocationKind.MetadataFile)
                 {
-                    WriteSymbolKey(location.MetadataModule!.ContainingAssembly);
+                    WriteSymbolKey(location.MetadataModule.ContainingAssembly);
                     WriteString(location.MetadataModule.MetadataName);
                 }
             }
@@ -279,21 +277,14 @@ namespace Microsoft.CodeAnalysis
             internal void WriteParameterTypesArray(ImmutableArray<IParameterSymbol> symbols)
                 => WriteArray(symbols, _writeParameterType);
 
-            internal void WriteBooleanArray(ImmutableArray<bool> array)
-                => WriteArray(array, _writeBoolean);
-
-            // annotating WriteStringArray and WriteLocationArray as allowing null elements
-            // then causes issues where we can't pass ImmutableArrays of non-null elements
-
-#nullable disable
-
             internal void WriteStringArray(ImmutableArray<string> strings)
                 => WriteArray(strings, _writeString);
 
+            internal void WriteBooleanArray(ImmutableArray<bool> array)
+                => WriteArray(array, _writeBoolean);
+
             internal void WriteLocationArray(ImmutableArray<Location> array)
                 => WriteArray(array, _writeLocation);
-
-#nullable enable
 
             internal void WriteRefKindArray(ImmutableArray<IParameterSymbol> values)
                 => WriteArray(values, _writeRefKind);
@@ -318,46 +309,51 @@ namespace Microsoft.CodeAnalysis
 
             internal void WriteRefKind(RefKind refKind) => WriteInteger((int)refKind);
 
-            public override void VisitAlias(IAliasSymbol aliasSymbol)
+            public override object VisitAlias(IAliasSymbol aliasSymbol)
             {
                 WriteType(SymbolKeyType.Alias);
                 AliasSymbolKey.Create(aliasSymbol, this);
+                return null;
             }
 
-            public override void VisitArrayType(IArrayTypeSymbol arrayTypeSymbol)
+            public override object VisitArrayType(IArrayTypeSymbol arrayTypeSymbol)
             {
                 WriteType(SymbolKeyType.ArrayType);
                 ArrayTypeSymbolKey.Create(arrayTypeSymbol, this);
+                return null;
             }
 
-            public override void VisitAssembly(IAssemblySymbol assemblySymbol)
+            public override object VisitAssembly(IAssemblySymbol assemblySymbol)
             {
                 WriteType(SymbolKeyType.Assembly);
                 AssemblySymbolKey.Create(assemblySymbol, this);
+                return null;
             }
 
-            public override void VisitDynamicType(IDynamicTypeSymbol dynamicTypeSymbol)
+            public override object VisitDynamicType(IDynamicTypeSymbol dynamicTypeSymbol)
             {
                 WriteType(SymbolKeyType.DynamicType);
                 DynamicTypeSymbolKey.Create(this);
+                return null;
             }
 
-            public override void VisitField(IFieldSymbol fieldSymbol)
+            public override object VisitField(IFieldSymbol fieldSymbol)
             {
                 WriteType(SymbolKeyType.Field);
                 FieldSymbolKey.Create(fieldSymbol, this);
+                return null;
             }
 
-            public override void VisitLabel(ILabelSymbol labelSymbol)
+            public override object VisitLabel(ILabelSymbol labelSymbol)
                 => throw ExceptionUtilities.Unreachable;
 
-            public override void VisitLocal(ILocalSymbol localSymbol)
+            public override object VisitLocal(ILocalSymbol localSymbol)
                 => throw ExceptionUtilities.Unreachable;
 
-            public override void VisitRangeVariable(IRangeVariableSymbol rangeVariableSymbol)
+            public override object VisitRangeVariable(IRangeVariableSymbol rangeVariableSymbol)
                 => throw ExceptionUtilities.Unreachable;
 
-            public override void VisitMethod(IMethodSymbol methodSymbol)
+            public override object VisitMethod(IMethodSymbol methodSymbol)
             {
                 if (!methodSymbol.Equals(methodSymbol.ConstructedFrom))
                 {
@@ -387,15 +383,18 @@ namespace Microsoft.CodeAnalysis
                             break;
                     }
                 }
+
+                return null;
             }
 
-            public override void VisitModule(IModuleSymbol moduleSymbol)
+            public override object VisitModule(IModuleSymbol moduleSymbol)
             {
                 WriteType(SymbolKeyType.Module);
                 ModuleSymbolKey.Create(moduleSymbol, this);
+                return null;
             }
 
-            public override void VisitNamedType(INamedTypeSymbol namedTypeSymbol)
+            public override object VisitNamedType(INamedTypeSymbol namedTypeSymbol)
             {
                 if (namedTypeSymbol.TypeKind == TypeKind.Error)
                 {
@@ -428,45 +427,53 @@ namespace Microsoft.CodeAnalysis
                     WriteType(SymbolKeyType.NamedType);
                     NamedTypeSymbolKey.Create(namedTypeSymbol, this);
                 }
+
+                return null;
             }
 
-            public override void VisitNamespace(INamespaceSymbol namespaceSymbol)
+            public override object VisitNamespace(INamespaceSymbol namespaceSymbol)
             {
                 WriteType(SymbolKeyType.Namespace);
                 NamespaceSymbolKey.Create(namespaceSymbol, this);
+                return null;
             }
 
-            public override void VisitParameter(IParameterSymbol parameterSymbol)
+            public override object VisitParameter(IParameterSymbol parameterSymbol)
             {
                 WriteType(SymbolKeyType.Parameter);
                 ParameterSymbolKey.Create(parameterSymbol, this);
+                return null;
             }
 
-            public override void VisitPointerType(IPointerTypeSymbol pointerTypeSymbol)
+            public override object VisitPointerType(IPointerTypeSymbol pointerTypeSymbol)
             {
                 WriteType(SymbolKeyType.PointerType);
                 PointerTypeSymbolKey.Create(pointerTypeSymbol, this);
+                return null;
             }
 
-            public override void VisitFunctionPointerType(IFunctionPointerTypeSymbol symbol)
+            public override object VisitFunctionPointerType(IFunctionPointerTypeSymbol symbol)
             {
                 WriteType(SymbolKeyType.FunctionPointer);
                 FunctionPointerTypeSymbolKey.Create(symbol, this);
+                return null;
             }
 
-            public override void VisitProperty(IPropertySymbol propertySymbol)
+            public override object VisitProperty(IPropertySymbol propertySymbol)
             {
                 WriteType(SymbolKeyType.Property);
                 PropertySymbolKey.Create(propertySymbol, this);
+                return null;
             }
 
-            public override void VisitEvent(IEventSymbol eventSymbol)
+            public override object VisitEvent(IEventSymbol eventSymbol)
             {
                 WriteType(SymbolKeyType.Event);
                 EventSymbolKey.Create(eventSymbol, this);
+                return null;
             }
 
-            public override void VisitTypeParameter(ITypeParameterSymbol typeParameterSymbol)
+            public override object VisitTypeParameter(ITypeParameterSymbol typeParameterSymbol)
             {
                 // If it's a reference to a method type parameter, and we're currently writing
                 // out a signture, then only write out the ordinal of type parameter.  This 
@@ -481,6 +488,7 @@ namespace Microsoft.CodeAnalysis
                     WriteType(SymbolKeyType.TypeParameter);
                     TypeParameterSymbolKey.Create(typeParameterSymbol, this);
                 }
+                return null;
             }
 
             public bool ShouldWriteTypeParameterOrdinal(ISymbol symbol, out int methodIndex)
@@ -493,7 +501,7 @@ namespace Microsoft.CodeAnalysis
                         for (int i = 0, n = _methodSymbolStack.Count; i < n; i++)
                         {
                             var method = _methodSymbolStack[i];
-                            if (typeParameter.DeclaringMethod!.Equals(method))
+                            if (typeParameter.DeclaringMethod.Equals(method))
                             {
                                 methodIndex = i;
                                 return true;

@@ -32,8 +32,6 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        public string FilePath => _lineSpan.Path;
-
         public override FileLinePositionSpan GetLineSpan()
         {
             return _lineSpan;

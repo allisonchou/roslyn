@@ -28,14 +28,11 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
                 </Project>
             </Workspace>
 
-            Dim composition = EditorTestCompositions.EditorFeatures.AddParts(
-                GetType(NoCompilationContentTypeDefinitions),
-                GetType(NoCompilationContentTypeLanguageService),
+            Dim exportProvider = ExportProviderCache.GetOrCreateExportProviderFactory(TestExportProvider.EntireAssemblyCatalogWithCSharpAndVisualBasic.WithParts(
                 GetType(CompletionItemNonExclusiveCompletionProvider),
                 GetType(CompletionItemExclusiveCompletionProvider),
-                GetType(CompletionItemExclusive2CompletionProvider))
-
-            Using workspace = TestWorkspace.Create(workspaceDefinition, composition:=composition)
+                GetType(CompletionItemExclusive2CompletionProvider))).CreateExportProvider()
+            Using workspace = TestWorkspace.Create(workspaceDefinition, exportProvider:=exportProvider)
                 Dim document = workspace.CurrentSolution.Projects.First.Documents.First
                 Dim completionService = New TestCompletionService(workspace)
 
@@ -67,9 +64,9 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.IntelliSense
         Private MustInherit Class TestCompletionProviderWithMockExclusivity
             Inherits CompletionProvider
 
-            Private ReadOnly s_isExclusive As Boolean
-            Private ReadOnly s_itemText As String
-            Private ReadOnly s_index As Integer
+            Private s_isExclusive As Boolean
+            Private s_itemText As String
+            Private s_index As Integer
 
             Protected Sub New(isExclusive As Boolean, text As String, index As Integer)
                 s_isExclusive = isExclusive

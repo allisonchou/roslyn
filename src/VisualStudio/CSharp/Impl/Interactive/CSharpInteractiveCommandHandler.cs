@@ -30,8 +30,9 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Interactive
             ISendToInteractiveSubmissionProvider sendToInteractiveSubmissionProvider,
             IContentTypeRegistryService contentTypeRegistryService,
             IEditorOptionsFactoryService editorOptionsFactoryService,
-            IEditorOperationsFactoryService editorOperationsFactoryService)
-            : base(contentTypeRegistryService, editorOptionsFactoryService, editorOperationsFactoryService)
+            IEditorOperationsFactoryService editorOperationsFactoryService,
+            IWaitIndicator waitIndicator)
+            : base(contentTypeRegistryService, editorOptionsFactoryService, editorOperationsFactoryService, waitIndicator)
         {
             _interactiveWindowProvider = interactiveWindowProvider;
             _sendToInteractiveSubmissionProvider = sendToInteractiveSubmissionProvider;

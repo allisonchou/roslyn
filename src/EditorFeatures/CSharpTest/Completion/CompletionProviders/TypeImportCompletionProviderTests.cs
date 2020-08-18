@@ -40,8 +40,8 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Completion.CompletionPr
                 .WithChangedOption(CompletionServiceOptions.IsExpandedCompletion, IsExpandedCompletion);
         }
 
-        protected override TestComposition GetComposition()
-            => base.GetComposition().AddParts(typeof(TestExperimentationService));
+        protected override ComposableCatalog GetExportCatalog()
+            => base.GetExportCatalog().WithPart(typeof(TestExperimentationService));
 
         #region "Option tests"
 
@@ -1020,7 +1020,7 @@ namespace Test
     class Program { }
 }";
 
-            var expectedCodeAfterCommit = @"
+            string expectedCodeAfterCommit = @"
 using Foo;
 
 namespace Test
@@ -1082,7 +1082,7 @@ namespace Test
     }
 }";
 
-            var expectedCodeAfterCommit = @"
+            string expectedCodeAfterCommit = @"
 using Foo;
 
 namespace Test
@@ -1141,7 +1141,7 @@ namespace Test
     class Program { }
 }";
 
-            var expectedCodeAfterCommit = @"
+            string expectedCodeAfterCommit = @"
 using Foo;
 
 namespace Test
@@ -1203,7 +1203,7 @@ namespace Test
     }
 }";
 
-            var expectedCodeAfterCommit = @"
+            string expectedCodeAfterCommit = @"
 using Foo;
 
 namespace Test

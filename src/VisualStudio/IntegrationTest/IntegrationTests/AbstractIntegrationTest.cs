@@ -21,15 +21,17 @@ namespace Roslyn.VisualStudio.IntegrationTests
 
         private readonly MessageFilter _messageFilter;
         private readonly VisualStudioInstanceFactory _instanceFactory;
+        private readonly ITestOutputHelper _testOutputHelper;
         private VisualStudioInstanceContext _visualStudioContext;
 
-        protected AbstractIntegrationTest(VisualStudioInstanceFactory instanceFactory)
+        protected AbstractIntegrationTest(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
         {
             Assert.Equal(ApartmentState.STA, Thread.CurrentThread.GetApartmentState());
 
             // Install a COM message filter to handle retry operations when the first attempt fails
             _messageFilter = RegisterMessageFilter();
             _instanceFactory = instanceFactory;
+            _testOutputHelper = testOutputHelper;
 
             try
             {

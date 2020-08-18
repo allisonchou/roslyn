@@ -12,7 +12,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
     Public Class WorkspaceChangedEventTests
         <WpfTheory>
         <CombinatorialData>
-        Public Async Function AddingASingleSourceFileRaisesDocumentAdded(addInBatch As Boolean) As Task
+        Public Async Sub AddingASingleSourceFileRaisesDocumentAdded(addInBatch As Boolean)
             Using environment = New TestEnvironment()
                 Dim project = environment.ProjectFactory.CreateAndAddToWorkspace("Project", LanguageNames.CSharp)
                 Dim workspaceChangeEvents = New WorkspaceChangeWatcher(environment)
@@ -27,10 +27,10 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
                 Assert.Equal(project.Id, change.ProjectId)
                 Assert.Equal(environment.Workspace.CurrentSolution.Projects.Single().DocumentIds.Single(), change.DocumentId)
             End Using
-        End Function
+        End Sub
 
         <WpfFact>
-        Public Async Function AddingTwoDocumentsInBatchRaisesProjectChanged() As Task
+        Public Async Sub AddingTwoDocumentsInBatchRaisesProjectChanged()
             Using environment = New TestEnvironment()
                 Dim project = environment.ProjectFactory.CreateAndAddToWorkspace("Project", LanguageNames.CSharp)
                 Dim workspaceChangeEvents = New WorkspaceChangeWatcher(environment)
@@ -46,11 +46,11 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
                 Assert.Equal(project.Id, change.ProjectId)
                 Assert.Null(change.DocumentId)
             End Using
-        End Function
+        End Sub
 
         <WpfTheory>
         <CombinatorialData>
-        Public Async Function AddingASingleAdditionalFileInABatchRaisesDocumentAdded(addInBatch As Boolean) As Task
+        Public Async Sub AddingASingleAdditionalFileInABatchRaisesDocumentAdded(addInBatch As Boolean)
             Using environment = New TestEnvironment()
                 Dim project = environment.ProjectFactory.CreateAndAddToWorkspace("Project", LanguageNames.CSharp)
                 Dim workspaceChangeEvents = New WorkspaceChangeWatcher(environment)
@@ -65,11 +65,11 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
                 Assert.Equal(project.Id, change.ProjectId)
                 Assert.Equal(environment.Workspace.CurrentSolution.Projects.Single().AdditionalDocumentIds.Single(), change.DocumentId)
             End Using
-        End Function
+        End Sub
 
         <WpfTheory>
         <CombinatorialData>
-        Public Async Function AddingASingleMetadataReferenceRaisesProjectChanged(addInBatch As Boolean) As Task
+        Public Async Sub AddingASingleMetadataReferenceRaisesProjectChanged(addInBatch As Boolean)
             Using environment = New TestEnvironment()
                 Dim project = environment.ProjectFactory.CreateAndAddToWorkspace("Project", LanguageNames.CSharp)
                 Dim workspaceChangeEvents = New WorkspaceChangeWatcher(environment)
@@ -84,11 +84,11 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
                 Assert.Equal(project.Id, change.ProjectId)
                 Assert.Null(change.DocumentId)
             End Using
-        End Function
+        End Sub
 
         <WpfFact>
         <WorkItem(34309, "https://github.com/dotnet/roslyn/issues/34309")>
-        Public Async Function StartingAndEndingBatchWithNoChangesDoesNothing() As Task
+        Public Async Sub StartingAndEndingBatchWithNoChangesDoesNothing()
             Using environment = New TestEnvironment()
                 Dim project = environment.ProjectFactory.CreateAndAddToWorkspace("Project", LanguageNames.CSharp)
                 Dim workspaceChangeEvents = New WorkspaceChangeWatcher(environment)
@@ -99,6 +99,6 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
                 Assert.Empty(Await workspaceChangeEvents.GetNewChangeEventsAsync())
                 Assert.Same(startingSolution, environment.Workspace.CurrentSolution)
             End Using
-        End Function
+        End Sub
     End Class
 End Namespace

@@ -22,9 +22,11 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Squiggles
     <[UseExportProvider]>
     Public Class ErrorSquiggleProducerTests
 
-        Private Shared Async Function ProduceSquiggles(content As String) As Task(Of ImmutableArray(Of ITagSpan(Of IErrorTag)))
+        Private _producer As New DiagnosticTagProducer(Of DiagnosticsSquiggleTaggerProvider)
+
+        Private Async Function ProduceSquiggles(content As String) As Task(Of ImmutableArray(Of ITagSpan(Of IErrorTag)))
             Using workspace = TestWorkspace.CreateVisualBasic(content)
-                Return (Await TestDiagnosticTagProducer(Of DiagnosticsSquiggleTaggerProvider).GetDiagnosticsAndErrorSpans(workspace)).Item2
+                Return (Await _producer.GetDiagnosticsAndErrorSpans(workspace)).Item2
             End Using
         End Function
 
@@ -67,7 +69,7 @@ End Class")
     End Sub
 End Class")
 
-                Dim diagnosticsAndSpans = Await TestDiagnosticTagProducer(Of DiagnosticsSquiggleTaggerProvider).GetDiagnosticsAndErrorSpans(workspace)
+                Dim diagnosticsAndSpans = Await _producer.GetDiagnosticsAndErrorSpans(workspace)
                 Dim spans = diagnosticsAndSpans.Item1.Zip(diagnosticsAndSpans.Item2, Function(diagostic, span) (diagostic, span)).OrderBy(Function(s) s.span.Span.Span.Start).ToImmutableArray()
 
                 Assert.Equal(1, spans.Count())
@@ -113,7 +115,7 @@ End Class"
                 }
             }
 
-            Using workspace = TestWorkspace.CreateVisualBasic(content, composition:=SquiggleUtilities.CompositionWithSolutionCrawler)
+            Using workspace = TestWorkspace.CreateVisualBasic(content)
                 Dim options As New Dictionary(Of OptionKey2, Object)
                 Dim language = workspace.Projects.Single().Language
                 Dim preferIntrinsicPredefinedTypeOption = New OptionKey2(CodeStyleOptions2.PreferIntrinsicPredefinedTypeKeywordInDeclaration, language)
@@ -121,7 +123,7 @@ End Class"
                 options.Add(preferIntrinsicPredefinedTypeOption, preferIntrinsicPredefinedTypeOptionValue)
                 workspace.ApplyOptions(options)
 
-                Dim diagnosticsAndSpans = Await TestDiagnosticTagProducer(Of DiagnosticsSquiggleTaggerProvider).GetDiagnosticsAndErrorSpans(workspace, analyzerMap)
+                Dim diagnosticsAndSpans = Await _producer.GetDiagnosticsAndErrorSpans(workspace, analyzerMap)
                 Dim spans = diagnosticsAndSpans.Item1.Zip(diagnosticsAndSpans.Item2, Function(diagostic, span) (diagostic, span)).OrderBy(Function(s) s.span.Span.Span.Start).ToImmutableArray()
 
                 Assert.Equal(2, spans.Length)

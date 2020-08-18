@@ -62,7 +62,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
 
                         break;
 
-                    case MiscellaneousFilesWorkspace _:
+                    case MiscellaneousFilesWorkspace miscellaneousFilesWorkspace:
 
                         // Nothing to do in this case: textBuffer is correct!
 

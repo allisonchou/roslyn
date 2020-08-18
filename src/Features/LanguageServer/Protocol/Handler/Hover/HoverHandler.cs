@@ -9,7 +9,6 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.QuickInfo;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -26,9 +25,10 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
         {
         }
 
-        public override async Task<Hover?> HandleRequestAsync(TextDocumentPositionParams request, RequestContext context, CancellationToken cancellationToken)
+        public override async Task<Hover?> HandleRequestAsync(TextDocumentPositionParams request, ClientCapabilities clientCapabilities,
+            string? clientName, CancellationToken cancellationToken)
         {
-            var document = SolutionProvider.GetDocument(request.TextDocument, context.ClientName);
+            var document = SolutionProvider.GetDocument(request.TextDocument, clientName);
             if (document == null)
             {
                 return null;
@@ -44,16 +44,21 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
             }
 
             var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
-
-            // TODO - Switch to markup content once it supports classifications.
-            // https://devdiv.visualstudio.com/DevDiv/_workitems/edit/918138
-            return new VSHover
+            return new Hover
             {
                 Range = ProtocolConversions.TextSpanToRange(info.Span, text),
-                Contents = new SumType<SumType<string, MarkedString>, SumType<string, MarkedString>[], MarkupContent>(string.Empty),
-                // Build the classified text without navigation actions - they are not serializable.
-                RawContent = await IntellisenseQuickInfoBuilder.BuildContentWithoutNavigationActionsAsync(info, document, cancellationToken).ConfigureAwait(false)
+                Contents = new MarkupContent
+                {
+                    Kind = MarkupKind.Markdown,
+                    Value = GetMarkdownString(info)
+                }
             };
+
+            // local functions
+            // TODO - This should return correctly formatted markdown from quick info.
+            // https://github.com/dotnet/roslyn/issues/43387
+            static string GetMarkdownString(QuickInfoItem info)
+                => string.Join("\r\n", info.Sections.Select(section => section.Text).Where(text => !string.IsNullOrEmpty(text)));
         }
     }
 }

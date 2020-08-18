@@ -15,20 +15,21 @@ Imports Moq
 Imports ProviderData = System.Tuple(Of Microsoft.CodeAnalysis.Packaging.IPackageInstallerService, Microsoft.CodeAnalysis.SymbolSearch.ISymbolSearchService)
 
 Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.CodeActions.AddImport
-    <Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
     Public Class AddImportNuGetTests
         Inherits AbstractAddImportTests
 
-        Private Const NugetOrgSource = "nuget.org"
+        Const NugetOrgSource = "nuget.org"
 
         Private Shared ReadOnly NugetPackageSources As ValueTask(Of ImmutableArray(Of PackageSource)?) =
             New ValueTask(Of ImmutableArray(Of PackageSource)?)(ImmutableArray.Create(New PackageSource(NugetOrgSource, "http://nuget.org")))
 
-        Protected Overrides Sub InitializeWorkspace(workspace As TestWorkspace, parameters As TestParameters)
+        Protected Overrides Function CreateWorkspaceFromFile(initialMarkup As String, parameters As TestParameters) As TestWorkspace
+            Dim workspace = MyBase.CreateWorkspaceFromFile(initialMarkup, parameters)
             workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(workspace.Options.
                 WithChangedOption(SymbolSearchOptions.SuggestForTypesInNuGetPackages, LanguageNames.VisualBasic, True).
                 WithChangedOption(SymbolSearchOptions.SuggestForTypesInReferenceAssemblies, LanguageNames.VisualBasic, True)))
-        End Sub
+            Return workspace
+        End Function
 
         Friend Overrides Function CreateDiagnosticProviderAndFixer(workspace As Workspace) As (DiagnosticAnalyzer, CodeFixProvider)
             ' This is used by inherited tests to ensure the properties of diagnostic analyzers are correct. It's not
@@ -45,7 +46,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.CodeActions.AddImp
             Return FlattenActions(actions)
         End Function
 
-        <Fact>
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
         Public Async Function TestSearchPackageSingleName() As Task
             Dim installerServiceMock = New Mock(Of IPackageInstallerService)(MockBehavior.Strict)
             installerServiceMock.Setup(Function(i) i.IsEnabled(It.IsAny(Of ProjectId))).Returns(True)
@@ -74,7 +75,7 @@ Class C
 End Class", fixProviderData:=New ProviderData(installerServiceMock.Object, packageServiceMock.Object))
         End Function
 
-        <Fact>
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
         Public Async Function TestSearchPackageMultipleNames() As Task
             Dim installerServiceMock = New Mock(Of IPackageInstallerService)(MockBehavior.Strict)
             installerServiceMock.Setup(Function(i) i.IsEnabled(It.IsAny(Of ProjectId))).Returns(True)
@@ -103,7 +104,7 @@ Class C
 End Class", fixProviderData:=New ProviderData(installerServiceMock.Object, packageServiceMock.Object))
         End Function
 
-        <Fact>
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
         Public Async Function TestFailedInstallDoesNotChangeFile() As Task
             Dim installerServiceMock = New Mock(Of IPackageInstallerService)(MockBehavior.Strict)
             installerServiceMock.Setup(Function(i) i.IsEnabled(It.IsAny(Of ProjectId))).Returns(True)
@@ -130,7 +131,7 @@ Class C
 End Class", fixProviderData:=New ProviderData(installerServiceMock.Object, packageServiceMock.Object))
         End Function
 
-        <Fact>
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
         Public Async Function TestMissingIfPackageAlreadyInstalled() As Task
             Dim installerServiceMock = New Mock(Of IPackageInstallerService)(MockBehavior.Strict)
             installerServiceMock.Setup(Function(i) i.IsEnabled(It.IsAny(Of ProjectId))).Returns(True)
@@ -152,7 +153,7 @@ End Class",
 New TestParameters(fixProviderData:=New ProviderData(installerServiceMock.Object, packageServiceMock.Object)))
         End Function
 
-        <Fact>
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
         Public Async Function TestOptionsOffered() As Task
             Dim installerServiceMock = New Mock(Of IPackageInstallerService)(MockBehavior.Strict)
             installerServiceMock.Setup(Function(i) i.IsEnabled(It.IsAny(Of ProjectId))).Returns(True)
@@ -195,7 +196,7 @@ FeaturesResources.Find_and_install_latest_version,
 parameters:=New TestParameters(index:=2, fixProviderData:=data))
         End Function
 
-        <Fact>
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
         Public Async Function TestInstallGetsCalledNoVersion() As Task
             Dim installerServiceMock = New Mock(Of IPackageInstallerService)(MockBehavior.Strict)
             installerServiceMock.Setup(Function(i) i.IsEnabled(It.IsAny(Of ProjectId))).Returns(True)
@@ -225,7 +226,7 @@ End Class", fixProviderData:=New ProviderData(installerServiceMock.Object, packa
             installerServiceMock.Verify()
         End Function
 
-        <Fact>
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsAddImport)>
         Public Async Function TestInstallGetsCalledWithVersion() As Task
             Dim installerServiceMock = New Mock(Of IPackageInstallerService)(MockBehavior.Strict)
             installerServiceMock.Setup(Function(i) i.IsEnabled(It.IsAny(Of ProjectId))).Returns(True)
@@ -257,7 +258,7 @@ End Class", fixProviderData:=New ProviderData(installerServiceMock.Object, packa
             installerServiceMock.Verify()
         End Function
 
-        Private Shared Function CreateSearchResult(packageName As String, typeName As String, nameParts As ImmutableArray(Of String)) As Task(Of IList(Of PackageWithTypeResult))
+        Private Function CreateSearchResult(packageName As String, typeName As String, nameParts As ImmutableArray(Of String)) As Task(Of IList(Of PackageWithTypeResult))
             Return CreateSearchResult(New PackageWithTypeResult(
                 packageName:=packageName,
                 typeName:=typeName,
@@ -266,11 +267,11 @@ End Class", fixProviderData:=New ProviderData(installerServiceMock.Object, packa
                 containingNamespaceNames:=nameParts))
         End Function
 
-        Private Shared Function CreateSearchResult(ParamArray results As PackageWithTypeResult()) As Task(Of IList(Of PackageWithTypeResult))
+        Private Function CreateSearchResult(ParamArray results As PackageWithTypeResult()) As Task(Of IList(Of PackageWithTypeResult))
             Return Task.FromResult(Of IList(Of PackageWithTypeResult))(ImmutableArray.Create(results))
         End Function
 
-        Private Shared Function CreateNameParts(ParamArray parts As String()) As ImmutableArray(Of String)
+        Private Function CreateNameParts(ParamArray parts As String()) As ImmutableArray(Of String)
             Return parts.ToImmutableArray()
         End Function
     End Class

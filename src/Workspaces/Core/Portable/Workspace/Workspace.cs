@@ -90,7 +90,7 @@ namespace Microsoft.CodeAnalysis
 
             var emptyOptions = new SerializableOptionSet(languages: ImmutableHashSet<string>.Empty, _optionService,
                 serializableOptions: ImmutableHashSet<IOption>.Empty, values: ImmutableDictionary<OptionKey, object?>.Empty,
-                changedOptionKeysSerializable: ImmutableHashSet<OptionKey>.Empty);
+                changedOptionKeys: ImmutableHashSet<OptionKey>.Empty);
 
             _latestSolution = CreateSolution(info, emptyOptions, analyzerReferences: SpecializedCollections.EmptyReadOnlyList<AnalyzerReference>());
 
@@ -135,7 +135,7 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         protected internal Solution CreateSolution(SolutionInfo solutionInfo)
         {
-            var options = _optionService.GetSerializableOptionsSnapshot(solutionInfo.GetRemoteSupportedProjectLanguages());
+            var options = _optionService.GetSerializableOptionsSnapshot(solutionInfo.GetProjectLanguages());
             return CreateSolution(solutionInfo, options, solutionInfo.AnalyzerReferences);
         }
 
@@ -272,7 +272,7 @@ namespace Microsoft.CodeAnalysis
 
         internal void UpdateCurrentSolutionOnOptionsChanged()
         {
-            var newOptions = _optionService.GetSerializableOptionsSnapshot(this.CurrentSolution.State.GetRemoteSupportedProjectLanguages());
+            var newOptions = _optionService.GetSerializableOptionsSnapshot(this.CurrentSolution.State.GetProjectLanguages());
             this.SetCurrentSolution(this.CurrentSolution.WithOptions(newOptions));
         }
 
@@ -1144,6 +1144,8 @@ namespace Microsoft.CodeAnalysis
 
         #region Apply Changes
 
+        internal virtual bool CanRenameFilesDuringCodeActions(Project project) => true;
+
         /// <summary>
         /// Determines if the specific kind of change is supported by the <see cref="TryApplyChanges(Solution)"/> method.
         /// </summary>
@@ -1268,36 +1270,15 @@ namespace Microsoft.CodeAnalysis
 
         private void CheckAllowedProjectChanges(ProjectChanges projectChanges)
         {
-            if (projectChanges.OldProject.CompilationOptions != projectChanges.NewProject.CompilationOptions)
+            // It's OK to use the null-suppression operator when calling CanApplyCompilationOptionChange: if they were both null,
+            // we'd bail right away since they didn't change. Thus, at least one is non-null, and once you have a non-null CompilationOptions and ParseOptions
+            // you can't ever make it null again, and it'll be non-null as long as the language supported it in the first place.
+            if (projectChanges.OldProject.CompilationOptions != projectChanges.NewProject.CompilationOptions
+                && !this.CanApplyChange(ApplyChangesKind.ChangeCompilationOptions)
+                && !this.CanApplyCompilationOptionChange(
+                    projectChanges.OldProject.CompilationOptions!, projectChanges.NewProject.CompilationOptions!, projectChanges.NewProject))
             {
-                // It's OK to assert this: if they were both null, the if check above would have been false right away
-                // since they didn't change. Thus, at least one is non-null, and once you have a non-null CompilationOptions
-                // and ParseOptions, we don't let you ever make it null again. Further, it can't ever start non-null:
-                // we replace a null when a project is created with default compilation options.
-                Contract.ThrowIfNull(projectChanges.OldProject.CompilationOptions);
-                Contract.ThrowIfNull(projectChanges.NewProject.CompilationOptions);
-
-                // The changes in CompilationOptions may include a change to the SyntaxTreeOptionsProvider, which would be happening
-                // if an .editorconfig was added, removed, or modified. We'll compute the options without that change, and if there's
-                // still changes then we need to verify we can apply those. The .editorconfig changes will also be represented as
-                // document edits, which the host is expected to actually apply directly.
-                var newOptionsWithoutSyntaxTreeOptionsChange =
-                    projectChanges.NewProject.CompilationOptions.WithSyntaxTreeOptionsProvider(
-                        projectChanges.OldProject.CompilationOptions.SyntaxTreeOptionsProvider);
-
-                if (projectChanges.OldProject.CompilationOptions != newOptionsWithoutSyntaxTreeOptionsChange)
-                {
-                    // We're actually changing in a meaningful way, so now validate that the workspace can take it.
-                    // We will pass into the CanApplyCompilationOptionChange newOptionsWithoutSyntaxTreeOptionsChange,
-                    // which means it's only having to validate that the changes it's expected to apply are changing.
-                    // The common pattern is to reject all changes not recognized, so this keeps existing code running just fine.
-                    if (!this.CanApplyChange(ApplyChangesKind.ChangeCompilationOptions)
-                        && !this.CanApplyCompilationOptionChange(
-                                projectChanges.OldProject.CompilationOptions, newOptionsWithoutSyntaxTreeOptionsChange, projectChanges.NewProject))
-                    {
-                        throw new NotSupportedException(WorkspacesResources.Changing_compilation_options_is_not_supported);
-                    }
-                }
+                throw new NotSupportedException(WorkspacesResources.Changing_compilation_options_is_not_supported);
             }
 
             if (projectChanges.OldProject.ParseOptions != projectChanges.NewProject.ParseOptions
@@ -1439,16 +1420,10 @@ namespace Microsoft.CodeAnalysis
             // It's OK to use the null-suppression operator when calling ApplyCompilation/ParseOptionsChanged: the only change that is allowed
             // is going from one non-null value to another which is blocked by the Project.WithCompilationOptions() API directly.
 
-            // The changes in CompilationOptions may include a change to the SyntaxTreeOptionsProvider, which would be happening
-            // if an .editorconfig was added, removed, or modified. We'll compute the options without that change, and if there's
-            // still changes then we need to verify we can apply those. The .editorconfig changes will also be represented as
-            // document edits, which the host is expected to actually apply directly.
-            var newOptionsWithoutSyntaxTreeOptionsChange =
-                projectChanges.NewProject.CompilationOptions?.WithSyntaxTreeOptionsProvider(
-                    projectChanges.OldProject.CompilationOptions!.SyntaxTreeOptionsProvider);
-            if (projectChanges.OldProject.CompilationOptions != newOptionsWithoutSyntaxTreeOptionsChange)
+            // changed compilation options
+            if (projectChanges.OldProject.CompilationOptions != projectChanges.NewProject.CompilationOptions)
             {
-                this.ApplyCompilationOptionsChanged(projectChanges.ProjectId, newOptionsWithoutSyntaxTreeOptionsChange!);
+                this.ApplyCompilationOptionsChanged(projectChanges.ProjectId, projectChanges.NewProject.CompilationOptions!);
             }
 
             // changed parse options

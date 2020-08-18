@@ -23,50 +23,62 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
     {
         private static readonly PartDiscovery s_partDiscovery = CreatePartDiscovery(Resolver.DefaultInstance);
 
-        private static readonly TestComposition s_defaultHostExportProviderComposition = TestComposition.Empty.AddAssemblies(MefHostServices.DefaultAssemblies);
-        internal static readonly TestComposition RemoteHostExportProviderComposition = TestComposition.Empty.AddAssemblies(RoslynServices.RemoteHostAssemblies);
+        // Cache the catalog and export provider factory for MefHostServices.DefaultAssemblies
+        private static readonly ComposableCatalog s_defaultHostCatalog =
+            CreateAssemblyCatalog(MefHostServices.DefaultAssemblies);
+
+        private static readonly IExportProviderFactory s_defaultHostExportProviderFactory =
+            CreateExportProviderFactory(s_defaultHostCatalog);
+
+        // Cache the catalog and export provider factory for RoslynServices.RemoteHostAssemblies
+        private static readonly ComposableCatalog s_remoteHostCatalog =
+            CreateAssemblyCatalog(RoslynServices.RemoteHostAssemblies);
+
+        private static readonly IExportProviderFactory s_remoteHostExportProviderFactory =
+            CreateExportProviderFactory(s_remoteHostCatalog);
 
         private static bool _enabled;
 
-        private static readonly Scope _localCompositionScope = new Scope("local");
-        private static readonly Scope _remoteCompositionScope = new Scope("remote");
+        private static ExportProvider? _currentExportProvider;
+        private static ComposableCatalog? _expectedCatalog;
+        private static ExportProvider? _expectedProviderForCatalog;
 
         internal static bool Enabled => _enabled;
 
-        internal static ExportProvider? LocalExportProviderForCleanup => _localCompositionScope.CurrentExportProvider;
-        internal static ExportProvider? RemoteExportProviderForCleanup => _remoteCompositionScope.CurrentExportProvider;
+        internal static ExportProvider? ExportProviderForCleanup => _currentExportProvider;
 
         internal static void SetEnabled_OnlyUseExportProviderAttributeCanCall(bool value)
         {
             _enabled = value;
             if (!_enabled)
             {
-                _localCompositionScope.Clear();
-                _remoteCompositionScope.Clear();
+                _currentExportProvider = null;
+                _expectedCatalog = null;
+                _expectedProviderForCatalog = null;
             }
         }
 
-        /// <summary>
-        /// Use to create <see cref="IExportProviderFactory"/> for default instances of <see cref="MefHostServices"/>.
-        /// </summary>
-        public static IExportProviderFactory GetOrCreateExportProviderFactory(IEnumerable<Assembly> assemblies)
+        public static ComposableCatalog GetOrCreateAssemblyCatalog(Assembly assembly)
+            => GetOrCreateAssemblyCatalog(SpecializedCollections.SingletonEnumerable(assembly));
+
+        public static ComposableCatalog GetOrCreateAssemblyCatalog(IEnumerable<Assembly> assemblies, Resolver? resolver = null)
         {
             if (assemblies is ImmutableArray<Assembly> assembliesArray)
             {
                 if (assembliesArray == MefHostServices.DefaultAssemblies)
                 {
-                    return s_defaultHostExportProviderComposition.ExportProviderFactory;
+                    return s_defaultHostCatalog;
                 }
                 else if (assembliesArray == RoslynServices.RemoteHostAssemblies)
                 {
-                    return RemoteHostExportProviderComposition.ExportProviderFactory;
+                    return s_remoteHostCatalog;
                 }
             }
 
-            return CreateExportProviderFactory(CreateAssemblyCatalog(assemblies), isRemoteHostComposition: false);
+            return CreateAssemblyCatalog(assemblies, resolver);
         }
 
-        public static ComposableCatalog CreateAssemblyCatalog(IEnumerable<Assembly> assemblies, Resolver? resolver = null)
+        private static ComposableCatalog CreateAssemblyCatalog(IEnumerable<Assembly> assemblies, Resolver? resolver = null)
         {
             var discovery = resolver == null ? s_partDiscovery : CreatePartDiscovery(resolver);
 
@@ -97,8 +109,24 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
         public static PartDiscovery CreatePartDiscovery(Resolver resolver)
             => PartDiscovery.Combine(new AttributedPartDiscoveryV1(resolver), new AttributedPartDiscovery(resolver, isNonPublicSupported: true));
 
+        public static ComposableCatalog WithParts(this ComposableCatalog @this, ComposableCatalog catalog)
+            => @this.AddParts(catalog.DiscoveredParts);
+
         public static ComposableCatalog WithParts(this ComposableCatalog catalog, IEnumerable<Type> types)
-            => catalog.AddParts(CreateTypeCatalog(types).DiscoveredParts);
+            => catalog.WithParts(CreateTypeCatalog(types));
+
+        public static ComposableCatalog WithParts(this ComposableCatalog catalog, params Type[] types)
+            => WithParts(catalog, (IEnumerable<Type>)types);
+
+        public static ComposableCatalog WithPart(this ComposableCatalog catalog, Type t)
+            => catalog.WithParts(CreateTypeCatalog(SpecializedCollections.SingletonEnumerable(t)));
+
+        /// <summary>
+        /// Creates a <see cref="ComposableCatalog"/> derived from <paramref name="catalog"/>, but with all exported
+        /// parts assignable to type <paramref name="t"/> removed from the catalog.
+        /// </summary>
+        public static ComposableCatalog WithoutPartsOfType(this ComposableCatalog catalog, Type t)
+            => catalog.WithoutPartsOfTypes(SpecializedCollections.SingletonEnumerable(t));
 
         /// <summary>
         /// Creates a <see cref="ComposableCatalog"/> derived from <paramref name="catalog"/>, but with all exported
@@ -115,26 +143,36 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
             }
         }
 
-        public static IExportProviderFactory CreateExportProviderFactory(ComposableCatalog catalog, bool isRemoteHostComposition)
+        public static IExportProviderFactory GetOrCreateExportProviderFactory(ComposableCatalog catalog)
         {
-            var scope = isRemoteHostComposition ? _remoteCompositionScope : _localCompositionScope;
+            if (catalog == s_defaultHostCatalog)
+            {
+                return s_defaultHostExportProviderFactory;
+            }
+            else if (catalog == s_remoteHostCatalog)
+            {
+                return s_remoteHostExportProviderFactory;
+            }
+
+            return CreateExportProviderFactory(catalog);
+        }
+
+        private static IExportProviderFactory CreateExportProviderFactory(ComposableCatalog catalog)
+        {
             var configuration = CompositionConfiguration.Create(catalog.WithCompositionService());
             var runtimeComposition = RuntimeComposition.CreateRuntimeComposition(configuration);
             var exportProviderFactory = runtimeComposition.CreateExportProviderFactory();
-
-            return new SingleExportProviderFactory(scope, catalog, configuration, exportProviderFactory);
+            return new SingleExportProviderFactory(catalog, configuration, exportProviderFactory);
         }
 
-        private sealed class SingleExportProviderFactory : IExportProviderFactory
+        private class SingleExportProviderFactory : IExportProviderFactory
         {
-            private readonly Scope _scope;
             private readonly ComposableCatalog _catalog;
             private readonly CompositionConfiguration _configuration;
             private readonly IExportProviderFactory _exportProviderFactory;
 
-            public SingleExportProviderFactory(Scope scope, ComposableCatalog catalog, CompositionConfiguration configuration, IExportProviderFactory exportProviderFactory)
+            public SingleExportProviderFactory(ComposableCatalog catalog, CompositionConfiguration configuration, IExportProviderFactory exportProviderFactory)
             {
-                _scope = scope;
                 _catalog = catalog;
                 _configuration = configuration;
                 _exportProviderFactory = exportProviderFactory;
@@ -149,10 +187,10 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
                     throw new InvalidOperationException($"{nameof(ExportProviderCache)} may only be used from tests marked with {nameof(UseExportProviderAttribute)}");
                 }
 
-                var expectedCatalog = Interlocked.CompareExchange(ref _scope.ExpectedCatalog, _catalog, null) ?? _catalog;
+                var expectedCatalog = Interlocked.CompareExchange(ref _expectedCatalog, _catalog, null) ?? _catalog;
                 RequireForSingleExportProvider(expectedCatalog == _catalog);
 
-                var expected = _scope.ExpectedProviderForCatalog;
+                var expected = _expectedProviderForCatalog;
                 if (expected == null)
                 {
                     foreach (var errorCollection in _configuration.CompositionErrors)
@@ -185,11 +223,11 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
                     }
 
                     expected = _exportProviderFactory.CreateExportProvider();
-                    expected = Interlocked.CompareExchange(ref _scope.ExpectedProviderForCatalog, expected, null) ?? expected;
-                    Interlocked.CompareExchange(ref _scope.CurrentExportProvider, expected, null);
+                    expected = Interlocked.CompareExchange(ref _expectedProviderForCatalog, expected, null) ?? expected;
+                    Interlocked.CompareExchange(ref _currentExportProvider, expected, null);
                 }
 
-                var exportProvider = _scope.CurrentExportProvider;
+                var exportProvider = _currentExportProvider;
                 RequireForSingleExportProvider(exportProvider == expected);
 
                 return exportProvider;
@@ -206,7 +244,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
                 return GetOrCreateExportProvider();
             }
 
-            private void RequireForSingleExportProvider([DoesNotReturnIf(false)] bool condition)
+            private static void RequireForSingleExportProvider([DoesNotReturnIf(false)] bool condition)
             {
                 if (!condition)
                 {
@@ -221,9 +259,6 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
                     // will *behave* like singletons for the duration of the test. Each test is expected to create and
                     // use its ExportProvider in a consistent manner.
                     //
-                    // A test that validates remote services is allowed to create a couple of ExportProviders:
-                    // one for local workspace and the other for the remote one. 
-                    //
                     // When this exception is thrown by a test, it typically means one of the following occurred:
                     //
                     // * A test failed to pass an ExportProvider via an optional argument to a method, resulting in the
@@ -233,32 +268,12 @@ namespace Microsoft.CodeAnalysis.Test.Utilities
                     //   rather than break up the test into distinct tests for each case.
                     // * A test referenced different predefined ExportProvider instances within the context of a test.
                     //   Each test is expected to use the same ExportProvider throughout the test.
-                    throw new InvalidOperationException($"Only one {_scope.Name} {nameof(ExportProvider)} can be created in the context of a single test.");
+                    throw new InvalidOperationException($"Only one {nameof(ExportProvider)} can be created in the context of a single test.");
                 }
             }
         }
 
-        private sealed class Scope
-        {
-            public readonly string Name;
-            public ExportProvider? CurrentExportProvider;
-            public ComposableCatalog? ExpectedCatalog;
-            public ExportProvider? ExpectedProviderForCatalog;
-
-            public Scope(string name)
-            {
-                Name = name;
-            }
-
-            public void Clear()
-            {
-                CurrentExportProvider = null;
-                ExpectedCatalog = null;
-                ExpectedProviderForCatalog = null;
-            }
-        }
-
-        private sealed class SimpleAssemblyLoader : IAssemblyLoader
+        private class SimpleAssemblyLoader : IAssemblyLoader
         {
             public static readonly IAssemblyLoader Instance = new SimpleAssemblyLoader();
 

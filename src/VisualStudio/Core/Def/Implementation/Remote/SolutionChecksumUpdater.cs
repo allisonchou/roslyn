@@ -10,7 +10,6 @@ using Microsoft.CodeAnalysis.Notification;
 using Microsoft.CodeAnalysis.Remote;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.CodeAnalysis.SolutionCrawler;
-using Microsoft.VisualStudio.Threading;
 using Roslyn.Utilities;
 
 namespace Microsoft.VisualStudio.LanguageServices.Remote
@@ -19,13 +18,13 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
     {
         private readonly Workspace _workspace;
         private readonly TaskQueue _textChangeQueue;
-        private readonly AsyncQueue<IAsyncToken> _workQueue;
+        private readonly SemaphoreSlim _event;
         private readonly object _gate;
 
         private CancellationTokenSource _globalOperationCancellationSource;
 
-        // hold the async token from WaitAsync so ExecuteAsync can complete it
-        private IAsyncToken _currentToken;
+        // hold last async token
+        private IAsyncToken _lastToken;
 
         public SolutionChecksumUpdater(Workspace workspace, IAsynchronousOperationListenerProvider listenerProvider, CancellationToken shutdownToken)
             : base(listenerProvider.GetListener(FeatureAttribute.SolutionChecksumUpdater),
@@ -35,7 +34,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
             _workspace = workspace;
             _textChangeQueue = new TaskQueue(Listener, TaskScheduler.Default);
 
-            _workQueue = new AsyncQueue<IAsyncToken>();
+            _event = new SemaphoreSlim(initialCount: 0);
             _gate = new object();
 
             // start listening workspace change event
@@ -53,9 +52,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
         {
             lock (_gate)
             {
-                Contract.ThrowIfNull(_currentToken);
-                _currentToken.Dispose();
-                _currentToken = null;
+                _lastToken?.Dispose();
+                _lastToken = null;
             }
 
             // wait for global operation to finish
@@ -75,15 +73,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
             CancelAndDispose(previousCancellationSource);
         }
 
-        protected override async Task WaitAsync(CancellationToken cancellationToken)
-        {
-            var currentToken = await _workQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
-            lock (_gate)
-            {
-                Contract.ThrowIfFalse(_currentToken is null);
-                _currentToken = currentToken;
-            }
-        }
+        protected override Task WaitAsync(CancellationToken cancellationToken)
+            => _event.WaitAsync(cancellationToken);
 
         public override void Shutdown()
         {
@@ -111,12 +102,17 @@ namespace Microsoft.VisualStudio.LanguageServices.Remote
         private void EnqueueChecksumUpdate()
         {
             // event will raised sequencially. no concurrency on this handler
-            if (_workQueue.TryPeek(out _))
+            if (_event.CurrentCount > 0)
             {
                 return;
             }
 
-            _workQueue.Enqueue(Listener.BeginAsyncOperation(nameof(SolutionChecksumUpdater)));
+            lock (_gate)
+            {
+                _lastToken ??= Listener.BeginAsyncOperation(nameof(SolutionChecksumUpdater));
+            }
+
+            _event.Release();
         }
 
         private async Task SynchronizePrimaryWorkspaceAsync(CancellationToken cancellationToken)

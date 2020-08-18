@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Remote.Testing;
 using Microsoft.CodeAnalysis.Test.Utilities;
 using Roslyn.Test.Utilities;
 using Xunit;
@@ -15,15 +14,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
     [Trait(Traits.Feature, Traits.Features.Classification)]
     public partial class SyntacticClassifierTests
     {
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfTrue(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfTrue()
         {
             var code =
 @"#if true
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Keyword("true"),
@@ -31,15 +28,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfTrueWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfTrueWithComment()
         {
             var code =
 @"#if true //Goo
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Keyword("true"),
@@ -48,15 +43,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfFalse(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfFalse()
         {
             var code =
 @"#if false
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Keyword("false"),
@@ -64,15 +57,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfGOO(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfGOO()
         {
             var code =
 @"#if GOO
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("GOO"),
@@ -80,15 +71,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfNotTrue(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfNotTrue()
         {
             var code =
 @"#if !true
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Operators.Exclamation,
@@ -97,15 +86,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfNotFalse(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfNotFalse()
         {
             var code =
 @"#if !false
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Operators.Exclamation,
@@ -114,15 +101,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfNotGOO(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfNotGOO()
         {
             var code =
 @"#if !GOO
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Operators.Exclamation,
@@ -131,15 +116,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfTrueWithParens(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfTrueWithParens()
         {
             var code =
 @"#if (true)
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Punctuation.OpenParen,
@@ -149,15 +132,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfFalseWithParens(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfFalseWithParens()
         {
             var code =
 @"#if (false)
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Punctuation.OpenParen,
@@ -167,15 +148,13 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfGOOWithParens(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfGOOWithParens()
         {
             var code =
 @"#if (GOO)
 #endif";
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Punctuation.OpenParen,
@@ -185,16 +164,14 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfOrExpression(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfOrExpression()
         {
             var code =
 @"#if GOO || BAR
 #endif";
 
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("GOO"),
@@ -204,16 +181,14 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfAndExpression(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfAndExpression()
         {
             var code =
 @"#if GOO && BAR
 #endif";
 
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("GOO"),
@@ -223,16 +198,14 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfOrAndExpression(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfOrAndExpression()
         {
             var code =
 @"#if GOO || BAR && BAZ
 #endif";
 
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("GOO"),
@@ -244,16 +217,14 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfOrExpressionWithParens(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfOrExpressionWithParens()
         {
             var code =
 @"#if (GOO || BAR)
 #endif";
 
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Punctuation.OpenParen,
@@ -265,16 +236,14 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfAndExpressionWithParens(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfAndExpressionWithParens()
         {
             var code =
 @"#if (GOO && BAR)
 #endif";
 
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Punctuation.OpenParen,
@@ -286,16 +255,14 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfOrAndExpressionWithParens(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfOrAndExpressionWithParens()
         {
             var code =
 @"#if GOO || (BAR && BAZ)
 #endif";
 
             await TestInMethodAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("GOO"),
@@ -309,37 +276,31 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_If1(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_If1()
         {
             await TestAsync("#if goo",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_If2(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_If2()
         {
             await TestAsync(" #if goo",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_If3(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_If3()
         {
             var code =
 @"#if goo
 #endif";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Identifier("goo"),
@@ -347,51 +308,45 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.Classification
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_If4(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_If4()
         {
             var code =
 @"#if
 #endif";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 PPKeyword("#"),
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_If5(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_If5()
         {
             var code =
 @"#if
 aoeu
 aoeu
 #endif";
+            var start = code.IndexOf("#endif", StringComparison.Ordinal);
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Inactive(@"aoeu
 aoeu
-"),
-                PPKeyword("#"),
-                PPKeyword("endif"));
+"), PPKeyword("#"),
+     PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_If6(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_If6()
         {
             var code =
 @"#if
 #else
 aeu";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 PPKeyword("#"),
@@ -399,9 +354,8 @@ aeu";
                 Identifier("aeu"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_If7(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_If7()
         {
             var code =
 @"#if
@@ -409,7 +363,6 @@ aeu";
 #endif
 aeu";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 PPKeyword("#"),
@@ -419,10 +372,10 @@ aeu";
                 Identifier("aeu"));
         }
 
-        [Theory]
+        [Theory, Trait(Traits.Feature, Traits.Features.Classification)]
         [WorkItem(44423, "https://github.com/dotnet/roslyn/issues/44423")]
         [CombinatorialData]
-        public async Task PP_If8(bool script, TestHost testHost)
+        public async Task PP_If8(bool script, bool outOfProcess)
         {
             var code =
 @"#if
@@ -438,8 +391,8 @@ aeu";
             await TestAsync(
                 code,
                 code,
-                testHost,
                 parseOptions,
+                outOfProcess,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 PPKeyword("#"),
@@ -452,10 +405,10 @@ aeu";
                 script ? Field("aeu") : Identifier("aeu"));
         }
 
-        [Theory]
+        [Theory, Trait(Traits.Feature, Traits.Features.Classification)]
         [WorkItem(44423, "https://github.com/dotnet/roslyn/issues/44423")]
         [CombinatorialData]
-        public async Task PP_If9(bool script, TestHost testHost)
+        public async Task PP_If9(bool script, bool outOfProcess)
         {
             var code =
 @"#if //Goo1
@@ -471,8 +424,8 @@ aeu";
             await TestAsync(
                 code,
                 code,
-                testHost,
                 parseOptions,
+                outOfProcess,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Comment("//Goo1"),
@@ -488,92 +441,76 @@ aeu";
                 script ? Field("aeu") : Identifier("aeu"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_Region1(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_Region1()
         {
             await TestAsync("#region Goo",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("region"),
                 PPText("Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_Region2(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_Region2()
         {
             await TestAsync("   #region goo",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("region"),
                 PPText("goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_EndRegion1(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_EndRegion1()
         {
             await TestAsync("#endregion",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("endregion"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_EndRegion2(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_EndRegion2()
         {
             await TestAsync("   #endregion",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("endregion"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_EndRegion3(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_EndRegion3()
         {
             await TestAsync("#endregion adsf",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("endregion"),
                 PPText("adsf"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_EndRegion4(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_EndRegion4()
         {
             await TestAsync("   #endregion adsf",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("endregion"),
                 PPText("adsf"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_RegionEndRegion1(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_RegionEndRegion1()
         {
             await TestAsync(
 @"#region
 #endregion",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("region"),
                 PPKeyword("#"),
                 PPKeyword("endregion"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_CommentAfterRegion1(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_CommentAfterRegion1()
         {
             await TestAsync(
 @"#region adsf //comment
 #endregion",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("region"),
                 PPText("adsf //comment"),
@@ -581,14 +518,12 @@ aeu";
                 PPKeyword("endregion"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_CommentAfterRegion2(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_CommentAfterRegion2()
         {
             await TestAsync(
 @"#region //comment
 #endregion",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("region"),
                 PPText("//comment"),
@@ -596,14 +531,12 @@ aeu";
                 PPKeyword("endregion"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_CommentAfterEndRegion1(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_CommentAfterEndRegion1()
         {
             await TestAsync(
 @"#region
 #endregion adsf //comment",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("region"),
                 PPKeyword("#"),
@@ -611,14 +544,12 @@ aeu";
                 PPText("adsf //comment"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_CommentAfterEndRegion2(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_CommentAfterEndRegion2()
         {
             await TestAsync(
 @"#region
 #endregion //comment",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("region"),
                 PPKeyword("#"),
@@ -626,14 +557,12 @@ aeu";
                 Comment("//comment"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_DeclarationDirectives(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_DeclarationDirectives()
         {
             await TestAsync(
 @"#define A
 #undef B",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("define"),
                 Identifier("A"),
@@ -642,9 +571,8 @@ aeu";
                 Identifier("B"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_IfElseEndIfDirectives(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_IfElseEndIfDirectives()
         {
             var code =
 @"#if true
@@ -652,7 +580,6 @@ aeu";
 #else
 #endif";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("if"),
                 Keyword("true"),
@@ -665,236 +592,200 @@ aeu";
                 PPKeyword("endif"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_DefineDirective(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_DefineDirective()
         {
             var code = @"#define GOO";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("define"),
                 Identifier("GOO"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_DefineDirectiveWithCommentAndNoName(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_DefineDirectiveWithCommentAndNoName()
         {
             var code = @"#define //Goo";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("define"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_DefineDirectiveWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_DefineDirectiveWithComment()
         {
             var code = @"#define GOO //Goo";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("define"),
                 Identifier("GOO"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_UndefDirectives(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_UndefDirectives()
         {
             var code = @"#undef GOO";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("undef"),
                 Identifier("GOO"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_UndefDirectiveWithCommentAndNoName(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_UndefDirectiveWithCommentAndNoName()
         {
             var code = @"#undef //Goo";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("undef"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_UndefDirectiveWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_UndefDirectiveWithComment()
         {
             var code = @"#undef GOO //Goo";
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("undef"),
                 Identifier("GOO"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_ErrorDirective(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_ErrorDirective()
         {
             var code = @"#error GOO";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("error"),
                 PPText("GOO"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_ErrorDirectiveWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_ErrorDirectiveWithComment()
         {
             var code = @"#error GOO //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("error"),
                 PPText("GOO //Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_WarningDirective(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_WarningDirective()
         {
             var code = @"#warning GOO";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("warning"),
                 PPText("GOO"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_WarningDirectiveWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_WarningDirectiveWithComment()
         {
             var code = @"#warning GOO //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("warning"),
                 PPText("GOO //Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineHidden(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineHidden()
         {
             var code = @"#line hidden";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 PPKeyword("hidden"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineHiddenWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineHiddenWithComment()
         {
             var code = @"#line hidden //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 PPKeyword("hidden"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineDefault(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineDefault()
         {
             var code = @"#line default";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 PPKeyword("default"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineDefaultWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineDefaultWithComment()
         {
             var code = @"#line default //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 PPKeyword("default"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineNumber(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineNumber()
         {
             var code = @"#line 100";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 Number("100"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineNumberWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineNumberWithComment()
         {
             var code = @"#line 100 //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 Number("100"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineNumberWithFilename(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineNumberWithFilename()
         {
             var code = @"#line 100 ""C:\Goo""";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 Number("100"),
                 String("\"C:\\Goo\""));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_LineNumberWithFilenameAndComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_LineNumberWithFilenameAndComment()
         {
             var code = @"#line 100 ""C:\Goo"" //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("line"),
                 Number("100"),
@@ -902,55 +793,47 @@ aeu";
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableEnable(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableEnable()
         {
             var code = @"#nullable enable";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("enable"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableEnableWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableEnableWithComment()
         {
             var code = @"#nullable enable //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("enable"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableEnableWarnings(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableEnableWarnings()
         {
             var code = @"#nullable enable warnings";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("enable"),
                 PPKeyword("warnings"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableEnableWarningsWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableEnableWarningsWithComment()
         {
             var code = @"#nullable enable warnings //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("enable"),
@@ -958,28 +841,24 @@ aeu";
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableEnableAnnotations(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableEnableAnnotations()
         {
             var code = @"#nullable enable annotations";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("enable"),
                 PPKeyword("annotations"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableEnableAnnotationsWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableEnableAnnotationsWithComment()
         {
             var code = @"#nullable enable annotations //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("enable"),
@@ -987,53 +866,45 @@ aeu";
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableDisable(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableDisable()
         {
             var code = @"#nullable disable";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("disable"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_NullableDisableWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_NullableDisableWithComment()
         {
             var code = @"#nullable disable //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("nullable"),
                 PPKeyword("disable"),
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaChecksum1(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaChecksum1()
         {
             await TestAsync(
 @"#pragma checksum stuff",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("checksum"),
                 PPText("stuff"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaChecksum2(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaChecksum2()
         {
             await TestAsync(
 @"#pragma checksum ""file.txt"" ""{00000000-0000-0000-0000-000000000000}"" ""2453""",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("checksum"),
@@ -1042,13 +913,11 @@ aeu";
                 String("\"2453\""));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaChecksum3(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaChecksum3()
         {
             await TestAsync(
 @"#pragma checksum ""file.txt"" ""{00000000-0000-0000-0000-000000000000}"" ""2453"" // Goo",
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("checksum"),
@@ -1058,14 +927,12 @@ aeu";
                 Comment("// Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningDisableOne(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningDisableOne()
         {
             var code = @"#pragma warning disable 100";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1073,14 +940,12 @@ aeu";
                 Number("100"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningDisableOneWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningDisableOneWithComment()
         {
             var code = @"#pragma warning disable 100 //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1089,15 +954,13 @@ aeu";
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
         [WorkItem(30783, "https://github.com/dotnet/roslyn/issues/30783")]
-        public async Task PP_PragmaWarningDisableAllWithComment(TestHost testHost)
+        public async Task PP_PragmaWarningDisableAllWithComment()
         {
             var code = @"#pragma warning disable //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1105,14 +968,12 @@ aeu";
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningRestoreOne(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningRestoreOne()
         {
             var code = @"#pragma warning restore 100";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1120,14 +981,12 @@ aeu";
                 Number("100"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningRestoreOneWithComment(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningRestoreOneWithComment()
         {
             var code = @"#pragma warning restore 100 //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1136,15 +995,13 @@ aeu";
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
         [WorkItem(30783, "https://github.com/dotnet/roslyn/issues/30783")]
-        public async Task PP_PragmaWarningRestoreAllWithComment(TestHost testHost)
+        public async Task PP_PragmaWarningRestoreAllWithComment()
         {
             var code = @"#pragma warning restore //Goo";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1152,14 +1009,12 @@ aeu";
                 Comment("//Goo"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningDisableTwo(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningDisableTwo()
         {
             var code = @"#pragma warning disable 100, 101";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1169,14 +1024,12 @@ aeu";
                 Number("101"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningRestoreTwo(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningRestoreTwo()
         {
             var code = @"#pragma warning restore 100, 101";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1186,14 +1039,12 @@ aeu";
                 Number("101"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningDisableThree(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningDisableThree()
         {
             var code = @"#pragma warning disable 100, 101, 102";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1205,14 +1056,12 @@ aeu";
                 Number("102"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task PP_PragmaWarningRestoreThree(TestHost testHost)
+        [Fact, Trait(Traits.Feature, Traits.Features.Classification)]
+        public async Task PP_PragmaWarningRestoreThree()
         {
             var code = @"#pragma warning restore 100, 101, 102";
 
             await TestAsync(code,
-                testHost,
                 PPKeyword("#"),
                 PPKeyword("pragma"),
                 PPKeyword("warning"),
@@ -1224,115 +1073,95 @@ aeu";
                 Number("102"));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task DiscardInOutDeclaration(TestHost testHost)
+        [Fact]
+        public async Task DiscardInOutDeclaration()
         {
             await TestInMethodAsync(
                 code: @"M2(out var _);",
-                testHost: testHost,
- expected: Classifications(Identifier("M2"), Punctuation.OpenParen, Keyword("out"), Identifier("var"),
+                expected: Classifications(Identifier("M2"), Punctuation.OpenParen, Keyword("out"), Identifier("var"),
                     Keyword("_"), Punctuation.CloseParen, Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task DiscardInCasePattern(TestHost testHost)
+        [Fact]
+        public async Task DiscardInCasePattern()
         {
             await TestInMethodAsync(
                 code: @"switch (1) { case int _: }",
-                testHost: testHost,
- expected: Classifications(ControlKeyword("switch"), Punctuation.OpenParen, Number("1"), Punctuation.CloseParen,
+                expected: Classifications(ControlKeyword("switch"), Punctuation.OpenParen, Number("1"), Punctuation.CloseParen,
                     Punctuation.OpenCurly, ControlKeyword("case"), Keyword("int"), Keyword("_"), Punctuation.Colon, Punctuation.CloseCurly));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task DiscardInDeconstruction(TestHost testHost)
+        [Fact]
+        public async Task DiscardInDeconstruction()
         {
             await TestInMethodAsync(
                 code: @"var (x, _) = (1, 2);",
-                testHost: testHost,
- expected: Classifications(Identifier("var"), Punctuation.OpenParen, Local("x"), Punctuation.Comma,
+                expected: Classifications(Identifier("var"), Punctuation.OpenParen, Local("x"), Punctuation.Comma,
                     Keyword("_"), Punctuation.CloseParen, Operators.Equals, Punctuation.OpenParen, Number("1"),
                     Punctuation.Comma, Number("2"), Punctuation.CloseParen, Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task DiscardInDeconstruction2(TestHost testHost)
+        [Fact]
+        public async Task DiscardInDeconstruction2()
         {
             await TestInMethodAsync(
                 code: @"(var _, var _) = (1, 2);",
-                testHost: testHost,
- expected: Classifications(Punctuation.OpenParen, Identifier("var"), Keyword("_"), Punctuation.Comma,
+                expected: Classifications(Punctuation.OpenParen, Identifier("var"), Keyword("_"), Punctuation.Comma,
                     Identifier("var"), Keyword("_"), Punctuation.CloseParen, Operators.Equals, Punctuation.OpenParen,
                     Number("1"), Punctuation.Comma, Number("2"), Punctuation.CloseParen, Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task ShortDiscardInDeconstruction(TestHost testHost)
+        [Fact]
+        public async Task ShortDiscardInDeconstruction()
         {
             await TestInMethodAsync(
                 code: @"int x; (_, x) = (1, 2);",
-                testHost: testHost,
- expected: Classifications(Keyword("int"), Local("x"), Punctuation.Semicolon, Punctuation.OpenParen,
+                expected: Classifications(Keyword("int"), Local("x"), Punctuation.Semicolon, Punctuation.OpenParen,
                     Identifier("_"), Punctuation.Comma, Identifier("x"), Punctuation.CloseParen, Operators.Equals,
                     Punctuation.OpenParen, Number("1"), Punctuation.Comma, Number("2"), Punctuation.CloseParen,
                     Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task ShortDiscardInOutDeclaration(TestHost testHost)
+        [Fact]
+        public async Task ShortDiscardInOutDeclaration()
         {
             await TestInMethodAsync(
                 code: @"M2(out _);",
-                testHost: testHost,
- expected: Classifications(Identifier("M2"), Punctuation.OpenParen, Keyword("out"), Identifier("_"), Punctuation.CloseParen,
+                expected: Classifications(Identifier("M2"), Punctuation.OpenParen, Keyword("out"), Identifier("_"), Punctuation.CloseParen,
                     Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task ShortDiscardInAssignment(TestHost testHost)
+        [Fact]
+        public async Task ShortDiscardInAssignment()
         {
             await TestInMethodAsync(
                 code: @"_ = 1;",
-                testHost: testHost,
- expected: Classifications(Identifier("_"), Operators.Equals, Number("1"), Punctuation.Semicolon));
+                expected: Classifications(Identifier("_"), Operators.Equals, Number("1"), Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task UnderscoreInLambda(TestHost testHost)
+        [Fact]
+        public async Task UnderscoreInLambda()
         {
             await TestInMethodAsync(
                 code: @"x = (_) => 1;",
-                testHost: testHost,
- expected: Classifications(Identifier("x"), Operators.Equals, Punctuation.OpenParen, Parameter("_"), Punctuation.CloseParen,
+                expected: Classifications(Identifier("x"), Operators.Equals, Punctuation.OpenParen, Parameter("_"), Punctuation.CloseParen,
                     Operators.EqualsGreaterThan, Number("1"), Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task DiscardInLambda(TestHost testHost)
+        [Fact]
+        public async Task DiscardInLambda()
         {
             await TestInMethodAsync(
                 code: @"x = (_, _) => 1;",
-                testHost: testHost,
- expected: Classifications(Identifier("x"), Operators.Equals, Punctuation.OpenParen, Parameter("_"), Punctuation.Comma, Parameter("_"), Punctuation.CloseParen,
+                expected: Classifications(Identifier("x"), Operators.Equals, Punctuation.OpenParen, Parameter("_"), Punctuation.Comma, Parameter("_"), Punctuation.CloseParen,
                     Operators.EqualsGreaterThan, Number("1"), Punctuation.Semicolon));
         }
 
-        [Theory]
-        [CombinatorialData]
-        public async Task UnderscoreInAssignment(TestHost testHost)
+        [Fact]
+        public async Task UnderscoreInAssignment()
         {
             await TestInMethodAsync(code: @"int _; _ = 1;",
-                testHost: testHost,
- expected: Classifications(Keyword("int"), Local("_"), Punctuation.Semicolon, Identifier("_"), Operators.Equals,
+                expected: Classifications(Keyword("int"), Local("_"), Punctuation.Semicolon, Identifier("_"), Operators.Equals,
                     Number("1"), Punctuation.Semicolon));
         }
     }

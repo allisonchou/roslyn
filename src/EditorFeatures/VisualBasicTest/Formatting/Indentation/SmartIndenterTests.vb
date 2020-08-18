@@ -3,7 +3,6 @@
 ' See the LICENSE file in the project root for more information.
 
 Imports Microsoft.CodeAnalysis.Editor.Implementation.SmartIndent
-Imports Microsoft.CodeAnalysis.Editor.UnitTests
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Extensions
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 Imports Microsoft.CodeAnalysis.Formatting
@@ -16,17 +15,14 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.Formatting.Indenta
     Public Class SmartIndenterTests
         Inherits VisualBasicFormatterTestBase
 
-        Private Shared ReadOnly s_compositionWithTestFormattingRules As TestComposition = EditorTestCompositions.EditorFeatures.
-            AddParts(GetType(TestFormattingRuleFactoryServiceFactory))
-
-        Private Shared ReadOnly s_htmlMarkup As String = <text>
+        Private Shared s_htmlMarkup As String = <text>
 &lt;html&gt;
     &lt;body&gt;
         &lt;%{|S1:|}%&gt;
     &lt;/body&gt;
 &lt;/html&gt;
 </text>.NormalizedValue
-        Private Shared ReadOnly s_baseIndentationOfNugget As Integer = 8
+        Private Shared s_baseIndentationOfNugget As Integer = 8
 
         Public Sub New(output As ITestOutputHelper)
             MyBase.New(output)
@@ -2982,7 +2978,7 @@ End Class
         <WpfFact>
         <Trait(Traits.Feature, Traits.Features.SmartIndent)>
         Public Sub IndentationOfReturnInFileWithTabs1()
-            Dim code = "
+            dim code = "
 public class Example
 	public sub Test(session as object)
 		if (session is nothing)
@@ -2997,19 +2993,21 @@ end class"
                 expectedIndentation:=12,
                 useTabs:=True,
                 indentStyle:=FormattingOptions.IndentStyle.Smart)
-        End Sub
+        End sub
 
-        Private Shared Sub AssertSmartIndentIndentationInProjection(
+        Private Sub AssertSmartIndentIndentationInProjection(
                 markup As String,
                 expectedIndentation As Integer)
-            Using workspace = TestWorkspace.CreateVisualBasic(markup, composition:=s_compositionWithTestFormattingRules)
+            Using workspace = TestWorkspace.CreateVisualBasic(markup)
                 Dim subjectDocument = workspace.Documents.Single()
                 Dim projectedDocument = workspace.CreateProjectionBufferDocument(s_htmlMarkup, workspace.Documents)
 
-                Dim factory = CType(workspace.Services.GetService(Of IHostDependentFormattingRuleFactoryService)(),
+                Dim factory = TryCast(workspace.Services.GetService(Of IHostDependentFormattingRuleFactoryService)(),
                                     TestFormattingRuleFactoryServiceFactory.Factory)
-                factory.BaseIndentation = s_baseIndentationOfNugget
-                factory.TextSpan = subjectDocument.SelectedSpans.Single()
+                If factory IsNot Nothing Then
+                    factory.BaseIndentation = s_baseIndentationOfNugget
+                    factory.TextSpan = subjectDocument.SelectedSpans.Single()
+                End If
 
                 Dim indentationLine = projectedDocument.GetTextBuffer().CurrentSnapshot.GetLineFromPosition(projectedDocument.CursorPosition.Value)
                 Dim point = projectedDocument.GetTextView().BufferGraph.MapDownToBuffer(indentationLine.Start, PointTrackingMode.Negative, subjectDocument.GetTextBuffer(), PositionAffinity.Predecessor)
@@ -3020,7 +3018,7 @@ end class"
         End Sub
 
         ''' <param name="indentationLine">0-based. The line number in code to get indentation for.</param>
-        Private Shared Sub AssertSmartIndent(
+        Private Sub AssertSmartIndent(
                 code As String, indentationLine As Integer,
                 expectedIndentation As Integer?,
                 Optional indentStyle As FormattingOptions.IndentStyle = FormattingOptions.IndentStyle.Smart)
@@ -3029,7 +3027,7 @@ end class"
         End Sub
 
         ''' <param name="indentationLine">0-based. The line number in code to get indentation for.</param>
-        Private Shared Sub AssertSmartIndent(
+        Private Sub AssertSmartIndent(
                 code As String, indentationLine As Integer,
                 expectedIndentation As Integer?,
                 useTabs As Boolean,

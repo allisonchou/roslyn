@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
 {
     internal sealed partial class SolutionCrawlerRegistrationService
     {
-        internal sealed partial class WorkCoordinator
+        private sealed partial class WorkCoordinator
         {
             private sealed partial class IncrementalAnalyzerProcessor
             {
@@ -195,39 +195,24 @@ namespace Microsoft.CodeAnalysis.SolutionCrawler
                         _workItemQueue.Dispose();
                     }
 
-                    internal TestAccessor GetTestAccessor()
+                    internal void WaitUntilCompletion_ForTestingPurposesOnly(ImmutableArray<IIncrementalAnalyzer> analyzers, List<WorkItem> items)
                     {
-                        return new TestAccessor(this);
+                        var uniqueIds = new HashSet<ProjectId>();
+                        foreach (var item in items)
+                        {
+                            if (uniqueIds.Add(item.ProjectId))
+                            {
+                                ProcessProjectAsync(analyzers, item, CancellationToken.None).Wait();
+                            }
+                        }
                     }
 
-                    internal readonly struct TestAccessor
+                    internal void WaitUntilCompletion_ForTestingPurposesOnly()
                     {
-                        private readonly LowPriorityProcessor _lowPriorityProcessor;
-
-                        internal TestAccessor(LowPriorityProcessor lowPriorityProcessor)
+                        // this shouldn't happen. would like to get some diagnostic
+                        while (_workItemQueue.HasAnyWork)
                         {
-                            _lowPriorityProcessor = lowPriorityProcessor;
-                        }
-
-                        internal void WaitUntilCompletion(ImmutableArray<IIncrementalAnalyzer> analyzers, List<WorkItem> items)
-                        {
-                            var uniqueIds = new HashSet<ProjectId>();
-                            foreach (var item in items)
-                            {
-                                if (uniqueIds.Add(item.ProjectId))
-                                {
-                                    _lowPriorityProcessor.ProcessProjectAsync(analyzers, item, CancellationToken.None).Wait();
-                                }
-                            }
-                        }
-
-                        internal void WaitUntilCompletion()
-                        {
-                            // this shouldn't happen. would like to get some diagnostic
-                            while (_lowPriorityProcessor._workItemQueue.HasAnyWork)
-                            {
-                                FailFast.Fail("How?");
-                            }
+                            FailFast.Fail("How?");
                         }
                     }
                 }

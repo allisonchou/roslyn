@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.UnitTests.Persistence
 {
-    [ExportWorkspaceService(typeof(ITemporaryStorageService), ServiceLayer.Test), Shared, PartNotDiscoverable]
+    [ExportWorkspaceService(typeof(ITemporaryStorageService), "NotKeptAlive"), Shared]
     internal sealed class TestTemporaryStorageService : ITemporaryStorageService
     {
         [ImportingConstructor]

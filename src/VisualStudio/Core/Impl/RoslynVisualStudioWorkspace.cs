@@ -82,10 +82,6 @@ namespace Microsoft.VisualStudio.LanguageServices
                 }
             }
 
-            // Documents in the VisualStudioWorkspace always have file paths since that's how we get files given
-            // to us from the project system.
-            Contract.ThrowIfNull(textDocument.FilePath);
-
             return new InvisibleEditor(ServiceProvider.GlobalProvider, textDocument.FilePath, GetHierarchy(documentId.ProjectId), needsSave, needsUndoDisabled);
         }
 
@@ -192,7 +188,7 @@ namespace Microsoft.VisualStudio.LanguageServices
             var fileCodeModel = ComAggregate.GetManagedObject<FileCodeModel>(vsFileCodeModel);
             if (fileCodeModel != null)
             {
-                var syntaxNode = tree.GetRoot().FindNode(sourceLocation.SourceSpan);
+                SyntaxNode? syntaxNode = tree.GetRoot().FindNode(sourceLocation.SourceSpan);
                 while (syntaxNode != null)
                 {
                     if (!codeModelService.TryGetNodeKey(syntaxNode).IsEmpty)

@@ -79,10 +79,18 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
             {
                 throw new NotImplementedException();
             }
+
+            public override SyntaxTree WithDiagnosticOptions(ImmutableDictionary<string, ReportDiagnostic> options)
+            {
+                throw new NotImplementedException();
+            }
+
             public override bool HasCompilationUnitRoot
             {
                 get { throw new NotImplementedException(); }
             }
+
+            public override ImmutableDictionary<string, ReportDiagnostic> DiagnosticOptions => throw new NotImplementedException();
         }
     }
 }

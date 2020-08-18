@@ -10,7 +10,6 @@ Imports Microsoft.CodeAnalysis.VisualBasic.Symbols
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Imports Microsoft.CodeAnalysis.VisualBasic.UnitTests.Symbols
 Imports Roslyn.Test.Utilities
-Imports Roslyn.Test.Utilities.TestMetadata
 
 Namespace Microsoft.CodeAnalysis.VisualBasic.UnitTests
 
@@ -2015,7 +2014,7 @@ Module M
     End Sub
 End Module
 ]]></file>
-</compilation>, {Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             ' Note: Dev10 reports several errors, although it seems those are incorrect.
             ' BC30456: 'M_Object' is not a member of 'U1'.
             '         x.M_Object()
@@ -2117,7 +2116,7 @@ Module E
     End Sub
 End Module
 ]]></file>
-</compilation>, {Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             compilation.AssertTheseDiagnostics(<expected>
 BC30456: 'M2' is not a member of 'T1'.
         _1.M2()
@@ -2250,7 +2249,7 @@ Module E
     End Sub
 End Module
 ]]></file>
-</compilation>, {Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             compilation.AssertNoErrors()
         End Sub
 
@@ -2277,7 +2276,7 @@ Module E
     End Sub
 End Module
 ]]></file>
-</compilation>, {Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             compilation.AssertTheseDiagnostics(<expected>
 BC30456: 'M2' is not a member of 'T'.
         x.M2(y)
@@ -2312,7 +2311,7 @@ Module E
     End Sub
 End Module
 ]]></file>
-</compilation>, {Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             compilation.AssertTheseDiagnostics(<expected>
 BC30456: 'M' is not a member of 'I(Of B, A)'.
         y.M(z)
@@ -2415,7 +2414,7 @@ Module M
 End Module
 ]]>
     </file>
-</compilation>, {Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             compilation.AssertTheseDiagnostics(<expected>
 BC36593: Expression of type 'T2' is not queryable. Make sure you are not missing an assembly reference and/or namespace import for the LINQ provider.
         result = From o In _2 Where o IsNot Nothing
@@ -2486,7 +2485,7 @@ Module E
     End Sub
 End Module
 ]]></file>
-</compilation>, {Net40.SystemCore})
+</compilation>, {SystemCoreRef})
             compilation.AssertTheseDiagnostics(<expected>
 BC32105: Type argument 'T' does not satisfy the 'Structure' constraint for type parameter 'T'.
         _1 = AddressOf arg.F1(Of T)
@@ -5363,7 +5362,7 @@ Module M
     End Function
 End Module
    ]]></file>
-</compilation>, references:={Net40.SystemCore})
+</compilation>, references:={SystemCoreRef})
             compilation.AssertNoErrors()
         End Sub
 
@@ -5384,7 +5383,7 @@ Module M
     End Sub
 End Module
    ]]></file>
-</compilation>, references:={Net40.SystemCore})
+</compilation>, references:={SystemCoreRef})
             compilation.AssertNoErrors()
             compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(
 <compilation>
@@ -5398,7 +5397,7 @@ Module M
     End Sub
 End Module
    ]]></file>
-</compilation>, references:={Net40.SystemCore})
+</compilation>, references:={SystemCoreRef})
             compilation.AssertNoErrors()
         End Sub
 
@@ -5437,7 +5436,7 @@ Class C
     End Sub
 End Class
    ]]></file>
-</compilation>, references:={Net40.SystemCore})
+</compilation>, references:={SystemCoreRef})
             compilation.AssertNoErrors()
             compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(
 <compilation>
@@ -5475,7 +5474,7 @@ Class E
     End Sub
 End Class
    ]]></file>
-</compilation>, references:={Net40.SystemCore})
+</compilation>, references:={SystemCoreRef})
             compilation.AssertNoErrors()
             compilation = CompilationUtils.CreateCompilationWithMscorlib40AndVBRuntimeAndReferences(
 <compilation>
@@ -5517,7 +5516,7 @@ Class D2
     End Sub
 End Class
    ]]></file>
-</compilation>, references:={Net40.SystemCore})
+</compilation>, references:={SystemCoreRef})
             compilation.AssertTheseDiagnostics(
 <expected>
 BC30456: 'E1' is not a member of 'X'.

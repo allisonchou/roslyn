@@ -120,9 +120,7 @@ namespace Microsoft.CodeAnalysis.Completion.Providers
             }
 
             // CodeGenerationOptions containing before and after
-            var options = new CodeGenerationOptions(
-                contextLocation: semanticModel.SyntaxTree.GetLocation(TextSpan.FromBounds(line.Start, line.Start)),
-                options: await document.GetOptionsAsync(cancellationToken).ConfigureAwait(false));
+            var options = new CodeGenerationOptions(contextLocation: semanticModel.SyntaxTree.GetLocation(TextSpan.FromBounds(line.Start, line.Start)));
 
             var generatedMember = await GenerateMemberAsync(overriddenMember, containingType, document, completionItem, cancellationToken).ConfigureAwait(false);
             generatedMember = _annotation.AddAnnotationToSymbol(generatedMember);

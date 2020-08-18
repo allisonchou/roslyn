@@ -15,19 +15,19 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
     [Collection(nameof(SharedIntegrationHostFixture))]
     public class CSharpReplIntellisense : AbstractInteractiveWindowTest
     {
-        public CSharpReplIntellisense(VisualStudioInstanceFactory instanceFactory)
-            : base(instanceFactory)
+        public CSharpReplIntellisense(VisualStudioInstanceFactory instanceFactory, ITestOutputHelper testOutputHelper)
+            : base(instanceFactory, testOutputHelper)
         {
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyCompletionListOnEmptyTextAtTopLevel()
         {
             VisualStudio.InteractiveWindow.InvokeCompletionList();
             VisualStudio.InteractiveWindow.Verify.CompletionItemsExist("var", "public", "readonly", "goto");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifySharpRCompletionList()
         {
             VisualStudio.InteractiveWindow.InsertCode("#r \"");
@@ -35,7 +35,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
             VisualStudio.InteractiveWindow.Verify.CompletionItemsExist("System");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyCommitCompletionOnTopLevel()
         {
             VisualStudio.InteractiveWindow.InsertCode("pub");
@@ -46,7 +46,7 @@ namespace Roslyn.VisualStudio.IntegrationTests.CSharp
             VisualStudio.SendKeys.Send(VirtualKey.Escape);
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyCompletionListForAmbiguousParsingCases()
         {
             VisualStudio.InteractiveWindow.InsertCode(@"class C { }
@@ -56,7 +56,7 @@ Del<C, System");
             VisualStudio.InteractiveWindow.Verify.CompletionItemsExist("ArgumentException");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifySharpLoadCompletionList()
         {
             VisualStudio.InteractiveWindow.InsertCode("#load \"");
@@ -64,19 +64,18 @@ Del<C, System");
             VisualStudio.InteractiveWindow.Verify.CompletionItemsExist("C:");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyNoCrashOnEnter()
         {
             VisualStudio.Editor.SetUseSuggestionMode(false);
             VisualStudio.SendKeys.Send("#help", VirtualKey.Enter, VirtualKey.Enter);
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/40160")]
         public void VerifyCorrectIntellisenseSelectionOnEnter()
         {
             VisualStudio.Editor.SetUseSuggestionMode(false);
             VisualStudio.SendKeys.Send("TimeSpan.FromMin");
-            VisualStudio.Editor.InvokeCompletionList();
             VisualStudio.SendKeys.Send(VirtualKey.Enter, "(0d)", VirtualKey.Enter);
             VisualStudio.InteractiveWindow.WaitForReplOutput("[00:00:00]");
         }

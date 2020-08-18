@@ -25,11 +25,12 @@ namespace Microsoft.CodeAnalysis.LanguageServer.Handler
         {
         }
 
-        public override async Task<FoldingRange[]> HandleRequestAsync(FoldingRangeParams request, RequestContext context, CancellationToken cancellationToken)
+        public override async Task<FoldingRange[]> HandleRequestAsync(FoldingRangeParams request, ClientCapabilities clientCapabilities,
+            string? clientName, CancellationToken cancellationToken)
         {
             var foldingRanges = ArrayBuilder<FoldingRange>.GetInstance();
 
-            var document = SolutionProvider.GetDocument(request.TextDocument, context.ClientName);
+            var document = SolutionProvider.GetDocument(request.TextDocument, clientName);
             if (document == null)
             {
                 return foldingRanges.ToArrayAndFree();

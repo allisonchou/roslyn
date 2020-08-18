@@ -123,14 +123,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
                 // We don't want to block up file removal on the UI thread since we want that path to stay asynchronous.
                 CodeModelService.DetachFormatTrackingToBuffer(_invisibleEditor.TextBuffer);
 
-                State.ProjectCodeModelFactory.ScheduleDeferredCleanupTask(
-                    cancellationToken =>
-                    {
-                        // Ignore cancellationToken: we always need to call Dispose since it triggers the file save.
-                        _ = cancellationToken;
-
-                        _invisibleEditor.Dispose();
-                    });
+                State.ProjectCodeModelFactory.ScheduleDeferredCleanupTask(() => { _invisibleEditor.Dispose(); });
             }
 
             base.Shutdown();
@@ -381,7 +374,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.CodeModel
                 return true;
             }
 
-            if (!TryGetDocumentId(out _) && _previousDocument != null)
+            if (!TryGetDocumentId(out var documentId) && _previousDocument != null)
             {
                 document = _previousDocument;
             }

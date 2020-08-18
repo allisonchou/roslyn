@@ -1,7 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-extern alias InteractiveHost;
 
 using System;
 using System.Linq;
@@ -15,7 +14,7 @@ using Microsoft.CodeAnalysis.Editor;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using System.Collections.Generic;
-using InteractiveHost::Microsoft.CodeAnalysis.Interactive;
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.VisualStudio.LanguageServices.Interactive
 {
@@ -42,7 +41,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Interactive
 
         internal Task ExecuteAsync(IInteractiveWindow interactiveWindow, string title)
         {
-            if (GetProjectProperties(out var references, out var referenceSearchPaths, out var sourceSearchPaths, out var projectNamespaces, out var projectDirectory, out var platform))
+            if (GetProjectProperties(out var references, out var referenceSearchPaths, out var sourceSearchPaths, out var projectNamespaces, out var projectDirectory, out var is64Bit))
             {
                 // Now, we're going to do a bunch of async operations.  So create a wait
                 // indicator so the user knows something is happening, and also so they cancel.
@@ -56,7 +55,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Interactive
                     sourceSearchPaths,
                     projectNamespaces,
                     projectDirectory,
-                    platform,
+                    is64Bit,
                     waitContext);
 
                 // Once we're done resetting, dismiss the wait indicator and focus the REPL window.
@@ -79,7 +78,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Interactive
             ImmutableArray<string> sourceSearchPaths,
             ImmutableArray<string> projectNamespaces,
             string projectDirectory,
-            InteractiveHostPlatform? platform,
+            bool? is64Bit,
             IWaitContext waitContext)
         {
             // First, open the repl window.
@@ -101,7 +100,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Interactive
 
             // Then reset the REPL
             waitContext.Message = InteractiveEditorFeaturesResources.Resetting_Interactive;
-            evaluator.ResetOptions = new InteractiveEvaluatorResetOptions(platform);
+            evaluator.ResetOptions = new InteractiveEvaluatorResetOptions(is64Bit);
             await interactiveWindow.Operations.ResetAsync(initialize: true).ConfigureAwait(true);
 
             // TODO: load context from an rsp file.
@@ -137,7 +136,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Interactive
             out ImmutableArray<string> sourceSearchPaths,
             out ImmutableArray<string> projectNamespaces,
             out string projectDirectory,
-            out InteractiveHostPlatform? platform);
+            out bool? is64bit);
 
         /// <summary>
         /// A method that should trigger an async project build.

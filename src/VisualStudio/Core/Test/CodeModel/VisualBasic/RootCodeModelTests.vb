@@ -24,7 +24,7 @@ Class Goo
 End Class
 </code>
 
-            TestChildren(code, "MS", "My", "Microsoft", "System", "Goo", "FxResources")
+            TestChildren(code, "MS", "My", "Microsoft", "System", "Goo", "FxResources", "Windows")
         End Sub
 
         ' This test depends on the version of mscorlib used by the TestWorkspace and may
@@ -37,14 +37,14 @@ Module Goo
 End Module
 </code>
 
-            TestChildren(code, "MS", "My", "Microsoft", "System", "Goo", "FxResources")
+            TestChildren(code, "MS", "My", "Microsoft", "System", "Goo", "FxResources", "Windows")
         End Sub
 
 #End Region
 
 #Region "CreateCodeTypeRef"
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestCreateCodeTypeRef_Int32()
             TestCreateCodeTypeRef("System.Int32",
                                   New CodeTypeRefData With {
@@ -55,7 +55,7 @@ End Module
                                   })
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestCreateCodeTypeRef_System_Text_StringBuilder()
             TestCreateCodeTypeRef("System.Text.StringBuilder",
                                   New CodeTypeRefData With {
@@ -66,7 +66,7 @@ End Module
                                   })
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestCreateCodeTypeRef_NullableInteger()
             TestCreateCodeTypeRef("Integer?",
                                   New CodeTypeRefData With {
@@ -235,7 +235,7 @@ End Namespace
 
 #End Region
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestDotNetNameFromLanguageSpecific1()
             Dim code =
 <code>
@@ -256,7 +256,7 @@ End Namespace
                 End Sub)
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestDotNetNameFromLanguageSpecific2()
             TestRootCodeModelWithCodeFile(<code></code>,
                 Sub(rootCodeModel)
@@ -265,7 +265,7 @@ End Namespace
                 End Sub)
         End Sub
 
-        <ConditionalWpfFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
+        <ConditionalFact(GetType(x86)), Trait(Traits.Feature, Traits.Features.CodeModel)>
         Public Sub TestDotNetNameFromLanguageSpecificWithAssemblyQualifiedName()
             TestRootCodeModelWithCodeFile(<code></code>,
                 Sub(rootCodeModel)
