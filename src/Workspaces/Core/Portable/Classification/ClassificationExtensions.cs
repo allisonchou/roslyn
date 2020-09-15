@@ -13,6 +13,7 @@ namespace Microsoft.CodeAnalysis.Classification
             {
                 TypeKind.Class => ClassificationTypeNames.ClassName,
                 TypeKind.Module => ClassificationTypeNames.ModuleName,
+                TypeKind.Record => ClassificationTypeNames.RecordName,
                 TypeKind.Struct => ClassificationTypeNames.StructName,
                 TypeKind.Interface => ClassificationTypeNames.InterfaceName,
                 TypeKind.Enum => ClassificationTypeNames.EnumName,

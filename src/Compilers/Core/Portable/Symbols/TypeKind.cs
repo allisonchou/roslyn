@@ -85,5 +85,10 @@ namespace Microsoft.CodeAnalysis
         /// Type is a function pointer.
         /// </summary>
         FunctionPointer = 13,
+
+        /// <summary>
+        /// Type is a record.
+        /// </summary>
+        Record = 14,
     }
 }

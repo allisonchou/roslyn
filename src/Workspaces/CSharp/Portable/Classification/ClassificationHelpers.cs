@@ -4,6 +4,7 @@
 
 #nullable enable
 
+using System;
 using System.Threading;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
@@ -205,15 +206,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Classification
             }
             else if (token.Parent is ConstructorDeclarationSyntax constructorDeclaration && constructorDeclaration.Identifier == token)
             {
-                return constructorDeclaration.IsParentKind(SyntaxKind.ClassDeclaration)
-                    ? ClassificationTypeNames.ClassName
-                    : ClassificationTypeNames.StructName;
+                return GetConstructorDestructorParentType(constructorDeclaration.Parent?.Kind());
             }
             else if (token.Parent is DestructorDeclarationSyntax destructorDeclaration && destructorDeclaration.Identifier == token)
             {
-                return destructorDeclaration.IsParentKind(SyntaxKind.ClassDeclaration)
-                    ? ClassificationTypeNames.ClassName
-                    : ClassificationTypeNames.StructName;
+                return GetConstructorDestructorParentType(destructorDeclaration.Parent?.Kind());
             }
             else if (token.Parent is LocalFunctionStatementSyntax localFunctionStatement && localFunctionStatement.Identifier == token)
             {
@@ -299,6 +296,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Classification
             {
                 return ClassificationTypeNames.Identifier;
             }
+
+            // Local functions
+            static string? GetConstructorDestructorParentType(SyntaxKind? parentKind)
+                => parentKind switch
+                {
+                    SyntaxKind.ClassDeclaration => ClassificationTypeNames.ClassName,
+                    SyntaxKind.RecordDeclaration => ClassificationTypeNames.RecordName,
+                    SyntaxKind.StructDeclaration => ClassificationTypeNames.StructName,
+                    _ => null
+                };
         }
 
         private static bool IsNamespaceName(IdentifierNameSyntax identifierSyntax)
@@ -350,6 +357,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Classification
                 SyntaxKind.EnumDeclaration => ClassificationTypeNames.EnumName,
                 SyntaxKind.StructDeclaration => ClassificationTypeNames.StructName,
                 SyntaxKind.InterfaceDeclaration => ClassificationTypeNames.InterfaceName,
+                SyntaxKind.RecordDeclaration => ClassificationTypeNames.RecordName,
                 _ => null,
             };
 

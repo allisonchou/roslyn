@@ -152,6 +152,9 @@ namespace Microsoft.CodeAnalysis
                 case TextTags.Module:
                     return ClassificationTypeNames.ModuleName;
 
+                case TextTags.Record:
+                    return ClassificationTypeNames.RecordName;
+
                 case TextTags.Struct:
                     return ClassificationTypeNames.StructName;
 

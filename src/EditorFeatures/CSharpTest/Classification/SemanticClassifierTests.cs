@@ -230,6 +230,23 @@ class C
 
         [Theory]
         [CombinatorialData]
+        public async Task DynamicAsRecordName(TestHost testHost)
+        {
+            await TestAsync(
+@"record dynamic
+{
+}
+
+class C
+{
+    dynamic d;
+}",
+                testHost,
+                Record("dynamic"));
+        }
+
+        [Theory]
+        [CombinatorialData]
         public async Task DynamicAsGenericClassName(TestHost testHost)
         {
             await TestAsync(

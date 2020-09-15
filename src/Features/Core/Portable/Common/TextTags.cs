@@ -32,6 +32,7 @@ namespace Microsoft.CodeAnalysis
         public const string Parameter = nameof(Parameter);
         public const string Property = nameof(Property);
         public const string Punctuation = nameof(Punctuation);
+        public const string Record = nameof(Record);
         public const string Space = nameof(Space);
         public const string Struct = nameof(Struct);
         public const string AnonymousTypeIndicator = nameof(AnonymousTypeIndicator);

@@ -40,6 +40,7 @@ namespace Microsoft.CodeAnalysis.Classification
         public const string EnumName = "enum name";
         public const string InterfaceName = "interface name";
         public const string ModuleName = "module name";
+        public const string RecordName = "record name";
         public const string StructName = "struct name";
         public const string TypeParameterName = "type parameter name";
 

@@ -74,6 +74,12 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.Classification
         [BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]
         internal readonly ClassificationTypeDefinition UserTypeModulesTypeDefinition;
         #endregion
+        #region User Types - Records
+        [Export]
+        [Name(ClassificationTypeNames.RecordName)]
+        [BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]
+        internal readonly ClassificationTypeDefinition UserTypeRecordsTypeDefinition;
+        #endregion
         #region User Types - Structures 
         [Export]
         [Name(ClassificationTypeNames.StructName)]

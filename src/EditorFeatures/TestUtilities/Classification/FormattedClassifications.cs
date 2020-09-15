@@ -13,6 +13,10 @@ namespace Microsoft.CodeAnalysis.Editor.UnitTests.Classification
             => new FormattedClassification(text, typeName);
 
         [DebuggerStepThrough]
+        public static FormattedClassification Record(string text)
+            => New(text, ClassificationTypeNames.RecordName);
+
+        [DebuggerStepThrough]
         public static FormattedClassification Struct(string text)
             => New(text, ClassificationTypeNames.StructName);
 
