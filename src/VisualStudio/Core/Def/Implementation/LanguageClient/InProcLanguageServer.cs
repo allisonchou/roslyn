@@ -73,6 +73,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.LanguageClient
             var jsonMessageFormatter = new JsonMessageFormatter();
             jsonMessageFormatter.JsonSerializer.Converters.Add(new VSExtensionConverter<TextDocumentIdentifier, VSTextDocumentIdentifier>());
             jsonMessageFormatter.JsonSerializer.Converters.Add(new VSExtensionConverter<ClientCapabilities, VSClientCapabilities>());
+            jsonMessageFormatter.JsonSerializer.Converters.Add(new VSExtensionConverter<CompletionContext, VSCompletionContext>());
 
             _jsonRpc = new JsonRpc(new HeaderDelimitedMessageHandler(outputStream, inputStream, jsonMessageFormatter));
             _jsonRpc.AddLocalRpcTarget(this);

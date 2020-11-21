@@ -70,7 +70,11 @@ namespace Microsoft.CodeAnalysis.LanguageServer
 
         // TO-DO: More LSP.CompletionTriggerKind mappings are required to properly map to Roslyn CompletionTriggerKinds.
         // https://dev.azure.com/devdiv/DevDiv/_workitems/edit/1178726
-        public static Completion.CompletionTrigger LSPToRoslynCompletionTrigger(LSP.CompletionContext? context)
+        public static async Task<Completion.CompletionTrigger> LSPToRoslynCompletionTriggerAsync(
+            LSP.CompletionContext? context,
+            Document document,
+            int position,
+            CancellationToken cancellationToken)
         {
             if (context == null)
             {
@@ -79,7 +83,26 @@ namespace Microsoft.CodeAnalysis.LanguageServer
             }
             else if (context.TriggerKind == LSP.CompletionTriggerKind.Invoked)
             {
-                return Completion.CompletionTrigger.Invoke;
+                if (context is not LSP.VSCompletionContext vsCompletionContext)
+                {
+                    return Completion.CompletionTrigger.Invoke;
+                }
+
+                switch (vsCompletionContext.InvokeKind)
+                {
+                    case LSP.VSCompletionInvokeKind.Explicit:
+                        return Completion.CompletionTrigger.Invoke;
+                    case LSP.VSCompletionInvokeKind.Typing:
+                        var insertionChar = await GetInsertionCharacter(document, position, cancellationToken).ConfigureAwait(false);
+                        return Completion.CompletionTrigger.CreateInsertionTrigger(insertionChar);
+                    case LSP.VSCompletionInvokeKind.Deletion:
+                        // TO-DO: fix
+                        return Completion.CompletionTrigger.Invoke;
+                    default:
+                        // LSP added an InvokeKind that we need to support.
+                        Logger.Log(FunctionId.LSPCompletion_MissingLSPCompletionTriggerKind);
+                        return Completion.CompletionTrigger.Invoke;
+                }
             }
             else if (context.TriggerKind == LSP.CompletionTriggerKind.TriggerCharacter)
             {
@@ -91,6 +114,16 @@ namespace Microsoft.CodeAnalysis.LanguageServer
                 // LSP added a TriggerKind that we need to support.
                 Logger.Log(FunctionId.LSPCompletion_MissingLSPCompletionTriggerKind);
                 return Completion.CompletionTrigger.Invoke;
+            }
+
+            // Local functions
+            static async Task<char> GetInsertionCharacter(Document document, int position, CancellationToken cancellationToken)
+            {
+                var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
+
+                // We use 'position - 1' here since we want to find the character that was just inserted.
+                var triggerCharacter = char.Parse(text.ToString(new TextSpan(position - 1, 1)));
+                return triggerCharacter;
             }
         }
 
